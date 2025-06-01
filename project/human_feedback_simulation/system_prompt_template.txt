@@ -6,6 +6,6 @@ how much you personally like the answer on a 0-10 scale (0 = terrible, 10 = perf
 • Answer only with this JSON (no extra keys, no commentary):
 
 {{
-  "analysis": "< ≤ 2 short sentences >"
-  "score": <int 0-10>,
+  "analysis": "< ≤ 2 short sentences >",
+  "score": <int 0-10>
 }}

@@ -61,14 +61,14 @@ personas = {  # persona_name - persona_bio
 }
 
 if __name__ == "__main__":
-    N_samples = 10
+    N_samples = 1000
     # Load the data
-    with open('dataset/array.pkl', 'rb') as file:
+    with open('dataset/data.pkl', 'rb') as file:
         data = pickle.load(file)
     df = pd.DataFrame(data[:N_samples])
     df['human_feedback'] = None
     df['human_feedback_score'] = None
-    df['human_feedback_explanation'] = None
+    df['human_feedback_analysis'] = None
     df['persona_name'] = None
     df['persona_bio'] = None
 
@@ -76,7 +76,8 @@ if __name__ == "__main__":
     persona_names = list(personas.keys())
 
     # Process each query-answer pair
-    for index, row in tqdm(df.iterrows()):
+    i = 0
+    for index, row in tqdm(df.iterrows(), total=len(df)):
         query = row['instruction']
         model_answer = row['answer']
 
@@ -84,22 +85,27 @@ if __name__ == "__main__":
         random_persona_name = random.choice(persona_names)
         persona_bio = personas[random_persona_name]
 
-        print(f"\n--- Query: {query} ---")
-        print(f"--- Model Answer: {model_answer} ---")
-        print(f"--- Persona: {random_persona_name} ({persona_bio}) ---")
-
         # Get simulated human feedback
         feedback_response = get_human_feedback(random_persona_name, query, model_answer, persona_bio)
         try:
             feedback = json.loads(feedback_response)
             df.at[index, 'human_feedback'] = feedback
             df.at[index, 'human_feedback_score'] = feedback['score']
-            df.at[index, 'human_feedback_explanation'] = feedback['explanation']
-        except json.JSONDecodeError:
+            df.at[index, 'human_feedback_analysis'] = feedback['analysis']
+        except json.JSONDecodeError as e:
+            print(f"--- Error: {e} ---")
             feedback = None
-        print(f"--- Simulated Feedback: {feedback} ---")
         df.at[index, 'persona_name'] = random_persona_name
         df.at[index, 'persona_bio'] = persona_bio
+
+        # Every 100 samples, save the data
+        if i % 100 == 0 and i > 0:
+            print(f"\n--- Query {index}: {query} ---")
+            print(f"--- Model Answer: {model_answer} ---")
+            print(f"--- Persona: {random_persona_name} ({persona_bio}) ---")
+            print(f"--- Feedback: {feedback} ---")
+            df.to_pickle('dataset/data_with_human_feedback.pickle')
+        i += 1
 
     # Save the data
     df.to_pickle('dataset/data_with_human_feedback.pickle')
