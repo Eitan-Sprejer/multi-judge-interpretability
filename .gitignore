@@ -1,4 +1,6 @@
 martian-sdk-python
 dataset/*
 .env
+*.DS_Store
 **/*.pkl
+models/*
