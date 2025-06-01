@@ -62,24 +62,55 @@ personas = {  # persona_name - persona_bio
 
 if __name__ == "__main__":
     N_samples = 1000
-    # Load the data
-    with open('dataset/data.pkl', 'rb') as file:
-        data = pickle.load(file)
-    df = pd.DataFrame(data[:N_samples])
+    base_data_path = 'dataset/data.pkl'
+    save_path = 'dataset/data_with_human_feedback.pickle'
+
+    # Load the base data for the target N_samples
+    print(f"Loading base data from {base_data_path} for {N_samples} samples...")
+    with open(base_data_path, 'rb') as file:
+        base_data_list = pickle.load(file)
+    
+    df = pd.DataFrame(base_data_list[:N_samples])
+
+    # Initialize feedback columns
     df['human_feedback'] = None
-    df['human_feedback_score'] = None
+    df['human_feedback_score'] = pd.NA
     df['human_feedback_analysis'] = None
     df['persona_name'] = None
     df['persona_bio'] = None
+
+    # Load existing processed data if save_path exists
+    if os.path.exists(save_path):
+        print(f"Attempting to load existing results from {save_path}...")
+        try:
+            df_saved = pd.read_pickle(save_path)
+            # Ensure we only update relevant rows and columns
+            common_indices = df.index.intersection(df_saved.index)
+            cols_to_load = ['human_feedback', 'human_feedback_score', 'human_feedback_analysis', 'persona_name', 'persona_bio']
+            cols_present_in_saved = [col for col in cols_to_load if col in df_saved.columns]
+
+            for col in cols_present_in_saved:
+                df.loc[common_indices, col] = df_saved.loc[common_indices, col]
+            
+            already_processed_count = df['human_feedback_score'].notna().sum()
+            print(f"Successfully loaded and merged data. {already_processed_count} out of {N_samples} rows were already processed.")
+        except Exception as e:
+            print(f"Error loading or merging {save_path}: {e}. Proceeding with initialized/base data.")
+    else:
+        print(f"No existing results file found at {save_path}. Starting fresh.")
 
     # Get a list of persona names
     persona_names = list(personas.keys())
 
     # Process each query-answer pair
-    i = 0
-    for index, row in tqdm(df.iterrows(), total=len(df)):
-        query = row['instruction']
-        model_answer = row['answer']
+    newly_processed_count = 0 # Counter for new items
+    for i, row_data in tqdm(df.iterrows(), total=len(df), desc="Processing samples"):
+        # Skip if already processed (score is not NA)
+        if pd.notna(df.at[i, 'human_feedback_score']):
+            continue
+
+        query = df.at[i, 'instruction']
+        model_answer = df.at[i, 'answer']
 
         # Randomly select a persona
         random_persona_name = random.choice(persona_names)
@@ -87,25 +118,38 @@ if __name__ == "__main__":
 
         # Get simulated human feedback
         feedback_response = get_human_feedback(random_persona_name, query, model_answer, persona_bio)
+        feedback_dict_for_print = None
+
         try:
             feedback = json.loads(feedback_response)
-            df.at[index, 'human_feedback'] = feedback
-            df.at[index, 'human_feedback_score'] = feedback['score']
-            df.at[index, 'human_feedback_analysis'] = feedback['analysis']
+            df.at[i, 'human_feedback'] = feedback
+            df.at[i, 'human_feedback_score'] = feedback['score']
+            df.at[i, 'human_feedback_analysis'] = feedback['analysis']
+            feedback_dict_for_print = feedback
         except json.JSONDecodeError as e:
-            print(f"--- Error: {e} ---")
-            feedback = None
-        df.at[index, 'persona_name'] = random_persona_name
-        df.at[index, 'persona_bio'] = persona_bio
+            print(f"--- JSON Decode Error for index {i}: {e} ---")
+            print(f"--- Faulty Feedback String: {feedback_response} ---")
+            df.at[i, 'human_feedback'] = f"Error: {e}. Original: {feedback_response}"
 
-        # Every 100 samples, save the data
-        if i % 100 == 0 and i > 0:
-            print(f"\n--- Query {index}: {query} ---")
+        df.at[i, 'persona_name'] = random_persona_name
+        df.at[i, 'persona_bio'] = persona_bio
+
+        newly_processed_count += 1 # Increment after processing
+
+        # Every 100 newly processed samples, save the data and print checkpoint info
+        if newly_processed_count > 0 and newly_processed_count % 100 == 0:
+            print(f"\n--- Checkpoint after {newly_processed_count} new samples (current index {i}) ---")
+            print(f"--- Query: {query} ---")
             print(f"--- Model Answer: {model_answer} ---")
             print(f"--- Persona: {random_persona_name} ({persona_bio}) ---")
-            print(f"--- Feedback: {feedback} ---")
-            df.to_pickle('dataset/data_with_human_feedback.pickle')
-        i += 1
+            if feedback_dict_for_print:
+                 print(f"--- Feedback (parsed): {feedback_dict_for_print} ---")
+            else:
+                 print(f"--- Feedback (raw/error): {feedback_response[:200]}... ---")
+            print(f"Saving progress to {save_path}...")
+            df.to_pickle(save_path)
 
-    # Save the data
-    df.to_pickle('dataset/data_with_human_feedback.pickle')
+    # Save the final data
+    print(f"\nProcessing complete. Total newly processed: {newly_processed_count}. Saving final data to {save_path}...")
+    df.to_pickle(save_path)
+    print("Done.")
