@@ -205,6 +205,15 @@ def train_model(
             device = torch.device("cpu")
     print(f"Using device: {device}")
 
+    # ---------- Construct actual save path ----------
+    # save_path argument is the base name/prefix from args.out
+    path_obj = pathlib.Path(save_path) 
+    final_filename_stem = path_obj.stem
+    final_output_dir = path_obj.parent
+    actual_save_filename = f"{final_filename_stem}_{model_type.lower()}.pt"
+    actual_save_path_str = str(final_output_dir / actual_save_filename)
+    print(f"Model will be saved to: {actual_save_path_str}")
+
     # ---------- Load data ----------
     X, y = load_pickle_dataset(data_pkl)
     n_judges = X.shape[1]
@@ -333,30 +342,30 @@ def train_model(
                 scheduler.step(current_val_loss) # Step the scheduler based on validation loss
                 if current_val_loss < best_val_loss:
                     best_val_loss = current_val_loss
-                    torch.save(model.state_dict(), save_path)
+                    torch.save(model.state_dict(), actual_save_path_str)
                     model_saved_this_run = True
         else: # No validation (val_split was 0 or resulted in empty ds_val)
             print(f"Epoch {epoch:3d}: train MSE={avg_train_loss:.4f} | (No validation) | LR={opt.param_groups[0]['lr']:.1e}")
             # Save model at the final epoch if no validation-based saving occurred
             if epoch == epochs:
-                torch.save(model.state_dict(), save_path)
+                torch.save(model.state_dict(), actual_save_path_str)
 
     # ---- Post-training ----
     if val_split > 0.0 and ds_val:
         if model_saved_this_run:
-            print(f"Best val MSE={best_val_loss:.4f} (model saved to {save_path})")
+            print(f"Best val MSE={best_val_loss:.4f} (model saved to {actual_save_path_str})")
         else:
             print(f"No model saved based on validation. Best val MSE remained {best_val_loss:.4f}.")
             if epochs > 0: 
-                 print(f"Saving model from final epoch to {save_path} as fallback.")
+                 print(f"Saving model from final epoch to {actual_save_path_str} as fallback.")
 
-    if model_saved_this_run and pathlib.Path(save_path).exists():
-        print(f"Loading {'best validation' if ds_val and best_val_loss != math.inf else 'final epoch'} model weights from {save_path} for return.")
-        model.load_state_dict(torch.load(save_path, map_location=device))
+    if model_saved_this_run and pathlib.Path(actual_save_path_str).exists():
+        print(f"Loading {'best validation' if ds_val and best_val_loss != math.inf else 'final epoch'} model weights from {actual_save_path_str} for return.")
+        model.load_state_dict(torch.load(actual_save_path_str, map_location=device))
     elif epochs > 0 : 
-        print(f"Warning: No model checkpoint found at {save_path}. Returning model from its last training state.")
+        print(f"Warning: No model checkpoint found at {actual_save_path_str}. Returning model from its last training state.")
     
-    return model, typical_scores_original_scale, norm_mean, norm_std, dl_val # Added dl_val to return
+    return model, typical_scores_original_scale, norm_mean, norm_std, dl_val, actual_save_path_str # Added actual_save_path_str
 
 # ================================================================
 # 4. Evaluation Function
@@ -436,8 +445,8 @@ if __name__ == "__main__":
     parser.add_argument("--val-split", type=float, default=0.1,
                         help="Fraction of data reserved for validation.")
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--out", default="agg_model.pt",
-                        help="File to save the best-val model weights.")
+    parser.add_argument("--out", default="agg_model",
+                        help="Base filename for saving the model. '_<model_type>.pt' will be appended (e.g., if 'mymodel', then 'mymodel_gam.pt' or 'mymodel_mlp.pt'). Default: 'agg_model'.")
     parser.add_argument("--force-cpu", action="store_true", 
                         help="Force training on CPU even if CUDA is available.")
     parser.add_argument("--no-normalize", action="store_true",
@@ -455,7 +464,7 @@ if __name__ == "__main__":
             current_device = torch.device("cpu")
 
     # -------- run training ----------
-    model, typical_scores_for_pdp, norm_mean_returned, norm_std_returned, returned_dl_val = train_model(
+    model, typical_scores_for_pdp, norm_mean_returned, norm_std_returned, returned_dl_val, final_model_save_path = train_model(
         data_pkl=args.data,
         model_type=args.model_type,
         hidden=args.hidden,
@@ -491,6 +500,6 @@ if __name__ == "__main__":
             print("\nSkipping evaluation: No validation data loader available (val_split might be 0).")
 
     if model is not None:
-        print("Finished. Best model weights saved to", args.out)
+        print("Finished. Best model weights saved to", final_model_save_path)
     else:
         print("Finished. Training might not have completed successfully or saved a model.")
