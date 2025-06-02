@@ -5,7 +5,7 @@ A framework for evaluating AI model outputs using multiple specialized judges an
 ## 🌟 Key Features
 
 - **Multiple Judge Integration**: Combine scores from specialized judges (e.g., harmlessness, privacy, factual accuracy)
-- **Flexible Model Architecture**: Choose between interpretable GAM models or powerful MLP models
+- **Flexible Model Architecture**: Choose between a GAM model or a powerful MLP model
 - **Robust Training Pipeline**: Including normalization, validation splits, and automatic checkpointing
 - **Built-in Interpretability Tools**: Analyze judge contributions and model behavior
 - **Error-Resilient Evaluation**: Implements exponential backoff for reliable scoring
@@ -36,6 +36,8 @@ Follow these steps in order:
    # Install dependencies
    pip install -r requirements.txt
    ```
+
+   Moreover, you should follow the guides to install the Martian API SDK outlined in [here](https://github.com/withmartian/martian-sdk-python).
 
 2. **Create Judges**
 
