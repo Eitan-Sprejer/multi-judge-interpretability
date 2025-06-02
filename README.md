@@ -86,7 +86,7 @@ Follow these steps in order:
 
 ## 📖 Project Structure
 
-![Project structure](https://ibb.co/RkYNDnLY)
+![Screenshot from 2025-06-02 02-54-50](https://github.com/user-attachments/assets/1c755126-50bc-46d5-ad2e-7b5382e039e2)
 
 ## 🔧 Available Models
 
