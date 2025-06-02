@@ -28,16 +28,18 @@ Follow these steps in order:
    # Clone the repository
    git clone https://github.com/yourusername/multi-judge-interpretability.git
    cd multi-judge-interpretability
+   ```
 
-   # Create and activate virtual environment
-   python -m venv .venv
+   Moreover, you should follow the guides to install the Martian API SDK outlined in [here](https://github.com/withmartian/martian-sdk-python).
+
+   Then you activate the environment and install the dependencies as expected:
+
+   ```bash
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
    # Install dependencies
    pip install -r requirements.txt
    ```
-
-   Moreover, you should follow the guides to install the Martian API SDK outlined in [here](https://github.com/withmartian/martian-sdk-python).
 
 2. **Create Judges**
 
