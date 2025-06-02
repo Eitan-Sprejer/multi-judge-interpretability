@@ -1,6 +1,4 @@
 from openai import AsyncOpenAI
-from dotenv import load_dotenv
-load_dotenv()
 import os
 import pandas as pd
 import random
@@ -9,7 +7,10 @@ from tqdm import tqdm
 import json
 import asyncio # Added import
 
-# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
+
+# This key right here is a proxy key for lambda.ai
 openai_api_key = os.getenv("OPEN_AI_API_KEY")
 openai_api_base = "https://api.lambda.ai/v1"
 
