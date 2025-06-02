@@ -86,13 +86,7 @@ Follow these steps in order:
 
 ## 📖 Project Structure
 
-multi-judge-interpretability/
-├── project/
-│ ├── judging/ # Judge creation and configuration
-│ ├── data_processing/ # Dataset extraction and processing
-│ ├── human_feedback_simulation/ # Ground truth generation
-│ └── inference/ # Model training and evaluation
-└── requirements.txt
+![Project structure](https://ibb.co/RkYNDnLY)
 
 ## 🔧 Available Models
 
