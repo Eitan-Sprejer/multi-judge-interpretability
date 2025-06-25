@@ -2,6 +2,8 @@
 
 A framework for evaluating AI model outputs using multiple specialized judges and interpretability techniques. This project provides tools for training judge aggregation models, analyzing model behavior, and implementing custom evaluation criteria.
 
+This work was done in the context of the [Apart x Martian Mechanistic Router Interpretability Hackathon](https://apartresearch.com/sprints/apart-x-martian-mechanistic-router-interpretability-hackathon-2025-05-30-to-2025-06-01). [Our submission](https://apartresearch.com/project/approximating-human-preferences-using-a-multijudge-learned-system-v3im) won 2nd place 🥈!
+
 ## 🌟 Key Features
 
 - **Multiple Judge Integration**: Combine scores from specialized judges (e.g., harmlessness, privacy, factual accuracy)
