@@ -4,3 +4,5 @@ dataset/*
 *.DS_Store
 **/*.pkl
 models/*
+.venv/
+!judges_annotated_data.pkl
