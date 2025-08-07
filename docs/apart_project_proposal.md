@@ -236,7 +236,16 @@ Key Deliverables:
 * Architectural comparison results (MoJ, self-bias analysis)
 * Comprehensive interpretability analysis (partial dependence plots, feature importance)
 * Complete paper draft with all experimental results
+
+**Milestone 4: Paper Submission**
+
+Description: Finish the paper, with the feedback from Narmeen and Apart.
+
+Target Completion Date: August 22th, 2025
+
+Key Deliverables:
 * Submission to NeurIPS Interpretability Workshop
+
 
 ### Anything else you would like us to know about?
 
