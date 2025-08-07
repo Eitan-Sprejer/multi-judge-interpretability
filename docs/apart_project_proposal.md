@@ -46,7 +46,8 @@ What are the 3-5 works that are foundational to the problem you’re trying to a
 ---
 
 * **Constitutional AI/RLHF papers** \- Establishing the paradigm of using AI feedback for alignment  
-* **UltraFeedback dataset paper** \- Provides the preference data infrastructure we build upon  
+* **UltraFeedback dataset paper** \- Provides multi-dimensional preference ratings we use as ground truth  
+* **Mixture of Judges (MoJ)** \- State-of-the-art context-aware judge aggregation method we benchmark against  
 * **Expert Orchestration vision papers** \- Framework for using multiple specialized models instead of monolithic AI  
 * **Multi-agent evaluation literature** \- Prior work on ensemble methods for model evaluation  
 * **Interpretable ML (GAMs) papers** \- Foundation for our interpretable aggregation approach
@@ -65,7 +66,13 @@ This section should provide enough detail that someone unfamiliar with these spe
 
 ---
 
-\[To be filled after literature review \- will focus on most similar multi-judge aggregation work and explain how our learned approach improves upon fixed aggregation strategies\]
+**Expert Orchestration - Kulkarni et al. (2024)**
+
+Expert Orchestration proposes a paradigm shift from monolithic AI systems to coordinated networks of specialized models. The framework identifies three core primitives: **Judges** (evaluate model outputs across different dimensions), **Routers** (select appropriate models for tasks), and **Orchestrators** (coordinate multi-step workflows). This addresses fundamental limitations of current AI systems: high computational costs, lack of interpretability, and vulnerability to single points of failure.
+
+**Core concepts we directly implement:** Multi-judge evaluation systems, preference aggregation as a core safety mechanism, interpretable alternatives to monolithic models. **Specific methods we extend:** While Expert Orchestration establishes the judge primitive conceptually, it doesn't address the critical question of optimal judge combination. Most implementations use simple heuristics (averaging, maximum, conditional logic) which are vulnerable to contaminated judges and fail to capture complex preference relationships.
+
+**Key gap our work addresses:** Expert Orchestration identifies judge aggregation as essential but provides limited guidance on implementation. Our learned aggregation approach f_θ fills this gap by providing a principled, interpretable method for combining multiple judges that can adapt to different preference profiles while remaining robust to adversarial inputs. This validates the Expert Orchestration vision by demonstrating that small, specialized models can effectively coordinate to achieve performance comparable to monolithic systems.
 
 ### Proposed methodology
 
@@ -84,32 +91,31 @@ See the [Methodology Worksheet](?tab=t.4j72f4qd5jx2) tab for additional guidance
 
 **Approach:**
 
-1. **Systematic persona and metric design:**  
-   * Develop principled methods for selecting representative personas that span human preference space.  
-   * Design judge metrics across constrained preference dimensions (building on idea 1.a from the brainstorm).  
-   * Study which characteristics best approximate human preferences and their individual contributions.  
-2. **Multi-model comparison framework:**  
-   * Compare GAMs, MLPs, and expanded model architectures (SVMs, random forests, decision trees)  
-   * Test against baselines: naive averaging, constitutional AI methods, existing ensemble techniques (we'd need some lit review)  
-   * Explore dynamic judge selection: learning which judges to use for different query types  
-3. **Synthetic dataset creation and validation:**  
-   * Create our own high-quality synthetic preference dataset  
-   * Compare against UltraFeedback to understand quality differences  
-   * Validate synthetic personas against human annotations  
-4. **Robustness and generalization experiments:**  
-   * Test if learned models generalize from N personas to a new persona OOD  
-   * Evaluate poisoning resistance: can one "bad preference" persona break the model?  
-   * Assess judge contamination: how do "bad judges" affect the system?  
-   * Map Pareto frontier for optimal judges-to-personas ratios  
-   * Preference decomposition: given human preferences, can we infer the underlying evaluation dimensions?
+We propose four experimental tracks to systematically validate our hypothesis. We will prioritize Tracks 1 and 2 as core contributions, with Tracks 3 and 4 as secondary/parallel efforts:
+
+**Track 1: Robustness Analysis (Priority)**
+* **Judge Contamination:** Introduce deliberately flawed judges (inverted metrics, random noise, safety-blind rubrics) and measure if learned aggregators assign near-zero weights to bad judges while maintaining performance
+* **Persona Poisoning:** Include "troll" personas that systematically misrate responses at varying contamination rates to identify failure thresholds
+* **Rubric Sensitivity:** Test semantic robustness by evaluating same content with differently phrased but equivalent rubrics
+
+**Track 2: Ground Truth Validation (Priority)**
+* **UltraFeedback Integration:** Use UltraFeedback's multi-dimensional ratings as more realistic ground truth, treating Overall Quality as target and other dimensions as judge inputs
+* **Baseline Comparison:** Compare against single-judge baselines and naive averaging methods
+
+**Track 3: Architectural Comparisons (Secondary)**
+* **Mixture of Judges (MoJ) Benchmark:** Compare our static learned aggregator against MoJ's dynamic context-aware gating on performance, computational cost, and interpretability
+* **Judge Self-Bias Analysis:** Test if LLM judges favor responses from same model family and develop correction methods
+
+**Track 4: Interpretability Deep Dive (Secondary)**
+* **Learned Function Analysis:** Systematic interpretability of GAM and MLP aggregators using partial dependence plots and feature importance
+* **Sparse Additive Distillation:** Train minimal GAM to mimic MLP behavior, identifying key judges and interaction effects
 
 **Validation:**
 
-* Performance metrics across model architectures  
-* Interpretability analysis via partial dependencies and feature importance  
-* Robustness metrics under adversarial conditions  
-* Generalization accuracy on held-out personas  
-* Comparison with human preference ground truth
+* **Robustness:** Quantified improvement over baseline aggregation methods under adversarial conditions
+* **Performance:** Competitive accuracy on established preference datasets compared to single-judge systems
+* **Efficiency:** Computational cost analysis and inference time comparisons
+* **Interpretability:** Clear identification of judge contributions and decision-making patterns
 
 **Key Assumptions:**
 
@@ -157,8 +163,19 @@ Once you’ve thought of these, address what you will do to decrease their likel
 ---
 
 1. **Time constraints** \- August 22 deadline is tight  
-* *Mitigation:* Prioritize core experiments, prepare incremental submission  
-2. 
+   * *Mitigation:* Prioritize Track 1 (Robustness) and Track 2 (UltraFeedback validation) as core contributions, defer some Track 3 experiments if needed
+   * *Monitoring:* Weekly progress reviews, milestone tracking
+   * *Contingency:* Submit preliminary results with clear follow-up plan
+
+2. **UltraFeedback limitations** \- Dataset may not represent true human preference diversity
+   * *Mitigation:* Acknowledge limitations explicitly, complement with synthetic persona validation
+   * *Monitoring:* Compare UltraFeedback results against our synthetic personas for consistency
+   * *Contingency:* Pivot to multi-source validation if UltraFeedback proves insufficient
+
+3. **Judge contamination detection failure** \- Learned aggregators might not identify bad judges
+   * *Mitigation:* Test multiple contamination types, implement explicit anomaly detection
+   * *Monitoring:* Track learned weights and performance degradation curves
+   * *Contingency:* Fall back to ensemble methods with explicit outlier removal
 
 ### Capacity
 
@@ -181,17 +198,45 @@ Propose a timeline for your project, including at least 3 milestones. For each m
 
 ---
 
-Milestone Template: 
+**Milestone 1: Robustness Framework**
 
-\------------------- 
+Description: Implement and test judge contamination experiments across all three contamination types (inverted, random, safety-blind). Establish baseline performance metrics and contamination detection capabilities.
 
-Milestone: 
-
-Description: 
-
-Target Completion Date: 
+Target Completion Date: August 12th, 2025
 
 Key Deliverables:
+* Contaminated judge test suite with multiple judge types
+* Performance degradation curves for different contamination rates
+* Learned weight analysis demonstrating bad judge detection
+* Comparison against naive averaging baselines
+
+\-------------------
+
+**Milestone 2: UltraFeedback Integration & Validation**
+
+Description: Integrate UltraFeedback dataset as ground truth, train aggregators on multi-dimensional ratings, and benchmark against single-judge baselines.
+
+Target Completion Date: August 16th, 2025
+
+Key Deliverables:
+* UltraFeedback integration pipeline
+* GAM and MLP aggregators trained on multi-dimensional ratings
+* Performance comparison with single-judge baseline
+* Ablation study showing dimension importance
+
+\-------------------
+
+**Milestone 3: Secondary Experiments & Paper Preparation**
+
+Description: Complete architectural comparisons (MoJ benchmark), finalize interpretability analysis, and prepare paper submission with all experimental results.
+
+Target Completion Date: August 20th, 2025
+
+Key Deliverables:
+* Architectural comparison results (MoJ, self-bias analysis)
+* Comprehensive interpretability analysis (partial dependence plots, feature importance)
+* Complete paper draft with all experimental results
+* Submission to NeurIPS Interpretability Workshop
 
 ### Anything else you would like us to know about?
 
