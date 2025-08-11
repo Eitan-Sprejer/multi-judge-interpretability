@@ -182,7 +182,8 @@ new_train_gam.ipynb / eval_nn.py → trained models
 
 ## Refactoring Progress
 
-### ✅ Completed
+### ✅ Completed Conversions
+
 1. **judge_creation.py** - Converted from `create_judges.ipynb`
    - Clean functions for creating/updating judges
    - Separated rubrics into `judge_rubrics.py` for maintainability
@@ -195,11 +196,19 @@ new_train_gam.ipynb / eval_nn.py → trained models
    - Checkpoint saving and resuming
    - Progress tracking and statistics
 
-### 🚧 In Progress
-- Converting `new_train_gam.ipynb` to aggregator training script
-- Moving `simulate_annotators.py` to pipelines folder
+3. **aggregator_training.py** - Converted from `new_train_gam.ipynb`
+   - Support for both GAM and MLP models
+   - Comprehensive evaluation metrics
+   - Partial dependence plots for interpretability
+   - Model saving and loading
 
-### 📝 To Do
+4. **persona_simulation.py** - Refactored from `simulate_annotators.py`
+   - PersonaSimulator class with async support
+   - 8 diverse personas for evaluation
+   - Checkpoint and resume functionality
+   - Concurrent API calls with rate limiting
+
+### 📝 Next Steps
 - Create unified configuration system
 - Build main orchestrator
 - Clean up obsolete files
