@@ -37,7 +37,7 @@ Include the following:
 
 ---
 
-We address the fundamental problem of approximating diverse human preferences using multi-judge AI systems. Our approach extends beyond simple aggregation by learning interpretable functions that optimally combine judge evaluations across different metrics and personas. We propose to: (1) systematically design judge metrics that capture preference dimensions, (2) develop methods for selecting diverse, representative personas that span human preference space, (3) compare our learned aggregation approach against existing ensemble methods. This is novel because current work uses fixed aggregation rules or single judges, missing the opportunity to learn optimal combinations that better approximate human preferences while remaining interpretable. Our experiments would demonstrate how learned aggregators can generalize to new personas, remain robust to judge contamination, and reveal which evaluation dimensions matter most for different preference profiles—critical for building truly aligned AI systems.
+Current approaches to evaluating AI outputs rely on either single judges, which provide limited perspectives, or naive averaging of multiple judges, which assumes all evaluation dimensions are equally important. However, human preferences are diverse: different people weight safety, helpfulness, and accuracy differently depending on context and values. We address this fundamental challenge by learning interpretable aggregation functions that capture these varying preference profiles when combining multiple judge evaluations. We propose to: (1) test robustness against deliberately contaminated judges, (2) validate using UltraFeedback's multi-dimensional ratings as ground truth, (3) compare our learned aggregation approach against existing ensemble methods like Mixture of Judges. This is novel because current work uses fixed aggregation rules or single judges, missing the opportunity to learn optimal combinations that better approximate human preferences while remaining interpretable. Our experiments will demonstrate how learned aggregators can remain robust to judge contamination, generalize to new personas, and reveal which evaluation dimensions matter most for different preference profiles—critical for building truly aligned AI systems.
 
 ### High-level background
 
@@ -45,12 +45,11 @@ What are the 3-5 works that are foundational to the problem you’re trying to a
 
 ---
 
-* **Constitutional AI/RLHF papers** \- Establishing the paradigm of using AI feedback for alignment  
-* **UltraFeedback dataset paper** \- Provides multi-dimensional preference ratings we use as ground truth  
-* **Mixture of Judges (MoJ)** \- State-of-the-art context-aware judge aggregation method we benchmark against  
-* **Expert Orchestration vision papers** \- Framework for using multiple specialized models instead of monolithic AI  
-* **Multi-agent evaluation literature** \- Prior work on ensemble methods for model evaluation  
-* **Interpretable ML (GAMs) papers** \- Foundation for our interpretable aggregation approach
+Constitutional AI: Harmlessness from AI Feedback - Bai et al.
+UltraFeedback: Boosting Language Models with Scaled AI Feedback - Cui et al.
+The Perfect Blend: Redefining RLHF with Mixture of Judges - Xu et al.
+Expert Orchestration: A Framework for Composable AI Systems - Kulkarni et al.
+Intelligible Models for Classification and Regression - Lou et al.
 
 ### Detailed technical background
 
@@ -66,7 +65,7 @@ This section should provide enough detail that someone unfamiliar with these spe
 
 ---
 
-**Expert Orchestration - Kulkarni et al. (2024)**
+**Expert Orchestration - Quirke et al. (2024)**
 
 Expert Orchestration proposes a paradigm shift from monolithic AI systems to coordinated networks of specialized models. The framework identifies three core primitives: **Judges** (evaluate model outputs across different dimensions), **Routers** (select appropriate models for tasks), and **Orchestrators** (coordinate multi-step workflows). This addresses fundamental limitations of current AI systems: high computational costs, lack of interpretability, and vulnerability to single points of failure.
 
