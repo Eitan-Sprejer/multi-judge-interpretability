@@ -10,7 +10,7 @@ from typing import Dict, Optional
 from martian_apart_hack_sdk import exceptions, judge_specs, martian_client, utils
 from martian_apart_hack_sdk.models import llm_models
 
-from judge_rubrics import JUDGE_RUBRICS, JUDGE_DESCRIPTIONS
+from utils.judge_rubrics import JUDGE_RUBRICS, JUDGE_DESCRIPTIONS
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

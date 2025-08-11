@@ -28,7 +28,7 @@ except ImportError:
     HAS_GAM = False
     logging.warning("PyGAM not installed. GAM training will not be available.")
 
-from judge_rubrics import JUDGE_RUBRICS
+from utils.judge_rubrics import JUDGE_RUBRICS
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
