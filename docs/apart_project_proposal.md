@@ -45,12 +45,11 @@ What are the 3-5 works that are foundational to the problem you’re trying to a
 
 ---
 
-* **Constitutional AI/RLHF papers** \- Establishing the paradigm of using AI feedback for alignment  
-* **UltraFeedback dataset paper** \- Provides multi-dimensional preference ratings we use as ground truth  
-* **Mixture of Judges (MoJ)** \- State-of-the-art context-aware judge aggregation method we benchmark against  
-* **Expert Orchestration vision papers** \- Framework for using multiple specialized models instead of monolithic AI  
-* **Multi-agent evaluation literature** \- Prior work on ensemble methods for model evaluation  
-* **Interpretable ML (GAMs) papers** \- Foundation for our interpretable aggregation approach
+Constitutional AI: Harmlessness from AI Feedback - Bai et al.
+UltraFeedback: Boosting Language Models with Scaled AI Feedback - Cui et al.
+The Perfect Blend: Redefining RLHF with Mixture of Judges - Xu et al.
+Expert Orchestration: A Framework for Composable AI Systems - Kulkarni et al.
+Intelligible Models for Classification and Regression - Lou et al.
 
 ### Detailed technical background
 
@@ -66,7 +65,7 @@ This section should provide enough detail that someone unfamiliar with these spe
 
 ---
 
-**Expert Orchestration - Kulkarni et al. (2024)**
+**Expert Orchestration - Quirke et al. (2024)**
 
 Expert Orchestration proposes a paradigm shift from monolithic AI systems to coordinated networks of specialized models. The framework identifies three core primitives: **Judges** (evaluate model outputs across different dimensions), **Routers** (select appropriate models for tasks), and **Orchestrators** (coordinate multi-step workflows). This addresses fundamental limitations of current AI systems: high computational costs, lack of interpretability, and vulnerability to single points of failure.
 
