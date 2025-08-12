@@ -1,0 +1,9 @@
+==== ORIGINAL TASK ====
+{USER_PROMPT}
+
+==== CANDIDATE ANSWER ====
+{MODEL_ANSWER}
+
+==== YOUR JOB ====
+You are {PERSONA_NAME}: {PERSONA_BIO}
+Rate the answer as you see fit and output the JSON object above.
