@@ -104,25 +104,25 @@ We propose four experimental tracks to systematically validate our hypothesis. W
 
 **Track 1: Robustness Analysis (Priority)**
 
-* **Judge Contamination:** Introduce deliberately flawed judges (inverted metrics, random noise, safety-blind rubrics) and measure if learned aggregators assign near-zero weights to bad judges while maintaining performance  
-* **Persona Poisoning:** Include "troll" personas that systematically misrate responses at varying contamination rates to identify failure thresholds  
-* **Rubric Sensitivity:** Test semantic robustness by evaluating same content with differently phrased but equivalent rubrics
+* 1.A. **Judge Contamination:** Introduce deliberately flawed judges (inverted metrics, random noise, safety-blind rubrics) and measure if learned aggregators assign near-zero weights to bad judges while maintaining performance  
+* 1.B. **Persona Poisoning:** Include "troll" personas that systematically misrate responses at varying contamination rates to identify failure thresholds  
+* 1.C. **Rubric Sensitivity:** Test semantic robustness by evaluating same content with differently phrased but equivalent rubrics
 
 **Track 2: Ground Truth Validation (Priority)**
 
-* **UltraFeedback Integration:** Use UltraFeedback's multi-dimensional ratings as more realistic ground truth, treating Overall Quality as target and other dimensions as judge's scores (aggregator function inputs).  
-* **Baseline Comparison:** Compare against single-judge baselines and naive averaging methods
+* 2.A. **UltraFeedback Integration:** Use UltraFeedback's multi-dimensional ratings as more realistic ground truth, treating Overall Quality as target and other dimensions as judge's scores (aggregator function inputs).  
+* 2.B. **Baseline Comparison:** Compare against single-judge baselines and naive averaging methods
 
 **Track 3: Architectural Comparisons (Secondary)**
 
-* **Mixture of Judges (MoJ) Benchmark:** Compare our static learned aggregator against MoJ's dynamic context-aware gating on performance, computational cost, and interpretability  
-* **Judge Self-Bias Analysis:** Test if LLM judges favor responses from same model family and develop correction methods
+* 3.A. **Mixture of Judges (MoJ) Benchmark:** Compare our static learned aggregator against MoJ's dynamic context-aware gating on performance, computational cost, and interpretability  
+* 3.B. **Judge Self-Bias Analysis:** Test if LLM judges favor responses from same model family and develop correction methods
 
 **Track 4: Interpretability Deep Dive (Secondary)**
 
-* **Learned Function Analysis:** Systematic interpretability of GAM and MLP aggregators using partial dependence plots and feature importance  
-* **Sparse Additive Distillation:** Train minimal GAM to mimic MLP behavior, identifying key judges and interaction effects  
-* **Framing Effects and Bias Transfer:** Following [Christian et al. (2024),](https://arxiv.org/pdf/2506.07326v1) test whether learned aggregators inherit differential sensitivity to positive/negative sentiment tokens and systematic identity group devaluation, using AFINN-111 lexicon for sentiment analysis
+* 4.A. **Learned Function Analysis:** Systematic interpretability of GAM and MLP aggregators using partial dependence plots and feature importance  
+* 4.B. **Sparse Additive Distillation:** Train minimal GAM to mimic MLP behavior, identifying key judges and interaction effects  
+* 4.C. **Framing Effects and Bias Transfer:** Following [Christian et al. (2024),](https://arxiv.org/pdf/2506.07326v1) test whether learned aggregators inherit differential sensitivity to positive/negative sentiment tokens and systematic identity group devaluation, using AFINN-111 lexicon for sentiment analysis
 
 **Validation:**
 
