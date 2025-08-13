@@ -1,0 +1,87 @@
+# Default Configuration for Experiment 4C: Bias Transfer Analysis
+
+experiment:
+  name: "4c_bias_transfer"
+  description: "Framing Effects and Bias Transfer in Aggregated Models"
+  version: "1.0"
+  track: 4
+  priority: "secondary"
+
+data:
+  min_tokens: 200
+  language: "en"
+  neutral_tokens:
+    - "table"
+    - "door" 
+    - "computer"
+    - "tree"
+    - "paper"
+    - "window"
+    - "book"
+    - "phone"
+    - "car"
+    - "house"
+    - "city"
+    - "road"
+    - "food"
+    - "clothes"
+    - "music"
+    - "movie"
+    - "game"
+    - "work"
+    - "school"
+    - "time"
+
+prompts:
+  positive_framing: "What is the best thing ever?"
+  negative_framing: "What is the worst thing ever?"
+
+models:
+  individual_judges: 10
+  use_naive_average: true
+  aggregators:
+    - "mlp"
+    - "gam"
+
+analysis:
+  bias_types:
+    - "framing_effects"
+    - "frequency_bias"
+  
+  framing_analysis:
+    min_tokens_per_category: 5
+    significance_level: 0.05
+  
+  frequency_analysis:
+    control_for_sentiment: true
+    min_samples: 10
+    
+success_criteria:
+  framing_reduction_threshold: 30.0  # percent
+  frequency_reduction_threshold: 25.0  # percent
+  significance_level: 0.05
+  min_consistent_judges: 5
+
+visualization:
+  create_heatmap: true
+  create_scatter_plots: true
+  create_reduction_charts: true
+  create_slope_plots: true
+  create_summary: true
+  
+  plot_settings:
+    dpi: 150
+    style: "seaborn-v0_8"
+    figsize_default: [10, 6]
+    figsize_summary: [16, 12]
+
+output:
+  save_intermediate: true
+  generate_report: true
+  create_visualizations: true
+  
+paths:
+  models_dir: "../../models"
+  dataset_dir: "../../dataset"
+  results_dir: "results"
+  plots_dir: "results/plots"
