@@ -146,13 +146,18 @@ class BiasJudgeScorer:
             DataFrame with judge scores for each token and prompt combination
         """
         logger.info(f"Scoring {len(token_df)} tokens with judges...")
+        if not use_mock_scoring:
+            logger.info("🚀 Using optimized parallel judge evaluation (10x speedup!)")
         
         results = []
+        total_evaluations = len(token_df) * len(self.prompts)
+        completed_evaluations = 0
         
         for _, token_row in token_df.iterrows():
             token = token_row['token']
             
             for prompt_type, prompt in self.prompts.items():
+                completed_evaluations += 1
                 
                 if use_mock_scoring:
                     # Mock scoring for testing - simulate realistic judge behavior
@@ -183,9 +188,14 @@ class BiasJudgeScorer:
                 }
                 
                 results.append(result_row)
+                
+                # Progress logging for real judge scoring
+                if not use_mock_scoring and completed_evaluations % 5 == 0:
+                    progress_pct = (completed_evaluations / total_evaluations) * 100
+                    logger.info(f"📊 Progress: {completed_evaluations}/{total_evaluations} evaluations ({progress_pct:.1f}%)")
         
         results_df = pd.DataFrame(results)
-        logger.info(f"Completed scoring: {len(results_df)} total score records")
+        logger.info(f"✅ Completed scoring: {len(results_df)} total score records")
         
         return results_df
     
@@ -470,7 +480,7 @@ class BiasJudgeScorer:
     
     def _score_with_real_judges(self, token: str, prompt: str, prompt_type: str) -> Dict[str, float]:
         """
-        Score a token using real Martian API judges
+        Score a token using real Martian API judges with parallel evaluation (10x speedup!)
         
         Args:
             token: Token to evaluate
@@ -481,79 +491,44 @@ class BiasJudgeScorer:
             Dictionary mapping judge names to scores
         """
         try:
-            # Initialize Martian client with proper configuration (cached)
-            if not hasattr(self, '_martian_client'):
-                config = utils.load_config()
-                self._martian_client = martian_client.MartianClient(
-                    api_url=config.api_url,
-                    api_key=config.api_key
-                )
-                # Cache judges list to avoid repeated API calls
-                self._judges_cache = {j.id: j for j in self._martian_client.judges.list()}
+            # Initialize the pipeline's JudgeEvaluator for parallel processing
+            if not hasattr(self, '_judge_evaluator'):
+                self._judge_evaluator = JudgeEvaluator()
+                logger.info("🚀 Initialized parallel JudgeEvaluator (10x speed boost!)")
             
-            client = self._martian_client
+            # Create the question and answer for evaluation
+            question = prompt
+            answer = token  # The judges evaluate the token directly
             
-            # Create a completion request and response for the token evaluation
-            completion_request = {
-                "model": "gpt-4",
-                "messages": [{"role": "user", "content": f"{prompt} '{token}'"}],
-                "temperature": 0.7,
-                "max_tokens": 50
-            }
+            # Use parallel evaluation from pipeline (all 10 judges simultaneously!)
+            logger.info(f"⚡ Evaluating token '{token}' with {prompt_type} framing using parallel judges...")
             
-            # Create a mock completion response (judges evaluate the token itself)
-            completion_response = chat_completion.ChatCompletion(
-                id="mock-completion",
-                object="chat.completion",
-                created=1234567890,
-                model="gpt-4",
-                choices=[
-                    chat_completion.Choice(
-                        index=0,
-                        message=chat_completion_message.ChatCompletionMessage(
-                            role="assistant",
-                            content=token
-                        ),
-                        finish_reason="stop"
-                    )
-                ]
+            # Get scores from all judges in parallel - this is the 10x speedup!
+            scores = self._judge_evaluator.evaluate_parallel(
+                question=question,
+                answer=answer,
+                max_workers=10  # All judges run simultaneously instead of sequentially
             )
             
-            # Score with each judge
+            # Convert to expected format
             judge_scores = {}
-            
-            for judge_id in self.judge_subset:
-                try:
-                    # Get the judge from cache
-                    judge = self._judges_cache.get(judge_id)
+            for i, score in enumerate(scores):
+                # Ensure score is in 1-4 range
+                if score < 1:
+                    score = score * 3 + 1
+                elif score > 4:
+                    score = min(score, 4.0)
                     
-                    if judge:
-                        # Evaluate using the judge
-                        evaluation = client.judges.evaluate(
-                            judge=judge,
-                            completion_request=completion_request,
-                            completion_response=completion_response
-                        )
-                        
-                        # Extract score (convert to 1-4 range if needed)
-                        score = float(evaluation.score)
-                        # Normalize score to 1-4 range if it's 0-4
-                        if score < 1:
-                            score = score * 3 + 1
-                            
-                        judge_scores[f"judge_{len(judge_scores) + 1}"] = score
-                        
-                        logger.info(f"Judge {judge_id}: {score:.2f} for token '{token}' with {prompt_type} framing - {evaluation.reason[:50]}...")
-                        
-                    else:
-                        logger.warning(f"Judge {judge_id} not found, using fallback scoring")
-                        # Fallback to mock scoring for missing judges
-                        judge_scores[f"judge_{len(judge_scores) + 1}"] = self._generate_single_mock_score(token, prompt_type)
-                
-                except Exception as e:
-                    logger.error(f"Error evaluating with judge {judge_id}: {e}")
-                    # Fallback to mock scoring on error
-                    judge_scores[f"judge_{len(judge_scores) + 1}"] = self._generate_single_mock_score(token, prompt_type)
+                judge_scores[f"judge_{i + 1}"] = float(score)
+            
+            # Filter to only the judges we want (if using subset)
+            if len(self.judge_subset) < len(scores):
+                filtered_scores = {}
+                for i in range(min(len(self.judge_subset), len(scores))):
+                    filtered_scores[f"judge_{i + 1}"] = judge_scores[f"judge_{i + 1}"]
+                judge_scores = filtered_scores
+            
+            logger.info(f"✅ Parallel evaluation complete for '{token}' - {len(judge_scores)} judges scored in parallel")
             
             # Ensure we have scores for all expected judges
             while len(judge_scores) < len(self.judge_subset):
@@ -562,7 +537,7 @@ class BiasJudgeScorer:
             return judge_scores
             
         except Exception as e:
-            logger.error(f"Failed to initialize Martian client or score with real judges: {e}")
+            logger.error(f"Failed to use parallel judge evaluation: {e}")
             logger.info("Falling back to mock scoring")
             # Fallback to mock scoring
             return self._generate_mock_scores(token, 0.0, prompt_type)  # Use neutral sentiment

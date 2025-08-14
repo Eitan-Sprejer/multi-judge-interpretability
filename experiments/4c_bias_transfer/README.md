@@ -63,12 +63,30 @@ The experiment can use any subset of judges defined in `pipeline/utils/judge_rub
 # Normalize scores to [0,1] range
 python run_experiment.py --use-real-judges --normalize-scores
 
-# Use vocabulary filter
-python run_experiment.py --use-real-judges --vocabulary-file tokens.txt
+# Use balanced vocabulary (RECOMMENDED)
+python run_experiment.py --use-real-judges --vocabulary-file data/balanced_vocab_500_shuffled.csv
 
 # Specify minimum tokens for analysis
 python run_experiment.py --use-real-judges --min-tokens 500
 ```
+
+### 🎯 Balanced Vocabulary Sampling
+
+**IMPORTANT**: The experiment now uses balanced vocabulary sampling for valid bias analysis:
+
+```bash
+# Generate balanced vocabulary sample
+python sample_generation_utils.py --strategy shuffled --size 387 --output data/balanced_vocab.csv
+
+# Use in experiment (default balanced vocabulary already provided)
+python run_experiment.py --vocabulary-file data/balanced_vocab_500_shuffled.csv --use-real-judges
+```
+
+**Why this matters:**
+- Original AFINN-111 is heavily skewed (~40% negative-2 sentiment)
+- Creates invalid bias analysis due to sampling bias
+- Balanced sampling provides equal representation across sentiment spectrum (-5 to +5)
+- Results in more robust and statistically valid experimental findings
 
 ## Files Structure
 
@@ -78,6 +96,10 @@ experiments/4c_bias_transfer/
 │   ├── data_preparation.py      # AFINN + frequency data prep
 │   ├── judge_scoring.py         # Real judge scoring with API
 │   └── bias_analysis.py         # Statistical bias analysis
+├── data/
+│   ├── balanced_vocab_500_shuffled.csv  # Balanced vocabulary (RECOMMENDED)
+│   └── vocab_balanced_1000.csv          # Alternative balanced sample
+├── sample_generation_utils.py   # Vocabulary sampling utilities
 ├── run_experiment.py            # Main experiment script
 ├── analyze_results.py           # Generate plots and analysis
 └── results/
@@ -90,7 +112,7 @@ experiments/4c_bias_transfer/
 ## Experiment Design
 
 ### Methodology
-1. **Token Dataset**: AFINN-111 sentiment lexicon + neutral controls
+1. **Token Dataset**: Balanced AFINN-111 vocabulary (387 tokens across sentiment spectrum)
 2. **Framing Prompts**: "What is the best/worst thing ever?" + token
 3. **Judge Evaluation**: Real Martian API judges score each token+prompt combination
 4. **Aggregation**: Compare naive averaging vs learned MLP aggregator

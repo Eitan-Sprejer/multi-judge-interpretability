@@ -29,6 +29,7 @@ sys.path.append(str(experiment_src))
 from data_preparation import BiasDataPreparator
 from judge_scoring import BiasJudgeScorer
 from bias_analysis import BiasAnalyzer
+from setup_logging import setup_experiment_logging, log_experiment_start, log_experiment_progress, log_experiment_complete
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -48,8 +49,21 @@ class ExperimentRunner:
         self.results_dir = Path(__file__).parent / "results"
         self.results_dir.mkdir(exist_ok=True)
         
-        # Initialize timestamp for this run
-        self.timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        # Set up comprehensive logging system
+        self.log_info = setup_experiment_logging()
+        self.timestamp = self.log_info['timestamp']
+        
+        # Log experiment configuration
+        experiment_config = {
+            'timestamp': self.timestamp,
+            'use_real_judges': args.use_real_judges,
+            'min_tokens': args.min_tokens,
+            'quick_mode': args.quick,
+            'normalize_scores': args.normalize_scores,
+            'judge_subset': args.judge_subset or 'all_judges',
+            'vocabulary_file': args.vocabulary_file
+        }
+        log_experiment_start(experiment_config)
         
         # Initialize components
         self.data_preparator = BiasDataPreparator()
@@ -65,8 +79,20 @@ class ExperimentRunner:
         self.vocabulary_filter = None
         if args.vocabulary_file and Path(args.vocabulary_file).exists():
             logger.info(f"Loading vocabulary filter from {args.vocabulary_file}")
-            with open(args.vocabulary_file, 'r') as f:
-                self.vocabulary_filter = [line.strip() for line in f if line.strip()]
+            
+            if args.vocabulary_file.endswith('.csv'):
+                # Load from CSV (token column expected)
+                vocab_df = pd.read_csv(args.vocabulary_file)
+                if 'token' in vocab_df.columns:
+                    self.vocabulary_filter = vocab_df['token'].tolist()
+                else:
+                    # Use first column if no 'token' column
+                    self.vocabulary_filter = vocab_df.iloc[:, 0].tolist()
+            else:
+                # Load from text file (one token per line)
+                with open(args.vocabulary_file, 'r') as f:
+                    self.vocabulary_filter = [line.strip() for line in f if line.strip()]
+                    
             logger.info(f"Loaded vocabulary filter: {len(self.vocabulary_filter)} tokens")
         
         logger.info(f"Experiment 4C initialized - Run ID: {self.timestamp}")
@@ -97,9 +123,21 @@ class ExperimentRunner:
             token_dataset, scores_dataset, analysis_results
         )
         
+        # Log completion
+        results_summary = {
+            'total_tokens': len(token_dataset),
+            'total_evaluations': len(scores_dataset),
+            'use_real_judges': self.args.use_real_judges,
+            'results_directory': str(self.results_dir),
+            'main_log_file': str(self.log_info['main_log']),
+            'timestamp': self.timestamp
+        }
+        log_experiment_complete(results_summary)
+        
         logger.info("="*60)
         logger.info("EXPERIMENT 4C COMPLETED SUCCESSFULLY")
         logger.info(f"Results saved in: {self.results_dir}")
+        logger.info(f"Logs saved in: logs/")
         logger.info("="*60)
         
         return final_report
@@ -135,13 +173,25 @@ class ExperimentRunner:
         """Collect scores from all judges and aggregators"""
         logger.info("Collecting scores with framing prompts...")
         
-        # Subsample for quick mode
+        # Determine sample size based on experiment configuration
         if self.args.quick:
-            sample_size = min(100, len(token_dataset))
+            # Quick mode: respect min_tokens but cap at reasonable size for testing
+            if self.args.min_tokens <= 50:
+                sample_size = self.args.min_tokens
+            else:
+                sample_size = 50  # Default quick mode size
+                
+            sample_size = min(sample_size, len(token_dataset))
             token_sample = token_dataset.sample(n=sample_size, random_state=42)
-            logger.info(f"Quick mode: using {sample_size} tokens")
+            logger.info(f"Quick mode: using {sample_size} tokens (requested: {self.args.min_tokens})")
         else:
-            token_sample = token_dataset
+            # Full mode: use min_tokens as actual experiment size
+            if self.args.min_tokens < len(token_dataset):
+                token_sample = token_dataset.sample(n=self.args.min_tokens, random_state=42)
+                logger.info(f"Full mode: using {self.args.min_tokens} tokens from {len(token_dataset)} available")
+            else:
+                token_sample = token_dataset
+                logger.info(f"Full mode: using all {len(token_dataset)} available tokens")
         
         # Score tokens with judges
         scores_dataset = self.judge_scorer.score_tokens_with_judges(
@@ -377,7 +427,7 @@ def main():
     parser.add_argument(
         '--quick', 
         action='store_true',
-        help='Run quick test with reduced dataset size'
+        help='Run quick test mode (uses --min-tokens if ≤50, otherwise 50 tokens)'
     )
     
     parser.add_argument(
@@ -390,7 +440,7 @@ def main():
         '--min-tokens',
         type=int,
         default=200,
-        help='Minimum number of AFINN tokens to include (default: 200)'
+        help='Number of tokens to evaluate. Quick mode: max 50, Full mode: exact count (default: 200)'
     )
     
     parser.add_argument(
