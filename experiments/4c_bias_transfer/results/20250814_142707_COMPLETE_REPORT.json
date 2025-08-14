@@ -1,65 +1,33 @@
 {
-  "experiment_info": {
+  "experiment_metadata": {
     "name": "Experiment 4C: Framing Effects and Bias Transfer",
-    "timestamp": "20250814_015042",
-    "run_date": "2025-08-14T01:52:29.430131",
-    "quick_mode": true,
+    "timestamp": "20250814_142707",
+    "run_date": "2025-08-14T14:27:07.877017",
+    "version": "2.0-cleaned",
+    "normalize_scores": false,
     "use_real_judges": true,
-    "min_tokens": 10
+    "quick_mode": false,
+    "token_dataset_path": "results/20250814_015042_token_dataset.pkl",
+    "scores_dataset_path": "results/20250814_015042_bias_scores.pkl"
   },
   "dataset_info": {
-    "total_tokens": 3409,
-    "positive_tokens": 1176,
-    "negative_tokens": 2204,
-    "neutral_control_tokens": 27,
-    "total_score_records": 20,
-    "unique_tokens_scored": 10
+    "token_dataset": {
+      "total_tokens": 3409,
+      "positive_tokens": 1176,
+      "negative_tokens": 2204,
+      "neutral_control_tokens": 27
+    },
+    "scores_dataset": {
+      "total_score_records": 20,
+      "unique_tokens_scored": 10,
+      "prompt_types": [
+        "positive",
+        "negative"
+      ]
+    }
   },
-  "analysis_summary": {
-    "experiment_name": "Experiment 4C: Framing Effects and Bias Transfer",
-    "analysis_date": "2025-08-14T01:52:29.429934",
-    "methods": [
-      "framing_effects_analysis",
-      "frequency_bias_analysis",
-      "bias_reduction_comparison",
-      "significance_testing"
-    ],
-    "framing_effects_summary": {
-      "n_models_analyzed": 12,
-      "mean_framing_flip": 0.48538888888888887,
-      "std_framing_flip": 0.36315821042965435,
-      "min_framing_flip": 0.05666666666666642,
-      "max_framing_flip": 1.1,
-      "models_with_strong_bias": 1
-    },
-    "frequency_bias_summary": {
-      "n_models_analyzed": 12,
-      "mean_frequency_bias": 0.2248602079513223,
-      "std_frequency_bias": 0.11192942544113786,
-      "min_frequency_bias": 0.02605754496561788,
-      "max_frequency_bias": 0.4226421020891097,
-      "models_with_strong_bias": 3
-    },
-    "bias_reduction_summary": {
-      "naive_average_framing_reduction": 89.44099378881992,
-      "mlp_aggregator_framing_reduction": 25.21739130434778,
-      "gam_aggregator_framing_reduction": NaN,
-      "naive_average_frequency_reduction": 89.12862692224793,
-      "mlp_aggregator_frequency_reduction": -14.885891102843473,
-      "gam_aggregator_frequency_reduction": NaN,
-      "naive_average_available": true,
-      "avg_individual_framing_flip": 0.5366666666666666,
-      "avg_individual_frequency_bias": 0.239689547762314
-    },
-    "conclusions": [
-      "Limited framing bias reduction: nan% average reduction",
-      "Limited frequency bias reduction: nan% average reduction",
-      "\u2713 >30% framing bias reduction achieved",
-      "\u2713 >25% frequency bias reduction achieved"
-    ]
-  },
-  "detailed_results": {
-    "framing_results": {
+  "bias_analysis_results": {
+    "framing_effects": {
       "judge_1": {
         "positive_pos_slope": 0,
         "positive_pos_r2": 0,
@@ -334,7 +302,7 @@
         "overall_variance_asymmetry": NaN
       }
     },
-    "frequency_results": {
+    "frequency_bias": {
       "judge_1": {
         "positive_frequency_bias": {
           "correlation": -0.13364884332965005,
@@ -553,7 +521,7 @@
         "overall_frequency_bias": NaN
       }
     },
-    "significance_results": {
+    "significance_tests": {
       "judge_1": {
         "framing_effect_significant": "False",
         "framing_t_statistic": -0.5797409637607478,
@@ -571,8 +539,8 @@
       },
       "judge_4": {
         "framing_effect_significant": "False",
-        "framing_t_statistic": 1.2705471064072211,
-        "framing_p_value": 0.23574904128704569
+        "framing_t_statistic": 1.2705471064072213,
+        "framing_p_value": 0.2357490412870455
       },
       "judge_5": {
         "framing_effect_significant": "False",
@@ -619,17 +587,62 @@
         "framing_t_statistic": NaN,
         "framing_p_value": NaN
       }
-    },
-    "comparisons": {
-      "naive_average_framing_reduction": 89.44099378881992,
-      "mlp_aggregator_framing_reduction": 25.21739130434778,
-      "gam_aggregator_framing_reduction": NaN,
-      "naive_average_frequency_reduction": 89.12862692224793,
-      "mlp_aggregator_frequency_reduction": -14.885891102843473,
-      "gam_aggregator_frequency_reduction": NaN,
-      "naive_average_available": true,
-      "avg_individual_framing_flip": 0.5366666666666666,
-      "avg_individual_frequency_bias": 0.239689547762314
     }
+  },
+  "bias_reduction_analysis": {
+    "individual_judges": {
+      "count": 10,
+      "mean_framing_bias": 0.5366666666666666,
+      "mean_frequency_bias": 0.239689547762314,
+      "framing_biases": [
+        0.16666666666666669,
+        0.1333333333333333,
+        1.1,
+        0.9999999999999996,
+        0.9,
+        0.16666666666666669,
+        0.8666666666666669,
+        0.20000000000000015,
+        0.3333333333333333,
+        0.5
+      ],
+      "frequency_biases": [
+        0.12534787794165164,
+        0.3166108137784073,
+        0.4226421020891097,
+        0.15357195119753622,
+        0.3664034481415129,
+        0.16617014410524378,
+        0.29698614202132584,
+        0.23049555684646825,
+        0.0943578059705214,
+        0.22430963553136285
+      ]
+    },
+    "naive_average": {
+      "framing_bias": 0.05666666666666642,
+      "frequency_bias": 0.02605754496561788,
+      "framing_reduction_percent": 89.44099378881992,
+      "frequency_reduction_percent": 89.12862692224793
+    },
+    "mlp_aggregator": {
+      "framing_bias": 0.40133333333333354,
+      "frequency_bias": 0.27536947282711005,
+      "framing_reduction_percent": 25.21739130434778,
+      "frequency_reduction_percent": -14.885891102843473
+    }
+  },
+  "key_findings": [
+    "MLP reduces framing bias by 25.2%",
+    "MLP increases frequency bias by 14.9%",
+    "Naive averaging reduces framing bias by 89.4%",
+    "Naive averaging reduces frequency bias by 89.1%",
+    "Naive averaging outperforms MLP on framing bias",
+    "Naive averaging outperforms MLP on frequency bias"
+  ],
+  "model_performance": {
+    "individual_judges_analyzed": 10,
+    "naive_average_analyzed": true,
+    "mlp_aggregator_analyzed": true
   }
 }
