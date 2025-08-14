@@ -1,2 +1,3 @@
 # Ignore deprecated mock results
-results/deprecated_mock_results/
+results/deprecated_results/
+logs
