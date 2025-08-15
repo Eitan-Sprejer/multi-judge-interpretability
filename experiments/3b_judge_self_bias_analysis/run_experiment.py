@@ -141,7 +141,8 @@ def main():
                 client.judges.create_judge(judge_id=judge_id, judge_spec=spec_obj, description=f"{pconf['description']} for {jr.JUDGE_DESCRIPTIONS.get(rkey, rkey)}")
                 print(f"Created {judge_id}")
                 created.append(judge_id)
-            except Exception:
+            except Exception as e:
+                print(f"Create failed for {judge_id}: {e}")
                 # Try update if exists
                 try:
                     client.judges.update_judge(judge_id=judge_id, judge_spec=spec_obj)
