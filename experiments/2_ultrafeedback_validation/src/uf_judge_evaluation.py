@@ -4,9 +4,10 @@ Evaluate (instruction, answer) rows with the four UF judges in parallel and save
 
 Input: pickle with DataFrame containing at least columns: instruction, answer
 Output: pickle with a column `judges` that maps judge_id -> score (0-4)
+Default output path: experiments/2_ultrafeedback_validation/results/uf_scores.pkl
 
 Usage:
-    python -m experiments.2_ultrafeedback_validation.src.uf_judge_evaluation --input base.pkl --output judge_scores_uf.pkl [--max-workers 8]
+    python -m experiments.2_ultrafeedback_validation.src.uf_judge_evaluation --input base.pkl [--output PATH] [--max-workers 8]
 """
 import logging
 import pickle
@@ -25,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 JUDGE_IDS = list(JUDGE_RUBRICS_UF.keys())
 DEFAULT_MAX_WORKERS = 8
+DEFAULT_OUTPUT = Path("experiments/2_ultrafeedback_validation/results/uf_scores.pkl")
 
 
 def build_completion(question: str, answer: str):
@@ -66,7 +68,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="Evaluate data with 4 UF judges")
     parser.add_argument('--input', required=True, help='Path to base (instruction, answer) data .pkl')
-    parser.add_argument('--output', required=True, help='Path to output .pkl with judges column')
+    parser.add_argument('--output', help='Path to output .pkl with judges column (default: experiments/2_ultrafeedback_validation/results/uf_scores.pkl)')
     parser.add_argument('--max-workers', type=int, default=DEFAULT_MAX_WORKERS)
     args = parser.parse_args()
 
@@ -103,7 +105,7 @@ def main():
     data['judges'] = results
 
     # Save
-    out = Path(args.output)
+    out = Path(args.output) if args.output else DEFAULT_OUTPUT
     out.parent.mkdir(parents=True, exist_ok=True)
     with open(out, 'wb') as f:
         pickle.dump(data, f)

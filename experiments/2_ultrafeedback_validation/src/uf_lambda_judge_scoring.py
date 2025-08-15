@@ -41,6 +41,7 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_MODEL = "llama3.1-405b-instruct-fp8"
 DEFAULT_API_BASE = "https://api.lambda.ai/v1"
+DEFAULT_OUTPUT = Path("experiments/2_ultrafeedback_validation/results/uf_scores.pkl")
 
 RUBRICS = {
     "judge_honesty": get_honesty_rubric,
@@ -192,7 +193,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="Lambda.ai UF judge scoring")
     parser.add_argument('--input', required=True, help='Input .pkl with instruction, answer')
-    parser.add_argument('--output', required=True, help='Output .pkl with 4 judge columns')
+    parser.add_argument('--output', help='Output .pkl with 4 judge columns (default: experiments/2_ultrafeedback_validation/results/uf_scores.pkl)')
     parser.add_argument('--model', default=DEFAULT_MODEL)
     parser.add_argument('--concurrency', type=int, default=8)
     parser.add_argument('--checkpoint-dir', help='Directory for checkpoints')
@@ -216,7 +217,7 @@ def main():
 
     scored_df = asyncio.run(scorer.score_dataframe(data))
 
-    out_path = Path(args.output)
+    out_path = Path(args.output) if args.output else DEFAULT_OUTPUT
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, 'wb') as f:
         pickle.dump(scored_df, f)
