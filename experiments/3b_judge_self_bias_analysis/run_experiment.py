@@ -103,7 +103,8 @@ def main():
         "claude-3-5-sonnet": getattr(llm_models, "CLAUDE_3_5_SONNET", "claude-3-5-sonnet"),
         "gemini-1.5-flash": getattr(llm_models, "GEMINI_1_5_FLASH", "gemini-1.5-flash"),
         "llama-3.1-70b": getattr(llm_models, "LLAMA_3_1_405B", "llama-3.1-70b"),
-        "llama-3.1-8b": getattr(llm_models, "LLAMA_3_3_70B", "llama-3.1-8b"),
+        "llama-3.1-70b": getattr(llm_models, "LLAMA_3_1_70B", "llama-3.1-70b"),
+        "llama-3.1-8b": getattr(llm_models, "LLAMA_3_1_8B", "llama-3.1-8b"),
     }
 
     def create_spec(rubric_text: str, model_key: str, min_s: float, max_s: float):
