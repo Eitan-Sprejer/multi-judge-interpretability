@@ -159,9 +159,10 @@ class LambdaUFScorer:
         results: List[Optional[Dict[str, Optional[float]]]] = self._load_checkpoint(len(df))
 
         async def producer():
-            for idx, instr, ans in df[['instruction', 'answer']].itertuples(index=True, name=None):
-                if results[idx] is None:
-                    yield idx, instr, ans
+            # Use positional indices to avoid issues with non-integer (e.g., UUID) DataFrame indices
+            for pos, (instr, ans) in enumerate(df[['instruction', 'answer']].itertuples(index=False, name=None)):
+                if results[pos] is None:
+                    yield pos, instr, ans
 
         async def runner():
             pending = []
