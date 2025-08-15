@@ -29,7 +29,6 @@ def test_imports():
     
     try:
         # Import judge_rubrics directly to avoid __init__.py dependencies
-        import sys
         from pathlib import Path
         # Go up two levels: experiments/3b_judge_self_bias_analysis -> experiments -> multi-judge-interpretability
         root_dir = Path(__file__).parent.parent.parent
