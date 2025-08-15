@@ -5,4 +5,4 @@ dataset/*
 **/*.pkl
 models/*
 .venv/
-!judges_annotated_data.pkl
+!judges_annotated_data.pkl.env.local
