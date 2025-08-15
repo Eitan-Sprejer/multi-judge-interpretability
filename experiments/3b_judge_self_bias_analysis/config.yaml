@@ -1,3 +1,0 @@
-# Moved: see configs/default_config.yaml
-__include__: configs/default_config.yaml
-# LLM Provider Configuration
