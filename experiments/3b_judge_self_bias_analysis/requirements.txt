@@ -1,0 +1,14 @@
+# Requirements for Multi-LLM Judge Creation Experiment
+
+# Core dependencies
+-e ../../martian-sdk-python
+python-dotenv>=1.0.0
+
+# Optional: for enhanced logging and configuration
+pyyaml>=6.0
+rich>=13.0.0  # For better console output
+
+# Development dependencies (optional)
+pytest>=7.0.0  # For running tests
+black>=23.0.0  # For code formatting
+flake8>=6.0.0  # For linting
