@@ -1,0 +1,56 @@
+# Experiment 3b Report
+
+Date: 20250814_221640
+Total judges created/updated: 50
+
+## Judges
+- anthropic-bias-fairness-judge
+- anthropic-calibration-uncertainty-judge
+- anthropic-conciseness-redundancy-judge
+- anthropic-discourse-coherence-judge
+- anthropic-factual-accuracy-judge
+- anthropic-harmlessness-judge
+- anthropic-privacy-judge
+- anthropic-prompt-faithfulness-relevance-judge
+- anthropic-reasoning-consistency-judge
+- anthropic-style-formatting-judge
+- google-bias-fairness-judge
+- google-calibration-uncertainty-judge
+- google-conciseness-redundancy-judge
+- google-discourse-coherence-judge
+- google-factual-accuracy-judge
+- google-harmlessness-judge
+- google-privacy-judge
+- google-prompt-faithfulness-relevance-judge
+- google-reasoning-consistency-judge
+- google-style-formatting-judge
+- meta-bias-fairness-judge
+- meta-calibration-uncertainty-judge
+- meta-conciseness-redundancy-judge
+- meta-discourse-coherence-judge
+- meta-factual-accuracy-judge
+- meta-harmlessness-judge
+- meta-privacy-judge
+- meta-prompt-faithfulness-relevance-judge
+- meta-reasoning-consistency-judge
+- meta-style-formatting-judge
+- openai-bias-fairness-judge
+- openai-calibration-uncertainty-judge
+- openai-conciseness-redundancy-judge
+- openai-discourse-coherence-judge
+- openai-factual-accuracy-judge
+- openai-harmlessness-judge
+- openai-privacy-judge
+- openai-prompt-faithfulness-relevance-judge
+- openai-reasoning-consistency-judge
+- openai-style-formatting-judge
+- together-bias-fairness-judge
+- together-calibration-uncertainty-judge
+- together-conciseness-redundancy-judge
+- together-discourse-coherence-judge
+- together-factual-accuracy-judge
+- together-harmlessness-judge
+- together-privacy-judge
+- together-prompt-faithfulness-relevance-judge
+- together-reasoning-consistency-judge
+- together-style-formatting-judge
