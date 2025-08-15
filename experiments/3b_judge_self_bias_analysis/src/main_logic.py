@@ -84,7 +84,8 @@ def create_all_judges(cfg: dict) -> list[str]:
                 try:
                     client.judges.create_judge(judge_id=judge_id, judge_spec=spec, description=desc)
                     logger.info(f"Created {judge_id}")
-                except Exception:
+                except Exception as e:
+                    logger.warning(f"Create failed for {judge_id}: {e}", exc_info=True)
                     client.judges.update_judge(judge_id=judge_id, judge_spec=spec)
                     logger.info(f"Updated {judge_id}")
                 created.append(judge_id)
