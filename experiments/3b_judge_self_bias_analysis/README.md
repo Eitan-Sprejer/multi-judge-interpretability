@@ -35,10 +35,40 @@ The experiment will create judges using these 5 LLM providers:
 - Each judge configured with the appropriate rubric and scoring scale (0.0-4.0)
 - Judges ready for use in evaluation pipelines
 
+## Structure
+
+This experiment follows the standard structure from `experiments/README.md`:
+
+```
+3b_judge_self_bias_analysis/
+├── src/                    # Core implementation
+│   └── main_logic.py       # Judge creation logic
+├── configs/
+│   └── default_config.yaml # Main config
+├── results/                # Auto-created outputs (json, reports, plots)
+├── run_experiment.py       # Standard entry point
+├── create_judges.py        # Back-compat wrapper
+└── README.md
+```
+
 ## Usage
+
+Quick test (smoke):
 
 ```bash
 cd experiments/3b_judge_self_bias_analysis
+python run_experiment.py --quick
+```
+
+Full run:
+
+```bash
+python run_experiment.py --config configs/default_config.yaml
+```
+
+Back-compat:
+
+```bash
 python create_judges.py
 ```
 
@@ -55,3 +85,9 @@ After creating the judges, they can be used in:
 - Multi-judge aggregation experiments
 - Bias analysis studies
 - Quality assessment systems
+
+## Results
+
+Outputs are saved to `results/`:
+- `[timestamp]_results.json`: ids and counts
+- `reports/experiment_report.md`: summary
