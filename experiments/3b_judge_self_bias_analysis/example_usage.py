@@ -11,8 +11,8 @@ import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Add the pipeline directory to the path
-sys.path.append(str(Path(__file__).parent.parent / "pipeline"))
+# Add the pipeline directory to the path (repo_root/pipeline)
+sys.path.append(str(Path(__file__).resolve().parents[2] / "pipeline"))
 
 def example_judge_evaluation():
     """Example of using the created judges to evaluate responses."""
@@ -22,14 +22,18 @@ def example_judge_evaluation():
         # Load environment variables
         load_dotenv()
         
-        # Check for API key
+        # Check for API credentials
         api_key = os.getenv("MARTIAN_API_KEY")
+        api_url = os.getenv("MARTIAN_API_URL")
         if not api_key:
             print("❌ MARTIAN_API_KEY environment variable not set")
             return
-        
-        # Create client
-        client = martian_client.MartianClient(api_key=api_key)
+        if not api_url:
+            print("❌ MARTIAN_API_URL environment variable not set")
+            return
+
+        # Create client (requires both api_url and api_key)
+        client = martian_client.MartianClient(api_url=api_url, api_key=api_key)
         print("✅ Connected to Martian API")
         
         # Example prompt and response
