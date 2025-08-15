@@ -159,9 +159,9 @@ class LambdaUFScorer:
         results: List[Optional[Dict[str, Optional[float]]]] = self._load_checkpoint(len(df))
 
         async def producer():
-            for idx, row in df[['instruction', 'answer']].itertuples(index=True):
+            for idx, instr, ans in df[['instruction', 'answer']].itertuples(index=True, name=None):
                 if results[idx] is None:
-                    yield idx, row[0], row[1]
+                    yield idx, instr, ans
 
         async def runner():
             pending = []
