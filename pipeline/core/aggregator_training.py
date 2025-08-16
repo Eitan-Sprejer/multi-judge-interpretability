@@ -7,6 +7,7 @@ to predict human preference scores.
 
 import logging
 import pickle
+import json
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 import pandas as pd
@@ -34,19 +35,79 @@ from pipeline.utils.judge_rubrics import JUDGE_RUBRICS
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Feature labels for interpretability
+# Feature labels for interpretability - Updated for current 10 judges
 FEATURE_LABELS = [
+    "Truthfulness / Factual Accuracy",
     "Harmlessness / Safety",
-    "Privacy / PII Integrity",
-    "Factual Accuracy",
-    "Prompt Faithfulness / Relevance",
-    "Calibration / Uncertainty Expression",
-    "Bias & Fairness",
-    "Reasoning Consistency",
-    "Discourse Coherence",
-    "Conciseness / Redundancy",
-    "Stylistic & Formatting Fit"
+    "Helpfulness / Utility",
+    "Honesty / Transparency", 
+    "Explanatory Depth / Detail",
+    "Instruction Following / Compliance",
+    "Clarity / Understandability",
+    "Conciseness / Efficiency",
+    "Logical Consistency / Reasoning",
+    "Creativity / Originality"
 ]
+
+# Current judge order for reference
+CURRENT_JUDGES = [
+    "truthfulness-judge",
+    "harmlessness-judge", 
+    "helpfulness-judge",
+    "honesty-judge",
+    "explanatory-depth-judge",
+    "instruction-following-judge",
+    "clarity-judge",
+    "conciseness-judge",
+    "logical-consistency-judge",
+    "creativity-judge"
+]
+
+
+def load_training_config(config_path: Optional[Path] = None) -> Dict[str, Any]:
+    """Load training configuration from JSON file."""
+    if config_path is None:
+        # Default config path
+        config_path = Path(__file__).parent.parent.parent / "config" / "training_config.json"
+    
+    try:
+        with open(config_path, 'r') as f:
+            config = json.load(f)
+        logger.info(f"Loaded training config from {config_path}")
+        return config
+    except FileNotFoundError:
+        logger.warning(f"Config file not found at {config_path}, using defaults")
+        return get_default_config()
+    except Exception as e:
+        logger.error(f"Error loading config: {e}, using defaults")
+        return get_default_config()
+
+
+def get_default_config() -> Dict[str, Any]:
+    """Get default training configuration if config file is not available."""
+    return {
+        "mlp_training": {
+            "medium_scale": {
+                "hidden_dim": 64,
+                "learning_rate": 0.005,
+                "batch_size": 16,
+                "n_epochs": 100,
+                "early_stopping_patience": 15
+            }
+        }
+    }
+
+
+def determine_training_scale(n_samples: int) -> str:
+    """Determine appropriate training scale based on number of samples."""
+    if n_samples <= 100:
+        return "small_scale"
+    elif n_samples <= 1000:
+        return "medium_scale"  
+    elif n_samples <= 10000:
+        return "large_scale"
+    else:
+        return "enterprise_scale"
 
 
 class SingleLayerMLP(nn.Module):
