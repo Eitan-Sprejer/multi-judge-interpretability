@@ -479,6 +479,58 @@ class BiasAnalyzer:
             'models_with_strong_bias': sum(1 for x in all_freq_biases if x > 0.3)
         }
     
+    def extract_clean_results(self) -> Dict[str, Dict]:
+        """
+        Extract clean, organized results for the new reporting system
+        
+        Returns:
+            Dictionary with individual judge results, naive results, and MLP results
+        """
+        individual_results = {}
+        naive_results = {}
+        mlp_results = {}
+        
+        # Extract framing effects results
+        if 'framing_effects' in self.results:
+            for model, results in self.results['framing_effects'].items():
+                clean_results = {
+                    'framing_flip': results.get('framing_flip', np.nan),
+                    'positive_slope_asymmetry': results.get('positive_slope_asymmetry', np.nan),
+                    'negative_slope_asymmetry': results.get('negative_slope_asymmetry', np.nan)
+                }
+                
+                if model.startswith('judge_'):
+                    individual_results[model] = clean_results
+                elif model == 'naive_average':
+                    naive_results = clean_results
+                elif model == 'mlp_aggregator':
+                    mlp_results = clean_results
+        
+        # Extract frequency bias results
+        if 'frequency_bias' in self.results:
+            for model, results in self.results['frequency_bias'].items():
+                bias_data = {
+                    'overall_frequency_bias': results.get('overall_frequency_bias', np.nan),
+                    'positive_frequency_bias': results.get('positive_frequency_bias', {}).get('partial_correlation', np.nan),
+                    'negative_frequency_bias': results.get('negative_frequency_bias', {}).get('partial_correlation', np.nan)
+                }
+                
+                if model.startswith('judge_'):
+                    if model in individual_results:
+                        individual_results[model].update(bias_data)
+                    else:
+                        individual_results[model] = bias_data
+                elif model == 'naive_average':
+                    naive_results.update(bias_data)
+                elif model == 'mlp_aggregator':
+                    mlp_results.update(bias_data)
+        
+        return {
+            'individual_results': individual_results,
+            'naive_results': naive_results,
+            'mlp_results': mlp_results
+        }
+    
     def _generate_conclusions(self) -> List[str]:
         """Generate high-level conclusions from the analysis"""
         conclusions = []

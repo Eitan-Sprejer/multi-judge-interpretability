@@ -1,8 +1,11 @@
 martian-sdk-python
-dataset/*
+# dataset/*
 .env
 *.DS_Store
-**/*.pkl
-models/*
+# **/*.pkl
+# models/*
 .venv/
+!judges_annotated_data.pkl
 !judges_annotated_data.pkl.env.local
+# Ignore pycache files
+__pycache__/
