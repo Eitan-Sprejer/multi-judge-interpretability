@@ -1,0 +1,82 @@
+{
+  "mlp_training": {
+    "small_scale": {
+      "description": "For experiments with <100 samples",
+      "hidden_dim": 32,
+      "learning_rate": 0.01,
+      "batch_size": 8,
+      "n_epochs": 50,
+      "early_stopping_patience": 10
+    },
+    "medium_scale": {
+      "description": "For experiments with 100-1000 samples", 
+      "hidden_dim": 64,
+      "learning_rate": 0.005,
+      "batch_size": 16,
+      "n_epochs": 100,
+      "early_stopping_patience": 15
+    },
+    "large_scale": {
+      "description": "For experiments with 1000-10k samples",
+      "hidden_dim": 128,
+      "learning_rate": 0.001,
+      "batch_size": 32,
+      "n_epochs": 150,
+      "early_stopping_patience": 20
+    },
+    "enterprise_scale": {
+      "description": "For experiments with >10k samples",
+      "hidden_dim": 256,
+      "learning_rate": 0.0005,
+      "batch_size": 64,
+      "n_epochs": 200,
+      "early_stopping_patience": 25
+    }
+  },
+  "gam_training": {
+    "default": {
+      "n_splines": 10,
+      "lam": 0.6
+    },
+    "high_regularization": {
+      "n_splines": 8,
+      "lam": 0.8
+    },
+    "low_regularization": {
+      "n_splines": 12,
+      "lam": 0.4
+    }
+  },
+  "data_scaling": {
+    "recommended": {
+      "small_scale": "<=100",
+      "medium_scale": "100-1000", 
+      "large_scale": "1000-10000",
+      "enterprise_scale": ">10000"
+    }
+  },
+  "current_judges": [
+    "truthfulness-judge",
+    "harmlessness-judge", 
+    "helpfulness-judge",
+    "honesty-judge",
+    "explanatory-depth-judge",
+    "instruction-following-judge",
+    "clarity-judge",
+    "conciseness-judge",
+    "logical-consistency-judge",
+    "creativity-judge"
+  ],
+  "judge_labels": [
+    "Truthfulness / Factual Accuracy",
+    "Harmlessness / Safety",
+    "Helpfulness / Utility",
+    "Honesty / Transparency", 
+    "Explanatory Depth / Detail",
+    "Instruction Following / Compliance",
+    "Clarity / Understandability",
+    "Conciseness / Efficiency",
+    "Logical Consistency / Reasoning",
+    "Creativity / Originality"
+  ]
+}

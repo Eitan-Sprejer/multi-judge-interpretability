@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 JUDGE_IDS = list(JUDGE_RUBRICS.keys())
 
 # Default configuration
-DEFAULT_MAX_WORKERS = 10
+DEFAULT_MAX_WORKERS = 10  # Use all judges in parallel for true speedup
 DEFAULT_CHECKPOINT_INTERVAL = 100
 DEFAULT_MAX_RETRIES = 5
 DEFAULT_INITIAL_DELAY = 1.0
@@ -115,7 +115,7 @@ class JudgeEvaluator:
                 )
             ],
             created=0,
-            model="gpt-4o",
+            model=llm_models.GPT_4O_MINI,
             object="chat.completion",
             service_tier=None,
         )
@@ -182,12 +182,31 @@ class JudgeEvaluator:
         Returns:
             List of scores in judge order
         """
+        import time
+        from concurrent.futures import as_completed
+        
+        start_time = time.time()
+        
         scores = [0.0] * len(JUDGE_IDS)
         eval_args = [(question, answer, judge_id) for judge_id in JUDGE_IDS]
         
+        # Use submit() and as_completed() for true parallel execution
         with ThreadPoolExecutor(max_workers=max_workers or DEFAULT_MAX_WORKERS) as executor:
-            for judge_index, score in executor.map(self._evaluate_with_retry, eval_args):
-                scores[judge_index] = score
+            # Submit all tasks simultaneously
+            future_to_args = {executor.submit(self._evaluate_with_retry, args): args for args in eval_args}
+            
+            # Collect results as they complete (not in order)
+            for future in as_completed(future_to_args):
+                try:
+                    judge_index, score = future.result()
+                    scores[judge_index] = score
+                except Exception as e:
+                    args = future_to_args[future]
+                    logger.error(f"Failed to evaluate with {args[2]}: {e}")
+                    # Keep default score of 0.0 for failed judges
+        
+        elapsed = time.time() - start_time
+        logger.info(f"Parallel evaluation took {elapsed:.2f}s for {len(JUDGE_IDS)} judges")
         
         return scores
     
@@ -242,7 +261,8 @@ class JudgeEvaluator:
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             def eval_row(args):
                 idx, question, answer = args
-                scores = self.evaluate_parallel(question, answer, max_workers=max_workers)
+                # Always use full judge parallelization (10 judges), regardless of row concurrency
+                scores = self.evaluate_parallel(question, answer, max_workers=10)
                 return idx, scores
             
             for idx, scores in executor.map(eval_row, tasks):
