@@ -8,4 +8,4 @@ martian-sdk-python
 !judges_annotated_data.pkl
 !judges_annotated_data.pkl.env.local
 # Ignore pycache files
-__pycache__/
+*__pycache__/
