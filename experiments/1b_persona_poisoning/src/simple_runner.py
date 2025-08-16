@@ -11,6 +11,12 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.append(str(project_root))
 
+# Import judge rubrics to get correct judge count and IDs
+from pipeline.utils.judge_rubrics import JUDGE_RUBRICS
+
+# Judge IDs
+JUDGE_IDS = list(JUDGE_RUBRICS.keys())
+
 import pandas as pd
 import numpy as np
 import pickle
@@ -33,6 +39,9 @@ class SingleLayerMLP(nn.Module):
     def forward(self, x):
         x = self.relu(self.fc1(x))
         return self.fc2(x)
+
+# Constants based on current judge configuration
+N_JUDGES = len(JUDGE_IDS)  # Should be 10
 
 def compute_metrics(y_true, y_pred):
     """Compute evaluation metrics."""
@@ -67,14 +76,37 @@ def contaminate_dataset_simple(df: pd.DataFrame, rate: float, strategy: str = "i
     contaminate_indices = np.random.choice(len(df), n_contaminate, replace=False)
     
     for idx in contaminate_indices:
-        original_score = float(df_contaminated.iloc[idx]['human_feedback_score'])
+        # Handle different possible column names for human feedback
+        if 'human_feedback_score' in df_contaminated.columns:
+            original_score = float(df_contaminated.iloc[idx]['human_feedback_score'])
+        elif 'score' in df_contaminated.columns:
+            original_score = float(df_contaminated.iloc[idx]['score'])
+        else:
+            # Try to extract from human_feedback if it's a dict
+            hf = df_contaminated.iloc[idx].get('human_feedback', {})
+            if isinstance(hf, dict) and 'score' in hf:
+                original_score = float(hf['score'])
+            else:
+                logger.warning(f"Could not find human feedback score for row {idx}, using default 5.0")
+                original_score = 5.0
+        
         judge_scores = list(df_contaminated.iloc[idx]['judge_scores'])  # Ensure it's a list
         
         # Generate troll rating
         troll_rating = troll.generate_rating(original_score, judge_scores)
         
         # Update the dataframe - only modify the score, not the judge scores
-        df_contaminated.at[idx, 'human_feedback_score'] = float(troll_rating)
+        if 'human_feedback_score' in df_contaminated.columns:
+            df_contaminated.at[idx, 'human_feedback_score'] = float(troll_rating)
+        elif 'score' in df_contaminated.columns:
+            df_contaminated.at[idx, 'score'] = float(troll_rating)
+        else:
+            # Update within human_feedback dict
+            hf = df_contaminated.iloc[idx].get('human_feedback', {})
+            if isinstance(hf, dict):
+                hf['score'] = float(troll_rating)
+                df_contaminated.at[idx, 'human_feedback'] = hf
+        
         df_contaminated.at[idx, 'is_contaminated'] = True
     
     logger.info(f"Contaminated {n_contaminate}/{len(df)} samples ({rate*100:.0f}%)")
@@ -128,22 +160,38 @@ def run_contamination_experiment(data_path: str, rates: List[float], strategy: s
     with open(data_path, 'rb') as f:
         df = pickle.load(f)
     
-    # Ensure we have the required columns - handle both 'scores' and 'judge_scores'
+    # Ensure we have the required columns - handle various naming conventions
     if 'judge_scores' not in df.columns:
         if 'scores' in df.columns:
             df['judge_scores'] = df['scores']
         else:
             raise ValueError("Dataset must have 'judge_scores' or 'scores' column")
     
+    # Handle different human feedback column formats
     if 'human_feedback_score' not in df.columns:
-        raise ValueError("Dataset must have 'human_feedback_score' column")
+        if 'score' in df.columns:
+            df['human_feedback_score'] = df['score']
+        elif 'human_feedback' in df.columns:
+            # Extract score from human_feedback dict/object
+            def extract_score(hf):
+                if isinstance(hf, dict) and 'score' in hf:
+                    return hf['score']
+                elif isinstance(hf, dict) and 'average_score' in hf:
+                    return hf['average_score']
+                else:
+                    return 5.0  # Default fallback
+            df['human_feedback_score'] = df['human_feedback'].apply(extract_score)
+        else:
+            raise ValueError("Dataset must have 'human_feedback_score', 'score', or 'human_feedback' column")
     
     # Remove rows with missing values
     df = df.dropna(subset=['human_feedback_score'])
     
     # Filter out rows where judge_scores don't have the right length
-    df = df[df['judge_scores'].apply(lambda x: len(x) == 10 if isinstance(x, list) else False)]
+    expected_judge_count = N_JUDGES
+    df = df[df['judge_scores'].apply(lambda x: len(x) == expected_judge_count if isinstance(x, list) else False)]
     logger.info(f"Loaded {len(df)} samples (after removing missing values and invalid scores)")
+    logger.info(f"Expected {expected_judge_count} judge scores per sample")
     
     # Prepare clean test set (20% of data)
     test_size = int(len(df) * 0.2)

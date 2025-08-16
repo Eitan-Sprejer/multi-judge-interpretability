@@ -3,134 +3,192 @@
 Analyze experiment results with proper baselines and create figures
 """
 
+import sys
 import json
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
+import argparse
 from pathlib import Path
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.linear_model import LinearRegression
 import pandas as pd
 
-# Load the experiment results
-with open('experiments/1b_persona_poisoning/results/inverse_experiment_20250812_101629.json', 'r') as f:
-    aggregator_results = json.load(f)
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent.parent
+sys.path.append(str(project_root))
 
-# Load the dataset to compute single judge baselines
-with open('dataset/data_with_judge_scores.pkl', 'rb') as f:
-    df = pickle.load(f)
+# Import judge configuration
+from pipeline.utils.judge_rubrics import JUDGE_RUBRICS
 
-# Prepare data
-df['judge_scores'] = df['scores']
-df = df.dropna(subset=['human_feedback_score'])
-df = df[df['judge_scores'].apply(lambda x: isinstance(x, list) and len(x) == 10)]
+# Judge IDs
+JUDGE_IDS = list(JUDGE_RUBRICS.keys())
 
-# Split data (same as in experiment)
-test_size = int(len(df) * 0.2)
-df_test = df.iloc[:test_size].copy().reset_index(drop=True)
-df_train_base = df.iloc[test_size:].copy().reset_index(drop=True)
-
-X_test = np.array(df_test['judge_scores'].tolist())
-y_test = np.array(df_test['human_feedback_score'].values, dtype=np.float32)
-
-print("Computing baseline performances...")
-
-# Define judge names
-judge_names = [
-    'harmlessness', 'privacy', 'factual-accuracy', 'prompt-faithfulness',
-    'calibration', 'bias-fairness', 'reasoning', 'discourse',
-    'conciseness', 'style-formatting'
-]
-
-def contaminate_training_data(df_train, contamination_rate):
-    """Contaminate training data by inverting scores."""
-    if contamination_rate == 0:
-        return df_train.copy()
+def main():
+    parser = argparse.ArgumentParser(description="Analyze persona poisoning experiment results")
+    parser.add_argument('--results', type=str, required=True,
+                       help='Path to experiment results JSON file')
+    parser.add_argument('--data', type=str, 
+                       help='Path to dataset with judge scores')
+    parser.add_argument('--output-dir', type=str,
+                       default='experiments/1b_persona_poisoning/results',
+                       help='Output directory for figures and analysis')
     
-    df_contaminated = df_train.copy()
-    n_contaminate = int(len(df_contaminated) * contamination_rate)
+    args = parser.parse_args()
     
-    np.random.seed(42)  # Same seed as experiment
-    contaminate_indices = np.random.choice(len(df_contaminated), n_contaminate, replace=False)
+    # Load the experiment results
+    with open(args.results, 'r') as f:
+        aggregator_results = json.load(f)
     
-    for idx in contaminate_indices:
-        # Invert the human feedback score (0-10 scale)
-        original = df_contaminated.iloc[idx]['human_feedback_score']
-        df_contaminated.at[idx, 'human_feedback_score'] = 10 - original
+    # Auto-detect dataset if not provided
+    if args.data is None:
+        possible_paths = [
+            'dataset/data_with_judge_scores.pkl',
+            'full_experiment_runs/latest/data_with_judge_scores.pkl',
+            'full_experiment_runs/data_with_judge_scores.pkl'
+        ]
+        
+        for path in possible_paths:
+            if Path(path).exists():
+                args.data = path
+                break
+        
+        if args.data is None:
+            print("❌ Could not find dataset. Please specify --data path.")
+            return 1
     
-    return df_contaminated
+    # Load the dataset to compute single judge baselines
+    with open(args.data, 'rb') as f:
+        df = pickle.load(f)
 
-def evaluate_single_judge(judge_idx, contamination_rates):
-    """Evaluate a single judge's performance across contamination rates."""
-    results = {}
+    # Prepare data - handle different column formats
+    if 'judge_scores' not in df.columns:
+        if 'scores' in df.columns:
+            df['judge_scores'] = df['scores']
+        else:
+            print("❌ Dataset must have 'judge_scores' or 'scores' column")
+            return 1
     
-    for rate in contamination_rates:
-        # Contaminate training data
-        df_train = contaminate_training_data(df_train_base, rate)
-        
-        # Train simple linear model: y = a * judge_score + b
-        X_train_single = df_train['judge_scores'].apply(lambda x: x[judge_idx]).values.reshape(-1, 1)
-        y_train = df_train['human_feedback_score'].values
-        
-        lr = LinearRegression()
-        lr.fit(X_train_single, y_train)
-        
-        # Evaluate on clean test set
-        X_test_single = X_test[:, judge_idx].reshape(-1, 1)
-        y_pred = lr.predict(X_test_single)
-        
-        r2 = r2_score(y_test, y_pred)
-        mse = mean_squared_error(y_test, y_pred)
-        
-        results[rate] = {'r2': r2, 'mse': mse}
+    # Handle human feedback columns
+    if 'human_feedback_score' not in df.columns:
+        if 'score' in df.columns:
+            df['human_feedback_score'] = df['score']
+        elif 'human_feedback' in df.columns:
+            def extract_score(hf):
+                if isinstance(hf, dict):
+                    return hf.get('score', hf.get('average_score', 5.0))
+                return 5.0
+            df['human_feedback_score'] = df['human_feedback'].apply(extract_score)
+        else:
+            print("❌ Dataset must have human feedback score column")
+            return 1
     
-    return results
+    df = df.dropna(subset=['human_feedback_score'])
+    expected_judge_count = len(JUDGE_IDS)
+    df = df[df['judge_scores'].apply(lambda x: isinstance(x, list) and len(x) == expected_judge_count)]
 
-def evaluate_mean_baseline(contamination_rates):
-    """Evaluate mean of all judges as baseline."""
-    results = {}
+    # Split data (same as in experiment)
+    test_size = int(len(df) * 0.2)
+    df_test = df.iloc[:test_size].copy().reset_index(drop=True)
+    df_train_base = df.iloc[test_size:].copy().reset_index(drop=True)
     
-    for rate in contamination_rates:
-        # Contaminate training data
-        df_train = contaminate_training_data(df_train_base, rate)
-        
-        # Train linear model on mean of judges
-        X_train_mean = np.array(df_train['judge_scores'].tolist()).mean(axis=1).reshape(-1, 1)
-        y_train = df_train['human_feedback_score'].values
-        
-        lr = LinearRegression()
-        lr.fit(X_train_mean, y_train)
-        
-        # Evaluate on clean test set
-        X_test_mean = X_test.mean(axis=1).reshape(-1, 1)
-        y_pred = lr.predict(X_test_mean)
-        
-        r2 = r2_score(y_test, y_pred)
-        mse = mean_squared_error(y_test, y_pred)
-        
-        results[rate] = {'r2': r2, 'mse': mse}
+    X_test = np.array(df_test['judge_scores'].tolist())
+    y_test = np.array(df_test['human_feedback_score'].values, dtype=np.float32)
     
-    return results
+    print("Computing baseline performances...")
 
-# Get contamination rates from aggregator results
-contamination_rates = sorted([float(k) for k in aggregator_results.keys()])
+    # Use current judge names from rubrics
+    judge_names = [jid.replace('-judge', '') for jid in JUDGE_IDS]
 
-# Compute baselines
-print("Evaluating single judges...")
-single_judge_results = {}
-for i, name in enumerate(judge_names):
-    print(f"  {name}...")
-    single_judge_results[name] = evaluate_single_judge(i, contamination_rates)
+    def contaminate_training_data(df_train, contamination_rate):
+        """Contaminate training data by inverting scores."""
+        if contamination_rate == 0:
+            return df_train.copy()
+        
+        df_contaminated = df_train.copy()
+        n_contaminate = int(len(df_contaminated) * contamination_rate)
+        
+        np.random.seed(42)  # Same seed as experiment
+        contaminate_indices = np.random.choice(len(df_contaminated), n_contaminate, replace=False)
+        
+        for idx in contaminate_indices:
+            # Invert the human feedback score (0-10 scale)
+            original = df_contaminated.iloc[idx]['human_feedback_score']
+            df_contaminated.at[idx, 'human_feedback_score'] = 10 - original
+        
+        return df_contaminated
 
-print("Evaluating mean baseline...")
-mean_baseline_results = evaluate_mean_baseline(contamination_rates)
+    def evaluate_single_judge(judge_idx, contamination_rates):
+        """Evaluate a single judge's performance across contamination rates."""
+        results = {}
+        
+        for rate in contamination_rates:
+            # Contaminate training data
+            df_train = contaminate_training_data(df_train_base, rate)
+            
+            # Train simple linear model: y = a * judge_score + b
+            X_train_single = df_train['judge_scores'].apply(lambda x: x[judge_idx]).values.reshape(-1, 1)
+            y_train = df_train['human_feedback_score'].values
+            
+            lr = LinearRegression()
+            lr.fit(X_train_single, y_train)
+            
+            # Evaluate on clean test set
+            X_test_single = X_test[:, judge_idx].reshape(-1, 1)
+            y_pred = lr.predict(X_test_single)
+            
+            r2 = r2_score(y_test, y_pred)
+            mse = mean_squared_error(y_test, y_pred)
+            
+            results[rate] = {'r2': r2, 'mse': mse}
+        
+        return results
 
-# Find best single judge (at 0% contamination)
-best_judge_name = max(judge_names, 
-                      key=lambda j: single_judge_results[j][0.0]['r2'])
-best_judge_results = single_judge_results[best_judge_name]
+    def evaluate_mean_baseline(contamination_rates):
+        """Evaluate mean of all judges as baseline."""
+        results = {}
+        
+        for rate in contamination_rates:
+            # Contaminate training data
+            df_train = contaminate_training_data(df_train_base, rate)
+            
+            # Train linear model on mean of judges
+            X_train_mean = np.array(df_train['judge_scores'].tolist()).mean(axis=1).reshape(-1, 1)
+            y_train = df_train['human_feedback_score'].values
+            
+            lr = LinearRegression()
+            lr.fit(X_train_mean, y_train)
+            
+            # Evaluate on clean test set
+            X_test_mean = X_test.mean(axis=1).reshape(-1, 1)
+            y_pred = lr.predict(X_test_mean)
+            
+            r2 = r2_score(y_test, y_pred)
+            mse = mean_squared_error(y_test, y_pred)
+            
+            results[rate] = {'r2': r2, 'mse': mse}
+        
+        return results
 
-print(f"\nBest single judge: {best_judge_name} (R²={best_judge_results[0.0]['r2']:.3f} at 0%)")
+    # Get contamination rates from aggregator results
+    contamination_rates = sorted([float(k) for k in aggregator_results.keys()])
+
+    # Compute baselines
+    print("Evaluating single judges...")
+    single_judge_results = {}
+    for i, name in enumerate(judge_names):
+        print(f"  {name}...")
+        single_judge_results[name] = evaluate_single_judge(i, contamination_rates)
+    
+    print("Evaluating mean baseline...")
+    mean_baseline_results = evaluate_mean_baseline(contamination_rates)
+
+    # Find best single judge (at 0% contamination)
+    best_judge_name = max(judge_names, 
+                          key=lambda j: single_judge_results[j][0.0]['r2'])
+    best_judge_results = single_judge_results[best_judge_name]
+    
+    print(f"\nBest single judge: {best_judge_name} (R²={best_judge_results[0.0]['r2']:.3f} at 0%)")
 
 # Create comprehensive figures
 fig = plt.figure(figsize=(15, 10))
@@ -241,10 +299,12 @@ ax6.grid(True, alpha=0.3)
 plt.suptitle('Persona Poisoning Experiment: Robustness Analysis', fontsize=16, fontweight='bold', y=1.02)
 plt.tight_layout()
 
-# Save figure
-figure_path = 'experiments/1b_persona_poisoning/results/contamination_analysis.png'
-plt.savefig(figure_path, dpi=150, bbox_inches='tight')
-print(f"\nFigure saved to: {figure_path}")
+    # Save figure
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    figure_path = output_dir / 'contamination_analysis.png'
+    plt.savefig(figure_path, dpi=150, bbox_inches='tight')
+    print(f"\nFigure saved to: {figure_path}")
 
 # Generate summary statistics
 print("\n" + "="*70)
@@ -285,7 +345,13 @@ results_summary = {
                    for name in judge_names}
 }
 
-with open('experiments/1b_persona_poisoning/results/complete_analysis.json', 'w') as f:
-    json.dump(results_summary, f, indent=2)
+    complete_analysis_path = output_dir / 'complete_analysis.json'
+    with open(complete_analysis_path, 'w') as f:
+        json.dump(results_summary, f, indent=2)
+    
+    print(f"\nComplete results saved to: {complete_analysis_path}")
+    return 0
 
-print(f"\nComplete results saved to: experiments/1b_persona_poisoning/results/complete_analysis.json")
+
+if __name__ == "__main__":
+    exit(main())
