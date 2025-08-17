@@ -26,16 +26,16 @@ def main():
     
     # Run experiment
     results = run_contamination_experiment(
-        'dataset/data_with_judge_scores.pkl',
+        '../../dataset/data_with_judge_scores.pkl',
         contamination_rates,
         'inverse'
     )
     
     # Save results
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_file = f'experiments/1b_persona_poisoning/results/experiment_{timestamp}.json'
+    output_file = f'results/experiment_{timestamp}.json'
     
-    Path('experiments/1b_persona_poisoning/results').mkdir(parents=True, exist_ok=True)
+    Path('results').mkdir(parents=True, exist_ok=True)
     
     with open(output_file, 'w') as f:
         json.dump(results, f, indent=2)
