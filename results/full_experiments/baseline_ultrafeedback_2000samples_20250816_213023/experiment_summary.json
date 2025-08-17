@@ -20,5 +20,132 @@
     },
     "model_path": "results/full_experiments/baseline_ultrafeedback_2000samples_20250816_213023/optimal_model.pt",
     "retrained_timestamp": "2025-08-17T13:40:33.428732"
+  },
+  "baseline_analysis": {
+    "timestamp": "2025-08-17T18:54:05.781692",
+    "baselines": {
+      "naive_mean": {
+        "method": "Simple average of all judge scores, scaled to [0,10]",
+        "train_metrics": {
+          "mse": 4.718064482079189,
+          "mae": 1.680042808219178,
+          "r2": 0.43397940097402865
+        },
+        "test_metrics": {
+          "mse": 4.333997935822856,
+          "mae": 1.579931506849315,
+          "r2": 0.4980894110222518
+        }
+      },
+      "best_single_judge": {
+        "method": "Best performing single judge: Logical Consistency / Reasoning",
+        "judge_index": 8,
+        "judge_name": "Logical Consistency / Reasoning",
+        "correlation": 0.7219338984087452,
+        "test_metrics": {
+          "mse": 5.58890625,
+          "mae": 1.784375,
+          "r2": 0.35276129125651423
+        },
+        "all_judge_correlations": {
+          "Truthfulness / Factual Accuracy": 0.6044298239767657,
+          "Harmlessness / Safety": 0.532391653665949,
+          "Helpfulness / Utility": 0.6696936789268019,
+          "Honesty / Transparency": 0.552419574239302,
+          "Explanatory Depth / Detail": 0.5236489178151812,
+          "Instruction Following / Compliance": 0.6854781813384553,
+          "Clarity / Understandability": 0.6811727756824658,
+          "Conciseness / Efficiency": 0.5367575135463698,
+          "Logical Consistency / Reasoning": 0.7219338984087452,
+          "Creativity / Originality": 0.39152389773577334
+        }
+      },
+      "correlation_weighted_mean": {
+        "method": "Correlation-weighted average of judge scores",
+        "weights": {
+          "Truthfulness / Factual Accuracy": 0.10245528526406014,
+          "Harmlessness / Safety": 0.09024428740075915,
+          "Helpfulness / Utility": 0.11351798702213095,
+          "Honesty / Transparency": 0.09363916673032,
+          "Explanatory Depth / Detail": 0.08876232959516091,
+          "Instruction Following / Compliance": 0.11619357587163048,
+          "Clarity / Understandability": 0.1154637780569567,
+          "Conciseness / Efficiency": 0.09098433264956644,
+          "Logical Consistency / Reasoning": 0.1223730871130976,
+          "Creativity / Originality": 0.06636617029631771
+        },
+        "test_metrics": {
+          "mse": 4.348655070029583,
+          "mae": 1.5816822059361402,
+          "r2": 0.49639200115465165
+        }
+      }
+    },
+    "baseline_comparison": {
+      "naive_mean_r2": 0.4980894110222518,
+      "best_judge_r2": 0.35276129125651423,
+      "weighted_mean_r2": 0.49639200115465165,
+      "best_baseline_method": "naive_mean"
+    }
+  },
+  "gam_analysis": {
+    "timestamp": "2025-08-17T18:54:05.781739",
+    "best_r2": 0.5750209224774778,
+    "best_mae": 1.45666714906076,
+    "best_aic": 7704.514817816558,
+    "best_gcv": 3.9256188802395613,
+    "best_edof": 15.29955241061451,
+    "best_config": {
+      "n_splines": 5,
+      "lam": 20.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 0.0001
+    },
+    "successful_trials": 75,
+    "mean_r2": 0.566839074411325,
+    "std_r2": 0.005760127098759718,
+    "top_5_r2": [
+      0.5750209224774778,
+      0.5747726609586785,
+      0.5746764534402395,
+      0.5745888552387378,
+      0.5745340275754501
+    ],
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9981909967877046,
+      "Harmlessness / Safety": 0.2609864809398825,
+      "Helpfulness / Utility": 0.8507255955731315,
+      "Honesty / Transparency": 0.5207544921052741,
+      "Explanatory Depth / Detail": 0.3569909472151299,
+      "Instruction Following / Compliance": 0.9999999994749699,
+      "Clarity / Understandability": 0.982032342667447,
+      "Conciseness / Efficiency": 0.9925237250464776,
+      "Logical Consistency / Reasoning": 0.9965840376882278,
+      "Creativity / Originality": 0.8475393024104685
+    }
+  },
+  "model_comparison": {
+    "all_r2_scores": {
+      "naive_mean": 0.4980894110222518,
+      "best_judge": 0.35276129125651423,
+      "weighted_mean": 0.49639200115465165,
+      "gam": 0.5750209224774778,
+      "mlp": 0.5784513354301453
+    },
+    "best_model": "mlp",
+    "best_r2": 0.5784513354301453,
+    "improvement_over_baseline": {
+      "naive_mean": 0.0,
+      "best_judge": -0.14532811976573756,
+      "weighted_mean": -0.0016974098676001415,
+      "gam": 0.07693151145522603,
+      "mlp": 0.08036192440789347
+    }
   }
 }
