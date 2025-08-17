@@ -21,6 +21,8 @@ import logging
 from datetime import datetime
 import json
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 # Simple MLP model (copied to avoid import issues)
 class SingleLayerMLP(nn.Module):
@@ -48,6 +50,36 @@ from troll_generator import TrollPersona
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+def contaminate_arrays_simple(X: np.ndarray, y: np.ndarray, rate: float, strategy: str = "inverse") -> tuple:
+    """Simple contamination of arrays (same logic as before but with arrays)."""
+    if rate == 0:
+        return X.copy(), y.copy()
+    
+    n_contaminate = int(len(X) * rate)
+    troll = TrollPersona(strategy)
+    
+    # Deep copy to avoid modifying originals
+    X_contaminated = X.copy()
+    y_contaminated = y.copy()
+    
+    # Randomly select samples to contaminate (same seed for reproducibility)
+    np.random.seed(42)
+    contaminate_indices = np.random.choice(len(X), n_contaminate, replace=False)
+    
+    for idx in contaminate_indices:
+        original_score = float(y_contaminated[idx])
+        judge_scores = list(X_contaminated[idx])  # Convert to list for troll
+        
+        # Generate troll rating
+        troll_rating = troll.generate_rating(original_score, judge_scores)
+        
+        # Update only the human score, not judge scores
+        y_contaminated[idx] = float(troll_rating)
+    
+    logger.info(f"Contaminated {n_contaminate}/{len(X)} samples ({rate*100:.0f}%)")
+    return X_contaminated, y_contaminated
 
 
 def contaminate_dataset_simple(df: pd.DataFrame, rate: float, strategy: str = "inverse") -> pd.DataFrame:
@@ -135,8 +167,16 @@ def run_contamination_experiment(data_path: str, rates: List[float], strategy: s
         else:
             raise ValueError("Dataset must have 'judge_scores' or 'scores' column")
     
+    # Handle human feedback score extraction
     if 'human_feedback_score' not in df.columns:
-        raise ValueError("Dataset must have 'human_feedback_score' column")
+        if 'human_feedback' in df.columns:
+            # Extract score from human_feedback dict
+            df['human_feedback_score'] = df['human_feedback'].apply(
+                lambda x: x.get('score', x.get('average_score', 5.0)) if isinstance(x, dict) else 5.0
+            )
+            logger.info("Extracted human_feedback_score from human_feedback column")
+        else:
+            raise ValueError("Dataset must have 'human_feedback_score' or 'human_feedback' column")
     
     # Remove rows with missing values
     df = df.dropna(subset=['human_feedback_score'])
@@ -145,14 +185,22 @@ def run_contamination_experiment(data_path: str, rates: List[float], strategy: s
     df = df[df['judge_scores'].apply(lambda x: len(x) == 10 if isinstance(x, list) else False)]
     logger.info(f"Loaded {len(df)} samples (after removing missing values and invalid scores)")
     
-    # Prepare clean test set (20% of data)
-    test_size = int(len(df) * 0.2)
-    df_test = df.iloc[:test_size].copy().reset_index(drop=True)
-    df_train_base = df.iloc[test_size:].copy().reset_index(drop=True)
+    # Prepare data arrays (same as hyperparameter tuning)
+    X = np.array(df['judge_scores'].tolist())
+    y = np.array(df['human_feedback_score'].values, dtype=np.float32)
     
-    # Prepare test data
-    X_test = np.array(df_test['judge_scores'].tolist())
-    y_test = np.array(df_test['human_feedback_score'].values, dtype=np.float32)
+    # Use RANDOM split with same seed as hyperparameter tuning (42)
+    X_clean, X_test_raw, y_clean, y_test_raw = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+    
+    # Apply normalization (same as hyperparameter tuning)
+    scaler = StandardScaler()
+    X_test = scaler.fit_transform(X_test_raw.reshape(-1, 10)).astype(np.float32)
+    y_test = y_test_raw.astype(np.float32)
+    
+    logger.info(f"Using RANDOM split and NORMALIZATION (same as hyperparameter tuning)")
+    logger.info(f"Train size: {len(X_clean)}, Test size: {len(X_test)}")
     
     results = {}
     
@@ -161,27 +209,21 @@ def run_contamination_experiment(data_path: str, rates: List[float], strategy: s
         logger.info(f"Testing contamination rate: {rate*100:.0f}%")
         logger.info(f"{'='*50}")
         
-        # Contaminate training data
-        df_train = contaminate_dataset_simple(df_train_base, rate, strategy)
+        # Create contaminated training data from clean arrays
+        X_train_raw, y_train_raw = contaminate_arrays_simple(X_clean.copy(), y_clean.copy(), rate, strategy)
         
-        # Debug check
-        logger.info(f"Checking df_train after contamination...")
-        bad_rows = []
-        for i, scores in enumerate(df_train['judge_scores']):
-            if not isinstance(scores, list) or len(scores) != 10:
-                bad_rows.append(i)
-        if bad_rows:
-            logger.warning(f"Found {len(bad_rows)} bad rows: {bad_rows[:5]}")
-            # Filter out bad rows
-            df_train = df_train[df_train['judge_scores'].apply(lambda x: isinstance(x, list) and len(x) == 10)]
-            logger.info(f"Filtered to {len(df_train)} good rows")
+        # Apply same normalization to training data (fit on contaminated training data)
+        scaler_train = StandardScaler()
+        X_train = scaler_train.fit_transform(X_train_raw).astype(np.float32)
+        y_train = y_train_raw.astype(np.float32)
         
-        # Prepare training data
-        X_train = np.array(df_train['judge_scores'].tolist())
-        y_train = np.array(df_train['human_feedback_score'].values, dtype=np.float32)
+        # Re-normalize test data with training scaler for fair comparison
+        X_test_normalized = scaler_train.transform(X_test_raw).astype(np.float32)
+        
+        logger.info(f"Training data shape: {X_train.shape}, Test data shape: {X_test_normalized.shape}")
         
         # Train model
-        model, metrics = train_simple_model(X_train, y_train, X_test, y_test)
+        model, metrics = train_simple_model(X_train, y_train, X_test_normalized, y_test)
         
         logger.info(f"Results for {rate*100:.0f}% contamination:")
         logger.info(f"  R² Score: {metrics['r2']:.3f}")
