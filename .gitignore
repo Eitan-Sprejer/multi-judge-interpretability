@@ -9,7 +9,7 @@ martian-sdk-python
 !judges_annotated_data.pkl.env.local
 
 # Ignore pycache files
-__pycache__/
+*__pycache__/
 
 # Organized results directory (generated files)
 # Ignore all results except the specific experiment we want
@@ -20,8 +20,8 @@ results/full_experiments/*/
 # Exclude large data files (pickle files) from version control
 *.pkl
 
-results/hyperparameter_search/*/
-!results/hyperparameter_search/tuning_run_20250817_130748/
+# Hyperparameter search results are now organized within experiment folders
+# results/hyperparameter_search/*/ (deprecated - now in experiment folders)
 results/quick_tests/*/
 results/single_configs/*/
 
@@ -34,8 +34,9 @@ results/single_configs/*/
 # Include important results (uncomment specific ones you want to keep)
 # !results/full_experiments/your_important_experiment/
 # !results/full_experiments/your_important_experiment/**
-# !results/hyperparameter_search/your_best_tuning_run/
-# !results/hyperparameter_search/your_best_tuning_run/**
+# Hyperparameter results are now within experiment folders:
+# !results/full_experiments/your_experiment/hyperparameter_tuning/
+# !results/full_experiments/your_experiment/hyperparameter_tuning/**
 
 # Legacy result directories (to be cleaned up)
 full_experiment_runs/

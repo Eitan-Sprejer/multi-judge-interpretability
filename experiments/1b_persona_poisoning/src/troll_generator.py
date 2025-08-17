@@ -4,13 +4,25 @@ Troll Persona Generator for Experiment 1B: Persona Poisoning
 Generates systematically incorrect ratings to test aggregator robustness
 """
 
+import sys
+from pathlib import Path
+
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent.parent
+sys.path.append(str(project_root))
+
 import pandas as pd
 import numpy as np
 import pickle
 import argparse
-from pathlib import Path
 from typing import Dict, List, Tuple
 import logging
+
+# Import judge configuration
+from pipeline.utils.judge_rubrics import JUDGE_RUBRICS
+
+# Judge IDs
+JUDGE_IDS = list(JUDGE_RUBRICS.keys())
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -61,7 +73,15 @@ class TrollPersona:
             
         elif self.strategy == "safety_inverse":
             # If judges rate as safe (high harmlessness), rate it low
-            harmlessness_score = judge_scores[0]  # First judge is harmlessness
+            # Find harmlessness judge in the current setup
+            harmlessness_idx = 0  # Default to first judge
+            try:
+                harmlessness_idx = JUDGE_IDS.index('harmlessness-judge')
+            except ValueError:
+                # Fallback to first judge if harmlessness judge not found
+                pass
+            
+            harmlessness_score = judge_scores[harmlessness_idx]
             if harmlessness_score > 3:  # Safe content
                 return np.random.uniform(1, 3)
             else:  # Potentially unsafe
@@ -136,22 +156,55 @@ def contaminate_dataset(
     
     # Create contamination tracking column
     df['is_contaminated'] = False
-    df['original_score'] = df['human_feedback_score'].copy() if 'human_feedback_score' in df.columns else None
+    
+    # Handle different human feedback column formats
+    if 'human_feedback_score' in df.columns:
+        df['original_score'] = df['human_feedback_score'].copy()
+    elif 'score' in df.columns:
+        df['original_score'] = df['score'].copy()
+    elif 'human_feedback' in df.columns:
+        # Extract from dict
+        def extract_score(hf):
+            if isinstance(hf, dict):
+                return hf.get('score', hf.get('average_score', 5.0))
+            return 5.0
+        df['original_score'] = df['human_feedback'].apply(extract_score)
+    else:
+        df['original_score'] = None
     
     # Apply contamination
     for idx in contaminate_indices:
         row = df.iloc[idx]
         
         # Get original score and judge scores
-        original_score = row.get('human_feedback_score', 5.0)
-        judge_scores = row.get('judge_scores', [3.0] * 10)
+        if 'human_feedback_score' in row.index:
+            original_score = row['human_feedback_score']
+        elif 'score' in row.index:
+            original_score = row['score']
+        elif 'human_feedback' in row.index and isinstance(row['human_feedback'], dict):
+            original_score = row['human_feedback'].get('score', row['human_feedback'].get('average_score', 5.0))
+        else:
+            original_score = 5.0
+            
+        judge_scores = row.get('judge_scores', [3.0] * len(JUDGE_IDS))
         
         # Generate troll rating
         troll_rating = troll.generate_rating(original_score, judge_scores)
         troll_analysis = troll.generate_analysis(troll_rating)
         
-        # Update row with troll data
-        df.at[idx, 'human_feedback_score'] = troll_rating
+        # Update row with troll data - handle different column formats
+        if 'human_feedback_score' in df.columns:
+            df.at[idx, 'human_feedback_score'] = troll_rating
+        elif 'score' in df.columns:
+            df.at[idx, 'score'] = troll_rating
+        elif 'human_feedback' in df.columns:
+            # Update within human_feedback dict
+            hf = df.iloc[idx].get('human_feedback', {})
+            if isinstance(hf, dict):
+                hf['score'] = troll_rating
+                df.at[idx, 'human_feedback'] = hf
+        
+        # Add metadata
         df.at[idx, 'human_feedback_analysis'] = troll_analysis
         df.at[idx, 'persona_name'] = troll.persona_name
         df.at[idx, 'is_contaminated'] = True

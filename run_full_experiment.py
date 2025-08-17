@@ -42,6 +42,7 @@ from pipeline.core.persona_simulation import PersonaSimulator, PERSONAS
 from pipeline.core.judge_evaluation import JudgeEvaluator, JUDGE_IDS
 from pipeline.core.aggregator_training import MLPTrainer, GAMAggregator, compute_metrics, load_training_config, determine_training_scale, plot_training_curves
 from hyperparameter_tuning import HyperparameterTuner
+from gam_hyperparameter_tuning import GAMHyperparameterTuner
 from utils.logging_setup import (
     setup_universal_logging, log_experiment_start, log_experiment_progress,
     log_experiment_milestone, log_experiment_complete, log_model_results,
@@ -65,7 +66,9 @@ class FullExperiment:
         normalize_features: bool = True,
         run_name: Optional[str] = None,
         enable_hyperparameter_tuning: bool = False,
-        hyperparameter_trials: int = 30
+        hyperparameter_trials: int = 30,
+        enable_gam_tuning: bool = False,
+        gam_trials: int = 30
     ):
         self.data_source = data_source
         self.data_size = data_size
@@ -76,6 +79,8 @@ class FullExperiment:
         self.normalize_features = normalize_features
         self.enable_hyperparameter_tuning = enable_hyperparameter_tuning
         self.hyperparameter_trials = hyperparameter_trials
+        self.enable_gam_tuning = enable_gam_tuning
+        self.gam_trials = gam_trials
         
         # Set random seeds
         random.seed(random_seed)
@@ -95,6 +100,8 @@ class FullExperiment:
         (self.run_dir / "checkpoints").mkdir(exist_ok=True)
         if enable_hyperparameter_tuning:
             (self.run_dir / "hyperparameter_tuning").mkdir(exist_ok=True)
+        if enable_gam_tuning:
+            (self.run_dir / "gam_tuning").mkdir(exist_ok=True)
         
         # Initialize components
         self.dataset_loader = DatasetLoader()
@@ -112,6 +119,8 @@ class FullExperiment:
             'normalize_features': normalize_features,
             'enable_hyperparameter_tuning': enable_hyperparameter_tuning,
             'hyperparameter_trials': hyperparameter_trials,
+            'enable_gam_tuning': enable_gam_tuning,
+            'gam_trials': gam_trials,
             'experiment_type': 'JUDGES_VS_PERSONAS',
             'run_name': self.run_name,
             'timestamp': timestamp
@@ -588,6 +597,51 @@ class FullExperiment:
             log_experiment_milestone(f"Hyperparameter tuning failed: {e}")
             return {'error': str(e)}
     
+    def run_gam_hyperparameter_tuning(self, data: pd.DataFrame) -> Dict[str, Any]:
+        """Run GAM hyperparameter tuning."""
+        if not self.enable_gam_tuning:
+            log_experiment_milestone("GAM hyperparameter tuning disabled, skipping")
+            return {}
+        
+        log_experiment_milestone(f"Running GAM Hyperparameter Tuning ({self.gam_trials} trials)")
+        
+        try:
+            # Initialize GAM hyperparameter tuner with run-specific output
+            tuner = GAMHyperparameterTuner(
+                experiment_data_path=str(self.run_dir / "data"),
+                output_dir=str(self.run_dir / "gam_tuning"),
+                test_size=self.test_size,
+                random_seed=self.random_seed
+            )
+            
+            # Run GAM tuning
+            analysis = tuner.run_tuning(
+                n_trials=self.gam_trials,
+                normalize=self.normalize_features
+            )
+            
+            if analysis:
+                log_experiment_milestone("GAM hyperparameter tuning complete", {
+                    'best_r2': analysis.get('best_r2', 0),
+                    'best_aic': analysis.get('best_aic', 0),
+                    'trials_completed': analysis.get('successful_trials', 0),
+                    'output_dir': str(self.run_dir / "gam_tuning")
+                })
+                
+                return {
+                    'analysis': analysis,
+                    'best_config': analysis.get('best_config', {}),
+                    'best_r2': analysis.get('best_r2', 0),
+                    'best_aic': analysis.get('best_aic', 0),
+                    'feature_importance': analysis.get('feature_importance_best', {})
+                }
+            else:
+                return {'error': 'No successful GAM trials'}
+            
+        except Exception as e:
+            log_experiment_milestone(f"GAM hyperparameter tuning failed: {e}")
+            return {'error': str(e)}
+    
     def create_hyperparameter_heatmap(self, results: List[Dict]):
         """Create best validation R² heatmap for hyperparameter combinations."""
         if not results:
@@ -873,32 +927,56 @@ class FullExperiment:
             # Step 5: Analyze correlations
             correlation_analysis = self.analyze_correlations(data_with_judges)
             
-            # Step 6: Test aggregation models
+            # Step 6: Compute baseline comparisons
+            baseline_results = self.compute_baseline_comparisons(data_with_judges)
+            
+            # Step 7: Test aggregation models
             model_results = self.test_aggregation_models(data_with_judges)
             
-            # Step 7: Run hyperparameter tuning (if enabled)
+            # Step 8: Run hyperparameter tuning (if enabled)
             hyperparameter_results = self.run_hyperparameter_tuning(data_with_judges)
             
-            # Step 8: Create visualizations
+            # Step 9: Run GAM hyperparameter tuning (if enabled)
+            gam_results = self.run_gam_hyperparameter_tuning(data_with_judges)
+            
+            # Step 10: Create visualizations
             self.create_visualizations(correlation_analysis, model_results)
             
-            # Step 9: Compile results
+            # Step 11: Compile results
             best_baseline_r2 = max([v['test_metrics']['r2'] for v in model_results.values() if 'test_metrics' in v], default=-1)
             best_hyperparameter_r2 = hyperparameter_results.get('best_r2', -1)
+            best_gam_r2 = gam_results.get('best_r2', -1)
+            
+            # Extract baseline comparison results
+            naive_mean_r2 = baseline_results.get('naive_mean', {}).get('metrics', {}).get('r2', -1)
+            best_judge_r2 = baseline_results.get('best_single_judge', {}).get('metrics', {}).get('r2', -1)
+            scaled_mean_r2 = baseline_results.get('scaled_mean', {}).get('metrics', {}).get('r2', -1)
+            best_judge_name = baseline_results.get('best_single_judge', {}).get('judge_name', 'Unknown')
             
             experiment_results = {
                 'config': self.config,
                 'correlation_analysis': correlation_analysis,
                 'model_results': model_results,
+                'baseline_results': baseline_results,
                 'hyperparameter_results': hyperparameter_results,
+                'gam_results': gam_results,
                 'summary': {
                     'overall_correlation': correlation_analysis.get('overall_correlation', 0),
                     'best_baseline_r2': best_baseline_r2,
                     'best_hyperparameter_r2': best_hyperparameter_r2,
+                    'best_gam_r2': best_gam_r2,
+                    'naive_mean_r2': naive_mean_r2,
+                    'best_judge_r2': best_judge_r2,
+                    'scaled_mean_r2': scaled_mean_r2,
+                    'best_judge_name': best_judge_name,
                     'hyperparameter_improvement': best_hyperparameter_r2 - best_baseline_r2 if best_hyperparameter_r2 > 0 and best_baseline_r2 > 0 else 0,
+                    'gam_improvement': best_gam_r2 - best_baseline_r2 if best_gam_r2 > 0 and best_baseline_r2 > 0 else 0,
+                    'gam_vs_naive_mean': best_gam_r2 - naive_mean_r2 if best_gam_r2 > 0 and naive_mean_r2 > 0 else 0,
+                    'gam_vs_best_judge': best_gam_r2 - best_judge_r2 if best_gam_r2 > 0 and best_judge_r2 > 0 else 0,
                     'normalization_helps': self._test_normalization_benefit(model_results),
                     'samples_processed': len(data_with_judges),
                     'hyperparameter_trials': self.hyperparameter_trials if self.enable_hyperparameter_tuning else 0,
+                    'gam_trials': self.gam_trials if self.enable_gam_tuning else 0,
                     'run_name': self.run_name
                 }
             }
@@ -921,11 +999,19 @@ class FullExperiment:
                 'overall_correlation': correlation_analysis.get('overall_correlation', 0),
                 'best_baseline_r2': experiment_results['summary']['best_baseline_r2'],
                 'best_hyperparameter_r2': experiment_results['summary']['best_hyperparameter_r2'],
+                'best_gam_r2': experiment_results['summary']['best_gam_r2'],
+                'naive_mean_r2': experiment_results['summary']['naive_mean_r2'],
+                'best_judge_r2': experiment_results['summary']['best_judge_r2'],
+                'best_judge_name': experiment_results['summary']['best_judge_name'],
                 'hyperparameter_improvement': experiment_results['summary']['hyperparameter_improvement'],
+                'gam_improvement': experiment_results['summary']['gam_improvement'],
+                'gam_vs_naive_mean': experiment_results['summary']['gam_vs_naive_mean'],
+                'gam_vs_best_judge': experiment_results['summary']['gam_vs_best_judge'],
                 'normalization_helps': experiment_results['summary']['normalization_helps'],
                 'samples_processed': len(data_with_judges),
                 'api_calls_made': len(data_with_judges) * len(JUDGE_IDS),
                 'hyperparameter_trials': experiment_results['summary']['hyperparameter_trials'],
+                'gam_trials': experiment_results['summary']['gam_trials'],
                 'run_name': self.run_name
             })
             
@@ -944,6 +1030,118 @@ class FullExperiment:
             return False
         
         return norm_r2 > raw_r2 + 0.05  # Meaningful improvement threshold
+    
+    def compute_baseline_comparisons(self, data: pd.DataFrame) -> Dict[str, Any]:
+        """Compute baseline model comparisons: best single judge and naive mean."""
+        log_experiment_milestone("Computing Baseline Comparisons")
+        
+        # Prepare data similar to test_aggregation_models
+        X_list = []
+        y_list = []
+        
+        # Uniform persona sampling
+        available_personas = list(PERSONAS.keys())
+        samples_per_persona = len(data) // len(available_personas)
+        remaining_samples = len(data) % len(available_personas)
+        
+        persona_assignment = []
+        for persona in available_personas:
+            persona_assignment.extend([persona] * samples_per_persona)
+        for _ in range(remaining_samples):
+            persona_assignment.append(random.choice(available_personas))
+        random.shuffle(persona_assignment)
+        
+        # Extract features and targets
+        for idx, (row, assigned_persona) in enumerate(zip(data.iterrows(), persona_assignment)):
+            row = row[1]
+            
+            if ('human_feedback' not in row or 'personas' not in row['human_feedback'] or
+                'judge_scores' not in row or not isinstance(row['judge_scores'], list)):
+                continue
+            
+            personas_feedback = row['human_feedback']['personas']
+            if assigned_persona not in personas_feedback or 'score' not in personas_feedback[assigned_persona]:
+                continue
+            
+            selected_score = personas_feedback[assigned_persona]['score']
+            judge_scores = row['judge_scores']
+            
+            if selected_score is None or len(judge_scores) != len(JUDGE_IDS):
+                continue
+            
+            X_list.append(judge_scores)
+            y_list.append(selected_score)
+        
+        if len(X_list) < 10:
+            log_experiment_milestone(f"Insufficient Data for Baseline Comparison: {len(X_list)} samples")
+            return {}
+        
+        X = np.array(X_list)
+        y = np.array(y_list)
+        
+        # Split data
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=self.test_size, random_state=self.random_seed
+        )
+        
+        baselines = {}
+        
+        # 1. Naive Mean Baseline - average of all judges
+        naive_mean_pred = np.mean(X_test, axis=1)
+        naive_mean_metrics = compute_metrics(y_test, naive_mean_pred)
+        baselines['naive_mean'] = {
+            'description': 'Average of all judge scores',
+            'metrics': naive_mean_metrics,
+            'predictions': naive_mean_pred
+        }
+        
+        # 2. Best Single Judge Baseline - find best individual judge
+        best_judge_r2 = -1
+        best_judge_idx = 0
+        best_judge_metrics = None
+        best_judge_pred = None
+        
+        for judge_idx in range(len(JUDGE_IDS)):
+            judge_pred = X_test[:, judge_idx]
+            judge_metrics = compute_metrics(y_test, judge_pred)
+            
+            if judge_metrics['r2'] > best_judge_r2:
+                best_judge_r2 = judge_metrics['r2']
+                best_judge_idx = judge_idx
+                best_judge_metrics = judge_metrics
+                best_judge_pred = judge_pred
+        
+        best_judge_name = JUDGE_IDS[best_judge_idx] if best_judge_idx < len(JUDGE_IDS) else f"Judge_{best_judge_idx}"
+        baselines['best_single_judge'] = {
+            'description': f'Best individual judge: {best_judge_name}',
+            'judge_name': best_judge_name,
+            'judge_index': best_judge_idx,
+            'metrics': best_judge_metrics,
+            'predictions': best_judge_pred
+        }
+        
+        # 3. Scaled Mean Baseline - mean scaled to match target range
+        y_min, y_max = np.min(y_test), np.max(y_test)
+        judges_mean = np.mean(X_test, axis=1)
+        judges_min, judges_max = np.min(judges_mean), np.max(judges_mean)
+        
+        # Scale judge mean to target range
+        scaled_mean_pred = (judges_mean - judges_min) / (judges_max - judges_min) * (y_max - y_min) + y_min
+        scaled_mean_metrics = compute_metrics(y_test, scaled_mean_pred)
+        baselines['scaled_mean'] = {
+            'description': 'Average of judges scaled to target range',
+            'metrics': scaled_mean_metrics,
+            'predictions': scaled_mean_pred
+        }
+        
+        log_experiment_milestone("Baseline Comparisons Complete", {
+            'naive_mean_r2': naive_mean_metrics['r2'],
+            'best_judge_r2': best_judge_metrics['r2'],
+            'best_judge': best_judge_name,
+            'scaled_mean_r2': scaled_mean_metrics['r2']
+        })
+        
+        return baselines
 
 
 async def main():
@@ -964,6 +1162,10 @@ async def main():
                         help='Enable hyperparameter tuning (default: False)')
     parser.add_argument('--hyperparameter-trials', type=int, default=30,
                         help='Number of hyperparameter trials (default: 30)')
+    parser.add_argument('--gam-tuning', action='store_true',
+                        help='Enable GAM hyperparameter tuning (default: False)')
+    parser.add_argument('--gam-trials', type=int, default=30,
+                        help='Number of GAM trials (default: 30)')
     parser.add_argument('--dry-run', action='store_true',
                         help='Run with small dataset for testing')
     
@@ -984,7 +1186,9 @@ async def main():
         concurrency=args.concurrency,
         run_name=args.run_name,
         enable_hyperparameter_tuning=args.hyperparameter_tuning,
-        hyperparameter_trials=args.hyperparameter_trials
+        hyperparameter_trials=args.hyperparameter_trials,
+        enable_gam_tuning=args.gam_tuning,
+        gam_trials=args.gam_trials
     )
     
     try:
@@ -998,18 +1202,38 @@ async def main():
         overall_corr = results['summary']['overall_correlation']
         best_baseline_r2 = results['summary']['best_baseline_r2']
         best_hyperparameter_r2 = results['summary']['best_hyperparameter_r2']
+        best_gam_r2 = results['summary']['best_gam_r2']
+        naive_mean_r2 = results['summary']['naive_mean_r2']
+        best_judge_r2 = results['summary']['best_judge_r2']
+        best_judge_name = results['summary']['best_judge_name']
         hyperparameter_improvement = results['summary']['hyperparameter_improvement']
+        gam_improvement = results['summary']['gam_improvement']
+        gam_vs_naive_mean = results['summary']['gam_vs_naive_mean']
+        gam_vs_best_judge = results['summary']['gam_vs_best_judge']
         norm_helps = results['summary']['normalization_helps']
         run_name = results['summary']['run_name']
         hyperparameter_trials = results['summary']['hyperparameter_trials']
+        gam_trials = results['summary']['gam_trials']
         
         print(f"📊 KEY FINDINGS:")
         print(f"   Judge-Persona Correlation: {overall_corr:.3f}")
+        print(f"\n🎯 BASELINE COMPARISONS:")
+        print(f"   Naive Mean R²: {naive_mean_r2:.3f}")
+        print(f"   Best Single Judge R²: {best_judge_r2:.3f} ({best_judge_name})")
         print(f"   Best Baseline R²: {best_baseline_r2:.3f}")
         if hyperparameter_trials > 0:
+            print(f"\n🔧 HYPERPARAMETER TUNING:")
             print(f"   Best Hyperparameter R²: {best_hyperparameter_r2:.3f}")
-            print(f"   Hyperparameter Improvement: {hyperparameter_improvement:+.3f}")
-            print(f"   Hyperparameter Trials: {hyperparameter_trials}")
+            print(f"   Improvement vs Baseline: {hyperparameter_improvement:+.3f}")
+            print(f"   Trials: {hyperparameter_trials}")
+        if gam_trials > 0:
+            print(f"\n🧠 GAM RESULTS:")
+            print(f"   Best GAM R²: {best_gam_r2:.3f}")
+            print(f"   Improvement vs Baseline: {gam_improvement:+.3f}")
+            print(f"   Improvement vs Naive Mean: {gam_vs_naive_mean:+.3f}")
+            print(f"   Improvement vs Best Judge: {gam_vs_best_judge:+.3f}")
+            print(f"   Trials: {gam_trials}")
+        print(f"\n⚙️ OTHER:")
         print(f"   Normalization Helps: {norm_helps}")
         
         print(f"\n📁 RESULTS:")

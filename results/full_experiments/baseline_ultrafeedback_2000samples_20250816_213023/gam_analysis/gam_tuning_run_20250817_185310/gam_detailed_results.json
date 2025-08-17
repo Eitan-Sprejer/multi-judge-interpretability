@@ -1,0 +1,3453 @@
+[
+  {
+    "config": {
+      "n_splines": 5,
+      "lam": 20.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.82121703807854,
+      "mae": 1.4932527632796542,
+      "r2": 0.5415731249293338
+    },
+    "test_metrics": {
+      "mse": 3.6696943344069792,
+      "mae": 1.45666714906076,
+      "r2": 0.5750209224774778
+    },
+    "gam_metrics": {
+      "aic": 7704.514817816558,
+      "deviance": -83.57320404146071,
+      "edof": 15.29955241061451,
+      "gcv": 3.9256188802395613,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9981909967877046,
+      "Harmlessness / Safety": 0.2609864809398825,
+      "Helpfulness / Utility": 0.8507255955731315,
+      "Honesty / Transparency": 0.5207544921052741,
+      "Explanatory Depth / Detail": 0.3569909472151299,
+      "Instruction Following / Compliance": 0.9999999994749699,
+      "Clarity / Understandability": 0.982032342667447,
+      "Conciseness / Efficiency": 0.9925237250464776,
+      "Logical Consistency / Reasoning": 0.9965840376882278,
+      "Creativity / Originality": 0.8475393024104685
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 5,
+      "lam": 30.0,
+      "interaction_features": [
+        [
+          1,
+          2
+        ],
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.8283814274498873,
+      "mae": 1.4961195136424124,
+      "r2": 0.5407136216353394
+    },
+    "test_metrics": {
+      "mse": 3.6718380726218105,
+      "mae": 1.457073133673774,
+      "r2": 0.5747726609586785
+    },
+    "gam_metrics": {
+      "aic": 7710.055246353477,
+      "deviance": -82.35178961146312,
+      "edof": 15.389513068027696,
+      "gcv": 3.933606662275332,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999981762892945,
+      "Harmlessness / Safety": 0.41534991107536934,
+      "Helpfulness / Utility": 0.8777375112279412,
+      "Honesty / Transparency": 0.5454172436542768,
+      "Explanatory Depth / Detail": 0.33613471477541534,
+      "Instruction Following / Compliance": 0.9999999990822381,
+      "Clarity / Understandability": 0.9779992677869063,
+      "Conciseness / Efficiency": 0.9676830517128945,
+      "Logical Consistency / Reasoning": 0.9973691858720672,
+      "Creativity / Originality": 0.8276739314215791
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 5,
+      "lam": 10.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ],
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.8071114318941746,
+      "mae": 1.48924758141404,
+      "r2": 0.5432653577702425
+    },
+    "test_metrics": {
+      "mse": 3.672668824543532,
+      "mae": 1.4559964962230452,
+      "r2": 0.5746764534402395
+    },
+    "gam_metrics": {
+      "aic": 7703.618642966593,
+      "deviance": -84.69747760866858,
+      "edof": 17.98903292513804,
+      "gcv": 3.929852707414007,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9951096492493464,
+      "Harmlessness / Safety": 0.27725773833652,
+      "Helpfulness / Utility": 0.8048794508369554,
+      "Honesty / Transparency": 0.5828930851143581,
+      "Explanatory Depth / Detail": 0.24919881751695017,
+      "Instruction Following / Compliance": 0.999999998260141,
+      "Clarity / Understandability": 0.9656646218935214,
+      "Conciseness / Efficiency": 0.9730894425348889,
+      "Logical Consistency / Reasoning": 0.9958744016834229,
+      "Creativity / Originality": 0.7658540746104261
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 5,
+      "lam": 15.0,
+      "interaction_features": [
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 100,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.8173127948519356,
+      "mae": 1.4923247548007135,
+      "r2": 0.5420415123577507
+    },
+    "test_metrics": {
+      "mse": 3.673425235013499,
+      "mae": 1.4574602025018146,
+      "r2": 0.5745888552387378
+    },
+    "gam_metrics": {
+      "aic": 7703.551334091407,
+      "deviance": -83.88377172532296,
+      "edof": 15.83874494184834,
+      "gcv": 3.9253612462885816,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999979238820383,
+      "Harmlessness / Safety": 0.2025180856108073,
+      "Helpfulness / Utility": 0.8190400639644628,
+      "Honesty / Transparency": 0.551223897186053,
+      "Explanatory Depth / Detail": 0.3223030241448819,
+      "Instruction Following / Compliance": 0.9999999989361805,
+      "Clarity / Understandability": 0.9790221883145681,
+      "Conciseness / Efficiency": 0.9897867361822318,
+      "Logical Consistency / Reasoning": 0.9969668109703582,
+      "Creativity / Originality": 0.7852679387973027
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 5,
+      "lam": 20.0,
+      "interaction_features": [],
+      "max_iter": 300,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.8230909804822977,
+      "mae": 1.4936793593074942,
+      "r2": 0.541348310282153
+    },
+    "test_metrics": {
+      "mse": 3.673898671885988,
+      "mae": 1.4579679517829098,
+      "r2": 0.5745340275754501
+    },
+    "gam_metrics": {
+      "aic": 7702.35149990059,
+      "deviance": -83.54822012696059,
+      "edof": 14.290831018481324,
+      "gcv": 3.9205262203710283,
+      "n_terms": 11
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999975216060994,
+      "Harmlessness / Safety": 0.18976694995606702,
+      "Helpfulness / Utility": 0.8543656852484964,
+      "Honesty / Transparency": 0.5001477060377396,
+      "Explanatory Depth / Detail": 0.381093148199805,
+      "Instruction Following / Compliance": 0.9999999995228286,
+      "Clarity / Understandability": 0.9862825213568721,
+      "Conciseness / Efficiency": 0.993568054456386,
+      "Logical Consistency / Reasoning": 0.9969727180039751,
+      "Creativity / Originality": 0.8463956938497355
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 5,
+      "lam": 15.0,
+      "interaction_features": [
+        [
+          1,
+          2
+        ],
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.8143919387212857,
+      "mae": 1.4921811393679634,
+      "r2": 0.5423919240028265
+    },
+    "test_metrics": {
+      "mse": 3.675462352649133,
+      "mae": 1.4563124098419633,
+      "r2": 0.5743529412102915
+    },
+    "gam_metrics": {
+      "aic": 7705.096997321485,
+      "deviance": -83.89022850221932,
+      "edof": 16.88980006250136,
+      "gcv": 3.929683928837322,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999984398267997,
+      "Harmlessness / Safety": 0.4159436572770605,
+      "Helpfulness / Utility": 0.8562341595796796,
+      "Honesty / Transparency": 0.5782364740700153,
+      "Explanatory Depth / Detail": 0.24201519932394,
+      "Instruction Following / Compliance": 0.9999999984521026,
+      "Clarity / Understandability": 0.9649114649121866,
+      "Conciseness / Efficiency": 0.9529513606741598,
+      "Logical Consistency / Reasoning": 0.9966346803083566,
+      "Creativity / Originality": 0.7872724441597974
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 5,
+      "lam": 10.0,
+      "interaction_features": [
+        [
+          1,
+          2
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.80760269485266,
+      "mae": 1.4901214676347059,
+      "r2": 0.5432064215358825
+    },
+    "test_metrics": {
+      "mse": 3.6802691613331358,
+      "mae": 1.4565286916107951,
+      "r2": 0.5737962754680792
+    },
+    "gam_metrics": {
+      "aic": 7700.582977549761,
+      "deviance": -84.78319481860012,
+      "edof": 17.019597020421713,
+      "gcv": 3.923594016460111,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.999998454526133,
+      "Harmlessness / Safety": 0.4257825209451441,
+      "Helpfulness / Utility": 0.8935243086298104,
+      "Honesty / Transparency": 0.5885811203938948,
+      "Explanatory Depth / Detail": 0.21262521131318268,
+      "Instruction Following / Compliance": 0.9999999978651257,
+      "Clarity / Understandability": 0.9541509094778513,
+      "Conciseness / Efficiency": 0.9898262135171957,
+      "Logical Consistency / Reasoning": 0.9961647857396796,
+      "Creativity / Originality": 0.7646411100578953
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 5,
+      "lam": 5.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ]
+      ],
+      "max_iter": 100,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.7969438441862144,
+      "mae": 1.4859523341864307,
+      "r2": 0.5444851512060822
+    },
+    "test_metrics": {
+      "mse": 3.680444328154573,
+      "mae": 1.4561925948927763,
+      "r2": 0.5737759897910164
+    },
+    "gam_metrics": {
+      "aic": 7700.167633058423,
+      "deviance": -85.66028140650997,
+      "edof": 19.132780143255538,
+      "gcv": 3.9273397641301724,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9973443024636844,
+      "Harmlessness / Safety": 0.2998816999548787,
+      "Helpfulness / Utility": 0.7941505273129112,
+      "Honesty / Transparency": 0.5995721902636522,
+      "Explanatory Depth / Detail": 0.19971443722115167,
+      "Instruction Following / Compliance": 0.9999999968487371,
+      "Clarity / Understandability": 0.9469427047106257,
+      "Conciseness / Efficiency": 0.9913088813828611,
+      "Logical Consistency / Reasoning": 0.994586188644309,
+      "Creativity / Originality": 0.7331151966342839
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 5,
+      "lam": 3.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ],
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.78804331735685,
+      "mae": 1.4833538291001707,
+      "r2": 0.5455529368513906
+    },
+    "test_metrics": {
+      "mse": 3.686847613342597,
+      "mae": 1.4570690907586306,
+      "r2": 0.573034439682386
+    },
+    "gam_metrics": {
+      "aic": 7703.528892253877,
+      "deviance": -85.8215197664872,
+      "edof": 21.9588026507127,
+      "gcv": 3.9379153699676244,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9914119962993048,
+      "Harmlessness / Safety": 0.28304559786130523,
+      "Helpfulness / Utility": 0.7914316986937183,
+      "Honesty / Transparency": 0.5969395467137564,
+      "Explanatory Depth / Detail": 0.17812632217814417,
+      "Instruction Following / Compliance": 0.9999999941842574,
+      "Clarity / Understandability": 0.9410973619066256,
+      "Conciseness / Efficiency": 0.9361122061575238,
+      "Logical Consistency / Reasoning": 0.9936667846338059,
+      "Creativity / Originality": 0.7171800179108795
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 5,
+      "lam": 8.0,
+      "interaction_features": [
+        [
+          0,
+          2
+        ]
+      ],
+      "max_iter": 100,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.805976829896061,
+      "mae": 1.4889500960021866,
+      "r2": 0.5434014746260141
+    },
+    "test_metrics": {
+      "mse": 3.691159983824725,
+      "mae": 1.4596195895149102,
+      "r2": 0.5725350337203561
+    },
+    "gam_metrics": {
+      "aic": 7701.983308211619,
+      "deviance": -84.46478719399829,
+      "edof": 17.75951170197882,
+      "gcv": 3.9270787781583674,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999806124169164,
+      "Harmlessness / Safety": 0.23142620737323227,
+      "Helpfulness / Utility": 0.7258357113077052,
+      "Honesty / Transparency": 0.5399206537633537,
+      "Explanatory Depth / Detail": 0.250601826283847,
+      "Instruction Following / Compliance": 0.999999997797704,
+      "Clarity / Understandability": 0.9748287907756352,
+      "Conciseness / Efficiency": 0.9931553167964883,
+      "Logical Consistency / Reasoning": 0.9960908235258474,
+      "Creativity / Originality": 0.7635622799358152
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 8,
+      "lam": 25.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.767898708178363,
+      "mae": 1.4784182100064753,
+      "r2": 0.5479696617176278
+    },
+    "test_metrics": {
+      "mse": 3.6917752823856245,
+      "mae": 1.4622130809497538,
+      "r2": 0.5724637773728287
+    },
+    "gam_metrics": {
+      "aic": 7710.082178176865,
+      "deviance": -86.56120934590945,
+      "edof": 28.06250295850816,
+      "gcv": 3.959983436326682,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9972735995141941,
+      "Harmlessness / Safety": 0.2411279733646584,
+      "Helpfulness / Utility": 0.5573280055815245,
+      "Honesty / Transparency": 0.8822025674844203,
+      "Explanatory Depth / Detail": 0.13296438965479218,
+      "Instruction Following / Compliance": 0.9999999850825256,
+      "Clarity / Understandability": 0.8804205356278602,
+      "Conciseness / Efficiency": 0.9345105975459285,
+      "Logical Consistency / Reasoning": 0.9883053233406051,
+      "Creativity / Originality": 0.9810061852395976
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 5,
+      "lam": 20.0,
+      "interaction_features": [
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.8089887954296477,
+      "mae": 1.489361779116292,
+      "r2": 0.5430401326939481
+    },
+    "test_metrics": {
+      "mse": 3.6943532040895497,
+      "mae": 1.465842425573035,
+      "r2": 0.5721652340371106
+    },
+    "gam_metrics": {
+      "aic": 7695.4745359433,
+      "deviance": -84.84733945608673,
+      "edof": 15.270342368415957,
+      "gcv": 3.912853810002322,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999988377696785,
+      "Harmlessness / Safety": 0.22010251769362288,
+      "Helpfulness / Utility": 0.7437121298407638,
+      "Honesty / Transparency": 0.5657553894478653,
+      "Explanatory Depth / Detail": 0.15251233653498575,
+      "Instruction Following / Compliance": 0.999999986380758,
+      "Clarity / Understandability": 0.9487439276670642,
+      "Conciseness / Efficiency": 0.9870721590136391,
+      "Logical Consistency / Reasoning": 0.9621097781987025,
+      "Creativity / Originality": 0.8468908395433581
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 8,
+      "lam": 15.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.757868219012889,
+      "mae": 1.4754953688932624,
+      "r2": 0.5491730076039611
+    },
+    "test_metrics": {
+      "mse": 3.696175350351228,
+      "mae": 1.464221328485055,
+      "r2": 0.5719542153617571
+    },
+    "gam_metrics": {
+      "aic": 7713.154909300458,
+      "deviance": -86.89787698561781,
+      "edof": 31.051969283525835,
+      "gcv": 3.97070898788257,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9965095691281457,
+      "Harmlessness / Safety": 0.23915757716969022,
+      "Helpfulness / Utility": 0.5500929550365141,
+      "Honesty / Transparency": 0.8822716363341586,
+      "Explanatory Depth / Detail": 0.12600635741325317,
+      "Instruction Following / Compliance": 0.9999999768586384,
+      "Clarity / Understandability": 0.872142652032498,
+      "Conciseness / Efficiency": 0.92675322161627,
+      "Logical Consistency / Reasoning": 0.9867174341999089,
+      "Creativity / Originality": 0.9812432997118887
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 5,
+      "lam": 5.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.7840636894518425,
+      "mae": 1.480619139378134,
+      "r2": 0.5460303680902491
+    },
+    "test_metrics": {
+      "mse": 3.6984010507370146,
+      "mae": 1.4648346787404063,
+      "r2": 0.5716964619876068
+    },
+    "gam_metrics": {
+      "aic": 7698.390206389411,
+      "deviance": -86.3769739603249,
+      "edof": 21.329267796404604,
+      "gcv": 3.929363320877468,
+      "n_terms": 14
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9899244557013348,
+      "Harmlessness / Safety": 0.2548622328488117,
+      "Helpfulness / Utility": 0.7374040678182701,
+      "Honesty / Transparency": 0.5870534148214063,
+      "Explanatory Depth / Detail": 0.10905182939822877,
+      "Instruction Following / Compliance": 0.9999999771459919,
+      "Clarity / Understandability": 0.9080587054771746,
+      "Conciseness / Efficiency": 0.8787666877299272,
+      "Logical Consistency / Reasoning": 0.9333595111377042,
+      "Creativity / Originality": 0.7052805946991829
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 10,
+      "lam": 30.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ],
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.745451163457643,
+      "mae": 1.471847346951982,
+      "r2": 0.5506626670289678
+    },
+    "test_metrics": {
+      "mse": 3.7013255195352697,
+      "mae": 1.4656120719707693,
+      "r2": 0.571357785809465
+    },
+    "gam_metrics": {
+      "aic": 7719.810657970543,
+      "deviance": -87.01377184159924,
+      "edof": 35.56651959883942,
+      "gcv": 3.989925514568503,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9916270512149045,
+      "Harmlessness / Safety": 0.20151418757471418,
+      "Helpfulness / Utility": 0.6003256372257979,
+      "Honesty / Transparency": 0.9142953831474038,
+      "Explanatory Depth / Detail": 0.25518388825556615,
+      "Instruction Following / Compliance": 0.9999998449637078,
+      "Clarity / Understandability": 0.7735961687776829,
+      "Conciseness / Efficiency": 0.8670502334784145,
+      "Logical Consistency / Reasoning": 0.9798197733102277,
+      "Creativity / Originality": 0.9979804749826908
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 10,
+      "lam": 30.0,
+      "interaction_features": [
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 100,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.749401768968242,
+      "mae": 1.4728268238876734,
+      "r2": 0.5501887175723383
+    },
+    "test_metrics": {
+      "mse": 3.702463297413958,
+      "mae": 1.4644007586019223,
+      "r2": 0.5712260223029579
+    },
+    "gam_metrics": {
+      "aic": 7719.36870302155,
+      "deviance": -86.71939514363112,
+      "edof": 34.6056855275887,
+      "gcv": 3.9872113029689276,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999817454351153,
+      "Harmlessness / Safety": 0.117174133179617,
+      "Helpfulness / Utility": 0.59054785211634,
+      "Honesty / Transparency": 0.9074666126716411,
+      "Explanatory Depth / Detail": 0.24754402878738202,
+      "Instruction Following / Compliance": 0.9999998326260681,
+      "Clarity / Understandability": 0.8182082943228514,
+      "Conciseness / Efficiency": 0.8980230501197903,
+      "Logical Consistency / Reasoning": 0.9824538744528132,
+      "Creativity / Originality": 0.9981709350039901
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 10,
+      "lam": 30.0,
+      "interaction_features": [],
+      "max_iter": 100,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.749496186312893,
+      "mae": 1.472863542903638,
+      "r2": 0.5501773904355048
+    },
+    "test_metrics": {
+      "mse": 3.702508015924831,
+      "mae": 1.4644060682992477,
+      "r2": 0.5712208435524225
+    },
+    "gam_metrics": {
+      "aic": 7716.255728826401,
+      "deviance": -87.0484432254284,
+      "edof": 33.70175961852459,
+      "gcv": 3.980815295884624,
+      "n_terms": 11
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999819342694698,
+      "Harmlessness / Safety": 0.12283693865046008,
+      "Helpfulness / Utility": 0.5910320038838728,
+      "Honesty / Transparency": 0.9084892958244863,
+      "Explanatory Depth / Detail": 0.2516466435221213,
+      "Instruction Following / Compliance": 0.9999998414206636,
+      "Clarity / Understandability": 0.8157292979072637,
+      "Conciseness / Efficiency": 0.9682978659209865,
+      "Logical Consistency / Reasoning": 0.9825107771031144,
+      "Creativity / Originality": 0.9982055224743469
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 5,
+      "lam": 2.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.771456866919988,
+      "mae": 1.4766584292939233,
+      "r2": 0.5475427936343251
+    },
+    "test_metrics": {
+      "mse": 3.7051908558191142,
+      "mae": 1.4653773999621518,
+      "r2": 0.5709101498761883
+    },
+    "gam_metrics": {
+      "aic": 7701.148403067085,
+      "deviance": -86.88388253662333,
+      "edof": 24.768816704849662,
+      "gcv": 3.9404045600630933,
+      "n_terms": 14
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9807398322201023,
+      "Harmlessness / Safety": 0.24818684791893197,
+      "Helpfulness / Utility": 0.758640327435954,
+      "Honesty / Transparency": 0.5831334856896542,
+      "Explanatory Depth / Detail": 0.1064928675709681,
+      "Instruction Following / Compliance": 0.9999999678452653,
+      "Clarity / Understandability": 0.883423312571281,
+      "Conciseness / Efficiency": 0.8245965002439857,
+      "Logical Consistency / Reasoning": 0.8859411307922656,
+      "Creativity / Originality": 0.6254307448431886
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 8,
+      "lam": 25.0,
+      "interaction_features": [
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.7626269451931944,
+      "mae": 1.4741393784103964,
+      "r2": 0.5486021088692346
+    },
+    "test_metrics": {
+      "mse": 3.7061171990440642,
+      "mae": 1.468524556578791,
+      "r2": 0.570802872143131
+    },
+    "gam_metrics": {
+      "aic": 7706.140248623874,
+      "deviance": -87.0125196957556,
+      "edof": 28.052295684043663,
+      "gcv": 3.9543705084215994,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999908460630714,
+      "Harmlessness / Safety": 0.10051972340416249,
+      "Helpfulness / Utility": 0.5108593624471632,
+      "Honesty / Transparency": 0.8860467995976821,
+      "Explanatory Depth / Detail": 0.0856041832290958,
+      "Instruction Following / Compliance": 0.9999999591741927,
+      "Clarity / Understandability": 0.8636818401300781,
+      "Conciseness / Efficiency": 0.9139529913015813,
+      "Logical Consistency / Reasoning": 0.9246061387809594,
+      "Creativity / Originality": 0.9822960774267782
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 8,
+      "lam": 20.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.7551545249066764,
+      "mae": 1.4722010168365778,
+      "r2": 0.5494985662667149
+    },
+    "test_metrics": {
+      "mse": 3.7061594232789514,
+      "mae": 1.4697878830425366,
+      "r2": 0.570797982249108
+    },
+    "gam_metrics": {
+      "aic": 7711.539056084414,
+      "deviance": -87.01458496845339,
+      "edof": 31.165677049376143,
+      "gcv": 3.9686533251464566,
+      "n_terms": 14
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9890046654241836,
+      "Harmlessness / Safety": 0.1873000074943838,
+      "Helpfulness / Utility": 0.5206235047258518,
+      "Honesty / Transparency": 0.8937822830480873,
+      "Explanatory Depth / Detail": 0.0879830209575283,
+      "Instruction Following / Compliance": 0.9999999571900556,
+      "Clarity / Understandability": 0.8329529421228978,
+      "Conciseness / Efficiency": 0.5755463763902616,
+      "Logical Consistency / Reasoning": 0.9160488636508237,
+      "Creativity / Originality": 0.97826328111827
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 5,
+      "lam": 2.0,
+      "interaction_features": [
+        [
+          0,
+          2
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.7916374644587973,
+      "mae": 1.4850102671708125,
+      "r2": 0.5451217512871918
+    },
+    "test_metrics": {
+      "mse": 3.7078064578831036,
+      "mae": 1.4608525785056299,
+      "r2": 0.5706072428624084
+    },
+    "gam_metrics": {
+      "aic": 7707.937654701055,
+      "deviance": -84.49406311897701,
+      "edof": 22.461501041898636,
+      "gcv": 3.945189586702561,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9998317160039079,
+      "Harmlessness / Safety": 0.2769652983124481,
+      "Helpfulness / Utility": 0.60205960239035,
+      "Honesty / Transparency": 0.566365672553664,
+      "Explanatory Depth / Detail": 0.18373133956057386,
+      "Instruction Following / Compliance": 0.9999999892848302,
+      "Clarity / Understandability": 0.9548478237126804,
+      "Conciseness / Efficiency": 0.9921715322427352,
+      "Logical Consistency / Reasoning": 0.99477333640875,
+      "Creativity / Originality": 0.6778926253523362
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 8,
+      "lam": 15.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 100,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.7496811954984577,
+      "mae": 1.4706441442796487,
+      "r2": 0.5501551951029832
+    },
+    "test_metrics": {
+      "mse": 3.7080266820602223,
+      "mae": 1.4706597757057365,
+      "r2": 0.5705817391939523
+    },
+    "gam_metrics": {
+      "aic": 7713.5971988412575,
+      "deviance": -87.17152090372474,
+      "edof": 32.907425927688216,
+      "gcv": 3.9753157488098356,
+      "n_terms": 14
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9879434019274521,
+      "Harmlessness / Safety": 0.18665879709684496,
+      "Helpfulness / Utility": 0.5217345324680881,
+      "Honesty / Transparency": 0.8929877608603232,
+      "Explanatory Depth / Detail": 0.08598216355776522,
+      "Instruction Following / Compliance": 0.9999999492520542,
+      "Clarity / Understandability": 0.8297830529263887,
+      "Conciseness / Efficiency": 0.5689150937414698,
+      "Logical Consistency / Reasoning": 0.9112837658928497,
+      "Creativity / Originality": 0.9783923750100398
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 10,
+      "lam": 20.0,
+      "interaction_features": [
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.740438637764714,
+      "mae": 1.4702532252716878,
+      "r2": 0.5512640137901496
+    },
+    "test_metrics": {
+      "mse": 3.708985177031627,
+      "mae": 1.4660052213376888,
+      "r2": 0.5704707380391862
+    },
+    "gam_metrics": {
+      "aic": 7722.6414961971595,
+      "deviance": -86.89285217845645,
+      "edof": 37.43048266366182,
+      "gcv": 3.9980347028299486,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999809860339925,
+      "Harmlessness / Safety": 0.12084645676012273,
+      "Helpfulness / Utility": 0.574160616718527,
+      "Honesty / Transparency": 0.9102933572340592,
+      "Explanatory Depth / Detail": 0.2282017210020828,
+      "Instruction Following / Compliance": 0.9999997564966037,
+      "Clarity / Understandability": 0.8146742913747569,
+      "Conciseness / Efficiency": 0.8953083852007085,
+      "Logical Consistency / Reasoning": 0.9803455121382767,
+      "Creativity / Originality": 0.9982267406819136
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 8,
+      "lam": 5.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ]
+      ],
+      "max_iter": 100,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.733451978461569,
+      "mae": 1.4685403122109744,
+      "r2": 0.5521021950186973
+    },
+    "test_metrics": {
+      "mse": 3.709045389071454,
+      "mae": 1.4686666517960145,
+      "r2": 0.5704637650177818
+    },
+    "gam_metrics": {
+      "aic": 7718.804530402685,
+      "deviance": -87.85816981743619,
+      "edof": 37.822627656874396,
+      "gcv": 3.9933996647017937,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9915976278296258,
+      "Harmlessness / Safety": 0.21572670443451492,
+      "Helpfulness / Utility": 0.5216785376789395,
+      "Honesty / Transparency": 0.8841602501343395,
+      "Explanatory Depth / Detail": 0.10297989712852906,
+      "Instruction Following / Compliance": 0.9999999400388565,
+      "Clarity / Understandability": 0.861220853672435,
+      "Conciseness / Efficiency": 0.9071559237054273,
+      "Logical Consistency / Reasoning": 0.9820234642919177,
+      "Creativity / Originality": 0.983135233426596
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 8,
+      "lam": 10.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.7414190295539593,
+      "mae": 1.4682969985289571,
+      "r2": 0.5511463973502013
+    },
+    "test_metrics": {
+      "mse": 3.711083852695806,
+      "mae": 1.4719009783202055,
+      "r2": 0.5702276951133982
+    },
+    "gam_metrics": {
+      "aic": 7716.308028451957,
+      "deviance": -87.4450355952738,
+      "edof": 35.425723751877236,
+      "gcv": 3.9846168137151667,
+      "n_terms": 14
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9859004841304376,
+      "Harmlessness / Safety": 0.18428837211421933,
+      "Helpfulness / Utility": 0.5199726814265748,
+      "Honesty / Transparency": 0.8920870873874795,
+      "Explanatory Depth / Detail": 0.0819186776687959,
+      "Instruction Following / Compliance": 0.999999934191597,
+      "Clarity / Understandability": 0.8269520482551935,
+      "Conciseness / Efficiency": 0.5653122117284918,
+      "Logical Consistency / Reasoning": 0.9026657825619591,
+      "Creativity / Originality": 0.9787245947962607
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 8,
+      "lam": 25.0,
+      "interaction_features": [
+        [
+          1,
+          2
+        ],
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.7665313744012825,
+      "mae": 1.4780280189813857,
+      "r2": 0.5481336991288398
+    },
+    "test_metrics": {
+      "mse": 3.7111917147424505,
+      "mae": 1.4637728868359443,
+      "r2": 0.5702152038514823
+    },
+    "gam_metrics": {
+      "aic": 7712.072673403645,
+      "deviance": -85.92504926506035,
+      "edof": 28.916955393422416,
+      "gcv": 3.964621564790271,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999909080248536,
+      "Harmlessness / Safety": 0.29076271867406256,
+      "Helpfulness / Utility": 0.7451753927447552,
+      "Honesty / Transparency": 0.8731017718985307,
+      "Explanatory Depth / Detail": 0.11813652341681324,
+      "Instruction Following / Compliance": 0.999999983986211,
+      "Clarity / Understandability": 0.8829848429259056,
+      "Conciseness / Efficiency": 0.5951884640481713,
+      "Logical Consistency / Reasoning": 0.9908051879134432,
+      "Creativity / Originality": 0.9796019967452743
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 8,
+      "lam": 10.0,
+      "interaction_features": [
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.746300320441403,
+      "mae": 1.4693208016247865,
+      "r2": 0.550560794672954
+    },
+    "test_metrics": {
+      "mse": 3.7117836834843376,
+      "mae": 1.4706601569472235,
+      "r2": 0.5701466492780154
+    },
+    "gam_metrics": {
+      "aic": 7713.139018921429,
+      "deviance": -87.3847638405116,
+      "edof": 33.492429390818856,
+      "gcv": 3.975921378117971,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999891276865742,
+      "Harmlessness / Safety": 0.10832557532903564,
+      "Helpfulness / Utility": 0.5086390332769702,
+      "Honesty / Transparency": 0.8842043089194798,
+      "Explanatory Depth / Detail": 0.07545407986133001,
+      "Instruction Following / Compliance": 0.9999999276612992,
+      "Clarity / Understandability": 0.8585474500706725,
+      "Conciseness / Efficiency": 0.8996043076747615,
+      "Logical Consistency / Reasoning": 0.90894957682329,
+      "Creativity / Originality": 0.9813163059389226
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 8,
+      "lam": 8.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.7366148812715703,
+      "mae": 1.4669365852778984,
+      "r2": 0.5517227453206319
+    },
+    "test_metrics": {
+      "mse": 3.7131668969535814,
+      "mae": 1.472684889058395,
+      "r2": 0.5699864624257578
+    },
+    "gam_metrics": {
+      "aic": 7717.690758795165,
+      "deviance": -87.616812016101,
+      "edof": 36.836027017862726,
+      "gcv": 3.9896554941718376,
+      "n_terms": 14
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9844475340801836,
+      "Harmlessness / Safety": 0.18241188015800824,
+      "Helpfulness / Utility": 0.5174429238603934,
+      "Honesty / Transparency": 0.8917103403078972,
+      "Explanatory Depth / Detail": 0.0792962805382047,
+      "Instruction Following / Compliance": 0.9999999234675657,
+      "Clarity / Understandability": 0.826211016225509,
+      "Conciseness / Efficiency": 0.5659289416152906,
+      "Logical Consistency / Reasoning": 0.8965611623011696,
+      "Creativity / Originality": 0.9789518007311234
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 5,
+      "lam": 10.0,
+      "interaction_features": [
+        [
+          0,
+          2
+        ],
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.79585693017078,
+      "mae": 1.4848941752609284,
+      "r2": 0.5446155469911425
+    },
+    "test_metrics": {
+      "mse": 3.713343035695514,
+      "mae": 1.469932696734598,
+      "r2": 0.5699660641927604
+    },
+    "gam_metrics": {
+      "aic": 7695.960090686885,
+      "deviance": -85.30904124113681,
+      "edof": 18.15951863065258,
+      "gcv": 3.9194233309564592,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999740720307626,
+      "Harmlessness / Safety": 0.23920707420059362,
+      "Helpfulness / Utility": 0.5699599305098537,
+      "Honesty / Transparency": 0.530720468552281,
+      "Explanatory Depth / Detail": 0.11809739313721945,
+      "Instruction Following / Compliance": 0.9999999788496468,
+      "Clarity / Understandability": 0.9534198209383145,
+      "Conciseness / Efficiency": 0.9875477845593954,
+      "Logical Consistency / Reasoning": 0.9509885044912918,
+      "Creativity / Originality": 0.7836928668215764
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 8,
+      "lam": 20.0,
+      "interaction_features": [
+        [
+          1,
+          2
+        ],
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 100,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.762401607421533,
+      "mae": 1.4768105560687297,
+      "r2": 0.5486291423743899
+    },
+    "test_metrics": {
+      "mse": 3.714012435451463,
+      "mae": 1.464661569553773,
+      "r2": 0.5698885425070686
+    },
+    "gam_metrics": {
+      "aic": 7713.610625072383,
+      "deviance": -86.00631891219518,
+      "edof": 30.22498339450332,
+      "gcv": 3.9695916008303316,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999905649416255,
+      "Harmlessness / Safety": 0.28788626683232066,
+      "Helpfulness / Utility": 0.7483118653155554,
+      "Honesty / Transparency": 0.8724922560075121,
+      "Explanatory Depth / Detail": 0.11674928784848404,
+      "Instruction Following / Compliance": 0.9999999806991988,
+      "Clarity / Understandability": 0.8803362374892455,
+      "Conciseness / Efficiency": 0.5805674594957215,
+      "Logical Consistency / Reasoning": 0.9904035640395537,
+      "Creativity / Originality": 0.979597596485238
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 10,
+      "lam": 20.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 100,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.729349016161791,
+      "mae": 1.4649623998403438,
+      "r2": 0.5525944225385887
+    },
+    "test_metrics": {
+      "mse": 3.717917791983834,
+      "mae": 1.4733929639322283,
+      "r2": 0.5694362719184907
+    },
+    "gam_metrics": {
+      "aic": 7721.221518715422,
+      "deviance": -87.67696609265931,
+      "edof": 39.37850495577209,
+      "gcv": 4.000267768920255,
+      "n_terms": 14
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9849047993912988,
+      "Harmlessness / Safety": 0.17364439041120272,
+      "Helpfulness / Utility": 0.576765837289416,
+      "Honesty / Transparency": 0.9262479796787498,
+      "Explanatory Depth / Detail": 0.19038366578810728,
+      "Instruction Following / Compliance": 0.9999996294755129,
+      "Clarity / Understandability": 0.7111973533104721,
+      "Conciseness / Efficiency": 0.8136737921689196,
+      "Logical Consistency / Reasoning": 0.8740598026968689,
+      "Creativity / Originality": 0.9974149808328673
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 8,
+      "lam": 3.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ],
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.7208081189101234,
+      "mae": 1.465158340747526,
+      "r2": 0.5536190638500779
+    },
+    "test_metrics": {
+      "mse": 3.7194918965993655,
+      "mae": 1.4711212374690106,
+      "r2": 0.5692539783903456
+    },
+    "gam_metrics": {
+      "aic": 7724.256047661917,
+      "deviance": -87.97856427696797,
+      "edof": 42.05241750294823,
+      "gcv": 4.010519181057649,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9785820338721313,
+      "Harmlessness / Safety": 0.20871164721999835,
+      "Helpfulness / Utility": 0.5024012891688922,
+      "Honesty / Transparency": 0.8842401351571574,
+      "Explanatory Depth / Detail": 0.09295100959680314,
+      "Instruction Following / Compliance": 0.9999999035537723,
+      "Clarity / Understandability": 0.8681924001387102,
+      "Conciseness / Efficiency": 0.6817029652731063,
+      "Logical Consistency / Reasoning": 0.979172118859695,
+      "Creativity / Originality": 0.9839071377874948
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 8,
+      "lam": 25.0,
+      "interaction_features": [
+        [
+          0,
+          2
+        ],
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.7606525061888805,
+      "mae": 1.473441581318769,
+      "r2": 0.5488389799743683
+    },
+    "test_metrics": {
+      "mse": 3.7216233053195706,
+      "mae": 1.4714736461591311,
+      "r2": 0.5690071447226901
+    },
+    "gam_metrics": {
+      "aic": 7708.145622888371,
+      "deviance": -86.52790097867046,
+      "edof": 29.0396376781004,
+      "gcv": 3.959305571359486,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9998563742439849,
+      "Harmlessness / Safety": 0.11137822221683269,
+      "Helpfulness / Utility": 0.31450207835877264,
+      "Honesty / Transparency": 0.8768123695832947,
+      "Explanatory Depth / Detail": 0.07807037956899365,
+      "Instruction Following / Compliance": 0.9999999387096807,
+      "Clarity / Understandability": 0.8888917435187083,
+      "Conciseness / Efficiency": 0.9172185279659779,
+      "Logical Consistency / Reasoning": 0.9278920823056644,
+      "Creativity / Originality": 0.9817749981979077
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 8,
+      "lam": 25.0,
+      "interaction_features": [
+        [
+          0,
+          2
+        ],
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.7606525061888805,
+      "mae": 1.473441581318769,
+      "r2": 0.5488389799743683
+    },
+    "test_metrics": {
+      "mse": 3.7216233053195706,
+      "mae": 1.4714736461591311,
+      "r2": 0.5690071447226901
+    },
+    "gam_metrics": {
+      "aic": 7708.145622888371,
+      "deviance": -86.52790097867046,
+      "edof": 29.0396376781004,
+      "gcv": 3.959305571359486,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9998563742439849,
+      "Harmlessness / Safety": 0.11137822221683269,
+      "Helpfulness / Utility": 0.31450207835877264,
+      "Honesty / Transparency": 0.8768123695832947,
+      "Explanatory Depth / Detail": 0.07807037956899365,
+      "Instruction Following / Compliance": 0.9999999387096807,
+      "Clarity / Understandability": 0.8888917435187083,
+      "Conciseness / Efficiency": 0.9172185279659779,
+      "Logical Consistency / Reasoning": 0.9278920823056644,
+      "Creativity / Originality": 0.9817749981979077
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 12,
+      "lam": 30.0,
+      "interaction_features": [
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.723970280246351,
+      "mae": 1.4658229875494948,
+      "r2": 0.5532397031057414
+    },
+    "test_metrics": {
+      "mse": 3.7230651098801597,
+      "mae": 1.4692305147223805,
+      "r2": 0.5688401725674395
+    },
+    "gam_metrics": {
+      "aic": 7724.797151662428,
+      "deviance": -87.57268607045239,
+      "edof": 41.53378479939187,
+      "gcv": 4.010147986654913,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999369660219732,
+      "Harmlessness / Safety": 0.5196797254314358,
+      "Helpfulness / Utility": 0.45035965491561236,
+      "Honesty / Transparency": 0.9273132632529419,
+      "Explanatory Depth / Detail": 0.12081459694263386,
+      "Instruction Following / Compliance": 0.9999993731707115,
+      "Clarity / Understandability": 0.7974526272671181,
+      "Conciseness / Efficiency": 0.9198175987465094,
+      "Logical Consistency / Reasoning": 0.9737169889568936,
+      "Creativity / Originality": 0.9975427492388896
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 10,
+      "lam": 30.0,
+      "interaction_features": [
+        [
+          1,
+          2
+        ],
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 100,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.7442943458406814,
+      "mae": 1.471434194968952,
+      "r2": 0.550801449066179
+    },
+    "test_metrics": {
+      "mse": 3.7231735584339174,
+      "mae": 1.4671975045386505,
+      "r2": 0.5688276133834491
+    },
+    "gam_metrics": {
+      "aic": 7718.949514049409,
+      "deviance": -86.60246835967973,
+      "edof": 35.56685459908484,
+      "gcv": 3.9886956022454907,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999847231793798,
+      "Harmlessness / Safety": 0.23348676247794475,
+      "Helpfulness / Utility": 0.7643783079876172,
+      "Honesty / Transparency": 0.9077564938910584,
+      "Explanatory Depth / Detail": 0.23904160443877132,
+      "Instruction Following / Compliance": 0.9999998462684512,
+      "Clarity / Understandability": 0.7808742150331787,
+      "Conciseness / Efficiency": 0.7769803908378892,
+      "Logical Consistency / Reasoning": 0.9840222748268831,
+      "Creativity / Originality": 0.9978871486993788
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 10,
+      "lam": 15.0,
+      "interaction_features": [
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.7271641221858274,
+      "mae": 1.4641973337280438,
+      "r2": 0.5528565416770153
+    },
+    "test_metrics": {
+      "mse": 3.724037897507508,
+      "mae": 1.472873077458337,
+      "r2": 0.5687275162122168
+    },
+    "gam_metrics": {
+      "aic": 7720.0449489852635,
+      "deviance": -87.80908577899118,
+      "edof": 39.50877157073768,
+      "gcv": 3.9988682372412114,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999803585179717,
+      "Harmlessness / Safety": 0.11097595476590305,
+      "Helpfulness / Utility": 0.5579538453170797,
+      "Honesty / Transparency": 0.9230249608946619,
+      "Explanatory Depth / Detail": 0.1727083597960789,
+      "Instruction Following / Compliance": 0.999999518860726,
+      "Clarity / Understandability": 0.7559325369646184,
+      "Conciseness / Efficiency": 0.9501911041867386,
+      "Logical Consistency / Reasoning": 0.8728259150437561,
+      "Creativity / Originality": 0.9978840065579874
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 10,
+      "lam": 10.0,
+      "interaction_features": [
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.7250430596238586,
+      "mae": 1.4659857896102582,
+      "r2": 0.5531110030364259
+    },
+    "test_metrics": {
+      "mse": 3.726052834998155,
+      "mae": 1.4698228345494975,
+      "r2": 0.5684941708166583
+    },
+    "gam_metrics": {
+      "aic": 7728.706811499506,
+      "deviance": -86.98263424061838,
+      "edof": 42.41322356767932,
+      "gcv": 4.017717172814721,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999799298556723,
+      "Harmlessness / Safety": 0.13104689150565885,
+      "Helpfulness / Utility": 0.5385390129796567,
+      "Honesty / Transparency": 0.9159678555704099,
+      "Explanatory Depth / Detail": 0.19940238730119997,
+      "Instruction Following / Compliance": 0.9999995492394894,
+      "Clarity / Understandability": 0.8111665245496239,
+      "Conciseness / Efficiency": 0.8935577356585956,
+      "Logical Consistency / Reasoning": 0.9765413210338638,
+      "Creativity / Originality": 0.9983375496647742
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 10,
+      "lam": 10.0,
+      "interaction_features": [],
+      "max_iter": 200,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.725269518958246,
+      "mae": 1.466029419938568,
+      "r2": 0.5530838349787208
+    },
+    "test_metrics": {
+      "mse": 3.7263661883633987,
+      "mae": 1.4698973924808922,
+      "r2": 0.5684578820656168
+    },
+    "gam_metrics": {
+      "aic": 7725.438064772698,
+      "deviance": -87.31050816771767,
+      "edof": 41.43941339652979,
+      "gcv": 4.010859665251597,
+      "n_terms": 11
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999804459334102,
+      "Harmlessness / Safety": 0.15232226040752783,
+      "Helpfulness / Utility": 0.5387417780276128,
+      "Honesty / Transparency": 0.9168981713847091,
+      "Explanatory Depth / Detail": 0.20215419900272769,
+      "Instruction Following / Compliance": 0.9999995735710977,
+      "Clarity / Understandability": 0.8060717667969258,
+      "Conciseness / Efficiency": 0.963378668416393,
+      "Logical Consistency / Reasoning": 0.9765739047480612,
+      "Creativity / Originality": 0.9983851059809861
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 10,
+      "lam": 25.0,
+      "interaction_features": [
+        [
+          1,
+          2
+        ],
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.7402540600937524,
+      "mae": 1.4702864874548272,
+      "r2": 0.5512861573543764
+    },
+    "test_metrics": {
+      "mse": 3.7263938335506337,
+      "mae": 1.4681211127055858,
+      "r2": 0.5684546805384327
+    },
+    "gam_metrics": {
+      "aic": 7720.407870492304,
+      "deviance": -86.6745851311191,
+      "edof": 36.83595117504914,
+      "gcv": 3.993540567618396,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.999984416046516,
+      "Harmlessness / Safety": 0.22958788868559443,
+      "Helpfulness / Utility": 0.7600317083855009,
+      "Honesty / Transparency": 0.9088601165392984,
+      "Explanatory Depth / Detail": 0.2313515521468359,
+      "Instruction Following / Compliance": 0.9999998183746072,
+      "Clarity / Understandability": 0.7790967347269491,
+      "Conciseness / Efficiency": 0.7756429861794811,
+      "Logical Consistency / Reasoning": 0.9831898622733811,
+      "Creativity / Originality": 0.9979166699174279
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 12,
+      "lam": 25.0,
+      "interaction_features": [],
+      "max_iter": 300,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.720058901613786,
+      "mae": 1.4648071808424468,
+      "r2": 0.5537089465603469
+    },
+    "test_metrics": {
+      "mse": 3.728346137289829,
+      "mae": 1.470370406927089,
+      "r2": 0.5682285886172751
+    },
+    "gam_metrics": {
+      "aic": 7723.4355661133095,
+      "deviance": -87.88393230726456,
+      "edof": 41.97928739442471,
+      "gcv": 4.009178924104737,
+      "n_terms": 11
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999373681799422,
+      "Harmlessness / Safety": 0.5536192047920945,
+      "Helpfulness / Utility": 0.4395229327671635,
+      "Honesty / Transparency": 0.9297768872248866,
+      "Explanatory Depth / Detail": 0.11740840798825158,
+      "Instruction Following / Compliance": 0.9999993193441267,
+      "Clarity / Understandability": 0.7945461893601834,
+      "Conciseness / Efficiency": 0.9718996456234009,
+      "Logical Consistency / Reasoning": 0.9730936347472149,
+      "Creativity / Originality": 0.9976529841532176
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 10,
+      "lam": 8.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.7148393052710946,
+      "mae": 1.4637476112316847,
+      "r2": 0.5543351353417394
+    },
+    "test_metrics": {
+      "mse": 3.731663377862937,
+      "mae": 1.4730725468002752,
+      "r2": 0.5678444264200421
+    },
+    "gam_metrics": {
+      "aic": 7726.974862270034,
+      "deviance": -87.8212414325792,
+      "edof": 44.091585099287016,
+      "gcv": 4.018961548489453,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9914308772224802,
+      "Harmlessness / Safety": 0.18751874030092575,
+      "Helpfulness / Utility": 0.5405899842346807,
+      "Honesty / Transparency": 0.9239994835226766,
+      "Explanatory Depth / Detail": 0.20167474470486968,
+      "Instruction Following / Compliance": 0.9999995324610986,
+      "Clarity / Understandability": 0.756314105743984,
+      "Conciseness / Efficiency": 0.9601528527840879,
+      "Logical Consistency / Reasoning": 0.971877863643864,
+      "Creativity / Originality": 0.9982661089300624
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 12,
+      "lam": 30.0,
+      "interaction_features": [
+        [
+          0,
+          2
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.722091007363066,
+      "mae": 1.4650484571862856,
+      "r2": 0.553465157244228
+    },
+    "test_metrics": {
+      "mse": 3.7356084441206336,
+      "mae": 1.471045443431999,
+      "r2": 0.5673875571371588
+    },
+    "gam_metrics": {
+      "aic": 7723.906932343196,
+      "deviance": -87.47380090936917,
+      "edof": 41.680874199282684,
+      "gcv": 4.009195136715732,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9991314122904831,
+      "Harmlessness / Safety": 0.5491716674290523,
+      "Helpfulness / Utility": 0.32049239249500094,
+      "Honesty / Transparency": 0.9219388072460525,
+      "Explanatory Depth / Detail": 0.11208011701306608,
+      "Instruction Following / Compliance": 0.9999991848403437,
+      "Clarity / Understandability": 0.8209933598519914,
+      "Conciseness / Efficiency": 0.9731222604729196,
+      "Logical Consistency / Reasoning": 0.976646230690288,
+      "Creativity / Originality": 0.9976633230343626
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 8,
+      "lam": 2.0,
+      "interaction_features": [
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.7156436984407164,
+      "mae": 1.4610492322086213,
+      "r2": 0.5542386332474057
+    },
+    "test_metrics": {
+      "mse": 3.7406867440733524,
+      "mae": 1.4784620616103428,
+      "r2": 0.566799450599496
+    },
+    "gam_metrics": {
+      "aic": 7725.25368626856,
+      "deviance": -87.69678302754232,
+      "edof": 43.43321056493981,
+      "gcv": 4.015018797048183,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999874521088605,
+      "Harmlessness / Safety": 0.16246377517279087,
+      "Helpfulness / Utility": 0.45864871562796994,
+      "Honesty / Transparency": 0.8849948070767026,
+      "Explanatory Depth / Detail": 0.0592505321893958,
+      "Instruction Following / Compliance": 0.9999997719254593,
+      "Clarity / Understandability": 0.8574291261567016,
+      "Conciseness / Efficiency": 0.8787342867588585,
+      "Logical Consistency / Reasoning": 0.8086397365951355,
+      "Creativity / Originality": 0.9807677721662061
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 10,
+      "lam": 8.0,
+      "interaction_features": [
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.7137606741200297,
+      "mae": 1.460683662842402,
+      "r2": 0.554464537441387
+    },
+    "test_metrics": {
+      "mse": 3.7414730958268376,
+      "mae": 1.476664389443905,
+      "r2": 0.5667083849650449
+    },
+    "gam_metrics": {
+      "aic": 7726.074513668503,
+      "deviance": -87.73476626559204,
+      "edof": 44.066290395051,
+      "gcv": 4.017609632113731,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999792686082125,
+      "Harmlessness / Safety": 0.12325670017771961,
+      "Helpfulness / Utility": 0.5291578656424373,
+      "Honesty / Transparency": 0.9265282327836413,
+      "Explanatory Depth / Detail": 0.15646273349512907,
+      "Instruction Following / Compliance": 0.9999992444208589,
+      "Clarity / Understandability": 0.7542544451669035,
+      "Conciseness / Efficiency": 0.949095484057912,
+      "Logical Consistency / Reasoning": 0.8541283327985347,
+      "Creativity / Originality": 0.99792442223961
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 8,
+      "lam": 3.0,
+      "interaction_features": [
+        [
+          0,
+          2
+        ],
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 100,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.719329355242836,
+      "mae": 1.4615720590254382,
+      "r2": 0.5537964693730323
+    },
+    "test_metrics": {
+      "mse": 3.74526083972028,
+      "mae": 1.47826465809696,
+      "r2": 0.5662697348326253
+    },
+    "gam_metrics": {
+      "aic": 7723.714204031856,
+      "deviance": -87.44764461098043,
+      "edof": 42.21332522953429,
+      "gcv": 4.010097526111441,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9988649715050466,
+      "Harmlessness / Safety": 0.15454097208188688,
+      "Helpfulness / Utility": 0.24808216874186484,
+      "Honesty / Transparency": 0.8763567465919485,
+      "Explanatory Depth / Detail": 0.05071469750198443,
+      "Instruction Following / Compliance": 0.9999996992049621,
+      "Clarity / Understandability": 0.8811501021972544,
+      "Conciseness / Efficiency": 0.8890644786213193,
+      "Logical Consistency / Reasoning": 0.8613882011645239,
+      "Creativity / Originality": 0.9819989976945999
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 10,
+      "lam": 10.0,
+      "interaction_features": [
+        [
+          1,
+          2
+        ]
+      ],
+      "max_iter": 100,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.7199155399709967,
+      "mae": 1.4648619108655396,
+      "r2": 0.553726145486567
+    },
+    "test_metrics": {
+      "mse": 3.746691137482848,
+      "mae": 1.4738443745304277,
+      "r2": 0.5661040952538682
+    },
+    "gam_metrics": {
+      "aic": 7725.0149731808315,
+      "deviance": -87.22166055074513,
+      "edof": 42.457093944688005,
+      "gcv": 4.012506706800551,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999832125905841,
+      "Harmlessness / Safety": 0.2112158045153335,
+      "Helpfulness / Utility": 0.770837687299893,
+      "Honesty / Transparency": 0.9162240789835847,
+      "Explanatory Depth / Detail": 0.19676451991720723,
+      "Instruction Following / Compliance": 0.9999995979985029,
+      "Clarity / Understandability": 0.7725201806631885,
+      "Conciseness / Efficiency": 0.9466638989453648,
+      "Logical Consistency / Reasoning": 0.9790572149279225,
+      "Creativity / Originality": 0.9981087411498027
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 12,
+      "lam": 25.0,
+      "interaction_features": [
+        [
+          1,
+          2
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.7141156580785615,
+      "mae": 1.4634251088791268,
+      "r2": 0.554421950436988
+    },
+    "test_metrics": {
+      "mse": 3.74676857917534,
+      "mae": 1.4739337829106858,
+      "r2": 0.5660951269049983
+    },
+    "gam_metrics": {
+      "aic": 7722.7660342065665,
+      "deviance": -87.91926749108097,
+      "edof": 43.05404527630384,
+      "gcv": 4.010600840534633,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999475685565385,
+      "Harmlessness / Safety": 0.608737586786583,
+      "Helpfulness / Utility": 0.7180332684420117,
+      "Honesty / Transparency": 0.9285104678885442,
+      "Explanatory Depth / Detail": 0.11366462595236837,
+      "Instruction Following / Compliance": 0.9999993360328735,
+      "Clarity / Understandability": 0.7624223005784114,
+      "Conciseness / Efficiency": 0.9593190346499275,
+      "Logical Consistency / Reasoning": 0.9763757384516503,
+      "Creativity / Originality": 0.9973745127528383
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 8,
+      "lam": 2.0,
+      "interaction_features": [
+        [
+          1,
+          2
+        ]
+      ],
+      "max_iter": 100,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.7159155003519713,
+      "mae": 1.4635347970345913,
+      "r2": 0.5542060254945423
+    },
+    "test_metrics": {
+      "mse": 3.748394612007098,
+      "mae": 1.4766103443159004,
+      "r2": 0.565906819686497
+    },
+    "gam_metrics": {
+      "aic": 7725.673376603368,
+      "deviance": -87.41864858604072,
+      "edof": 43.494199335066895,
+      "gcv": 4.0157580215015605,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999894573302438,
+      "Harmlessness / Safety": 0.2241217292909108,
+      "Helpfulness / Utility": 0.750654911426137,
+      "Honesty / Transparency": 0.877520767028423,
+      "Explanatory Depth / Detail": 0.08358087248966595,
+      "Instruction Following / Compliance": 0.999999861205144,
+      "Clarity / Understandability": 0.8626544334285963,
+      "Conciseness / Efficiency": 0.8749272988339086,
+      "Logical Consistency / Reasoning": 0.9833929990784003,
+      "Creativity / Originality": 0.9835328642394278
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 10,
+      "lam": 10.0,
+      "interaction_features": [
+        [
+          0,
+          2
+        ],
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 100,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.71585943377829,
+      "mae": 1.4606684476552823,
+      "r2": 0.5542127517348769
+    },
+    "test_metrics": {
+      "mse": 3.7508803527229593,
+      "mae": 1.477907199771986,
+      "r2": 0.5656189516244401
+    },
+    "gam_metrics": {
+      "aic": 7725.668318129254,
+      "deviance": -87.35546140190013,
+      "edof": 43.504695585907406,
+      "gcv": 4.015774112284071,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9995020597521875,
+      "Harmlessness / Safety": 0.12264003960309344,
+      "Helpfulness / Utility": 0.3575680093171152,
+      "Honesty / Transparency": 0.9175786943613933,
+      "Explanatory Depth / Detail": 0.1461474789654078,
+      "Instruction Following / Compliance": 0.9999989193952116,
+      "Clarity / Understandability": 0.793972123698725,
+      "Conciseness / Efficiency": 0.9519001172195641,
+      "Logical Consistency / Reasoning": 0.8676708649624427,
+      "Creativity / Originality": 0.9979454057856741
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 12,
+      "lam": 20.0,
+      "interaction_features": [
+        [
+          1,
+          2
+        ]
+      ],
+      "max_iter": 100,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.708277611209584,
+      "mae": 1.4619170161455342,
+      "r2": 0.5551223339943708
+    },
+    "test_metrics": {
+      "mse": 3.753822288778135,
+      "mae": 1.475756317525652,
+      "r2": 0.5652782526024163
+    },
+    "gam_metrics": {
+      "aic": 7724.781718781477,
+      "deviance": -87.96740559817863,
+      "edof": 44.86814478117355,
+      "gcv": 4.017539506522932,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999471414671025,
+      "Harmlessness / Safety": 0.6059715118504199,
+      "Helpfulness / Utility": 0.7054461634116419,
+      "Honesty / Transparency": 0.930026158689945,
+      "Explanatory Depth / Detail": 0.1075214924575818,
+      "Instruction Following / Compliance": 0.9999992028209626,
+      "Clarity / Understandability": 0.7595266982656407,
+      "Conciseness / Efficiency": 0.9583633668127319,
+      "Logical Consistency / Reasoning": 0.9754936369676598,
+      "Creativity / Originality": 0.9974800328464445
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 12,
+      "lam": 15.0,
+      "interaction_features": [
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.699980305763061,
+      "mae": 1.457491829010769,
+      "r2": 0.556117751885962
+    },
+    "test_metrics": {
+      "mse": 3.7538344363025153,
+      "mae": 1.4795416721398726,
+      "r2": 0.565276845824839
+    },
+    "gam_metrics": {
+      "aic": 7726.811946080073,
+      "deviance": -88.40132563684347,
+      "edof": 47.21211305450444,
+      "gcv": 4.025719955556865,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999300906814084,
+      "Harmlessness / Safety": 0.5238491336046068,
+      "Helpfulness / Utility": 0.4010489574032684,
+      "Honesty / Transparency": 0.9406375074864336,
+      "Explanatory Depth / Detail": 0.08474719168743239,
+      "Instruction Following / Compliance": 0.9999984886115086,
+      "Clarity / Understandability": 0.7378831122762597,
+      "Conciseness / Efficiency": 0.9671234631035113,
+      "Logical Consistency / Reasoning": 0.8236855906993897,
+      "Creativity / Originality": 0.9972867402999062
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 12,
+      "lam": 20.0,
+      "interaction_features": [
+        [
+          0,
+          2
+        ],
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.703672133816939,
+      "mae": 1.4575874862836968,
+      "r2": 0.5556748476538359
+    },
+    "test_metrics": {
+      "mse": 3.7590462698099314,
+      "mae": 1.4796938580943777,
+      "r2": 0.5646732750654393
+    },
+    "gam_metrics": {
+      "aic": 7725.490496253652,
+      "deviance": -88.10986561356731,
+      "edof": 46.05060776415456,
+      "gcv": 4.021206436448897,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9983921183152552,
+      "Harmlessness / Safety": 0.5250812277965111,
+      "Helpfulness / Utility": 0.2601088987987723,
+      "Honesty / Transparency": 0.9324505560131461,
+      "Explanatory Depth / Detail": 0.07734660300773732,
+      "Instruction Following / Compliance": 0.99999795204779,
+      "Clarity / Understandability": 0.7739857611523532,
+      "Conciseness / Efficiency": 0.9698236075269344,
+      "Logical Consistency / Reasoning": 0.8453624196200928,
+      "Creativity / Originality": 0.997360719514547
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 10,
+      "lam": 5.0,
+      "interaction_features": [
+        [
+          0,
+          2
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.7079322654602604,
+      "mae": 1.4611928027085563,
+      "r2": 0.5551637647142446
+    },
+    "test_metrics": {
+      "mse": 3.7648777253184424,
+      "mae": 1.4774119043495362,
+      "r2": 0.5639979472705915
+    },
+    "gam_metrics": {
+      "aic": 7734.326740539459,
+      "deviance": -86.65971067159671,
+      "edof": 47.641272213584166,
+      "gcv": 4.037534339663706,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9993124943859617,
+      "Harmlessness / Safety": 0.17332935791867365,
+      "Helpfulness / Utility": 0.32738283389594847,
+      "Honesty / Transparency": 0.9161902907716536,
+      "Explanatory Depth / Detail": 0.1679177958687328,
+      "Instruction Following / Compliance": 0.9999988860547755,
+      "Clarity / Understandability": 0.8266603840719857,
+      "Conciseness / Efficiency": 0.9623589373868879,
+      "Logical Consistency / Reasoning": 0.975442544063062,
+      "Creativity / Originality": 0.9985243577759004
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 12,
+      "lam": 8.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ]
+      ],
+      "max_iter": 100,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.679059633448378,
+      "mae": 1.455729316540948,
+      "r2": 0.5586275801260298
+    },
+    "test_metrics": {
+      "mse": 3.7686571112504312,
+      "mae": 1.478536129724427,
+      "r2": 0.5635602650549587
+    },
+    "gam_metrics": {
+      "aic": 7730.237697085635,
+      "deviance": -89.27186888427286,
+      "edof": 52.654716365144075,
+      "gcv": 4.043025054445536,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.969784628912123,
+      "Harmlessness / Safety": 0.5880541720961177,
+      "Helpfulness / Utility": 0.38520272414287227,
+      "Honesty / Transparency": 0.9368667577817313,
+      "Explanatory Depth / Detail": 0.09269666915419306,
+      "Instruction Following / Compliance": 0.9999986270050828,
+      "Clarity / Understandability": 0.7267592540587833,
+      "Conciseness / Efficiency": 0.9651789361289944,
+      "Logical Consistency / Reasoning": 0.964453133122836,
+      "Creativity / Originality": 0.9981005531761608
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 12,
+      "lam": 8.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ],
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.6771080118016157,
+      "mae": 1.4551766230496113,
+      "r2": 0.5588617138598455
+    },
+    "test_metrics": {
+      "mse": 3.7707216851970595,
+      "mae": 1.4789974439981892,
+      "r2": 0.5633211713726625
+    },
+    "gam_metrics": {
+      "aic": 7732.882650550225,
+      "deviance": -89.08319273376901,
+      "edof": 53.81954538264988,
+      "gcv": 4.049529193599591,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9586758968741981,
+      "Harmlessness / Safety": 0.5862224766184726,
+      "Helpfulness / Utility": 0.38311799138606406,
+      "Honesty / Transparency": 0.9350083677136934,
+      "Explanatory Depth / Detail": 0.09192392559988727,
+      "Instruction Following / Compliance": 0.9999985145656396,
+      "Clarity / Understandability": 0.724574235509663,
+      "Conciseness / Efficiency": 0.9023730077134284,
+      "Logical Consistency / Reasoning": 0.963518088926122,
+      "Creativity / Originality": 0.9980916123369816
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 10,
+      "lam": 3.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ],
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.6912356392114396,
+      "mae": 1.4585660750854195,
+      "r2": 0.5571668391586417
+    },
+    "test_metrics": {
+      "mse": 3.7711442695353536,
+      "mae": 1.4796508947863551,
+      "r2": 0.5632722328274055
+    },
+    "gam_metrics": {
+      "aic": 7738.6330307889975,
+      "deviance": -87.33674739892172,
+      "edof": 52.41880693894592,
+      "gcv": 4.054650653931281,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.974788592421393,
+      "Harmlessness / Safety": 0.1677962665442836,
+      "Helpfulness / Utility": 0.483723977928159,
+      "Honesty / Transparency": 0.9293454830362998,
+      "Explanatory Depth / Detail": 0.17671410864784443,
+      "Instruction Following / Compliance": 0.9999990374399534,
+      "Clarity / Understandability": 0.7587043745818068,
+      "Conciseness / Efficiency": 0.8800412327922239,
+      "Logical Consistency / Reasoning": 0.9667251720787868,
+      "Creativity / Originality": 0.9984786861644328
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 15,
+      "lam": 30.0,
+      "interaction_features": [
+        [
+          0,
+          2
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.6915021412778874,
+      "mae": 1.4577372632415126,
+      "r2": 0.5571348672218728
+    },
+    "test_metrics": {
+      "mse": 3.774004559121356,
+      "mae": 1.4790051838226494,
+      "r2": 0.5629409891000167
+    },
+    "gam_metrics": {
+      "aic": 7733.333121674852,
+      "deviance": -87.8097207818405,
+      "edof": 50.86572208811703,
+      "gcv": 4.043417309499781,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9960422699331056,
+      "Harmlessness / Safety": 0.710043021983934,
+      "Helpfulness / Utility": 0.18096683006237502,
+      "Honesty / Transparency": 0.9398781932418017,
+      "Explanatory Depth / Detail": 0.1393281627338243,
+      "Instruction Following / Compliance": 0.9999997770304322,
+      "Clarity / Understandability": 0.8373762383268029,
+      "Conciseness / Efficiency": 0.9357966349128929,
+      "Logical Consistency / Reasoning": 0.9232039214482152,
+      "Creativity / Originality": 0.999820531613774
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 15,
+      "lam": 20.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ],
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.6695730528896515,
+      "mae": 1.4535601595363667,
+      "r2": 0.5597656739420329
+    },
+    "test_metrics": {
+      "mse": 3.776881069393408,
+      "mae": 1.4798503267149439,
+      "r2": 0.562607866891325
+    },
+    "gam_metrics": {
+      "aic": 7734.117531694652,
+      "deviance": -89.37393795525259,
+      "edof": 55.78438577708024,
+      "gcv": 4.055853014951079,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.936290595812802,
+      "Harmlessness / Safety": 0.6997515431512951,
+      "Helpfulness / Utility": 0.26798407233804467,
+      "Honesty / Transparency": 0.9427077999130766,
+      "Explanatory Depth / Detail": 0.13276090341018665,
+      "Instruction Following / Compliance": 0.9999998324704034,
+      "Clarity / Understandability": 0.7678096890048142,
+      "Conciseness / Efficiency": 0.8184567122449229,
+      "Logical Consistency / Reasoning": 0.9043910979360092,
+      "Creativity / Originality": 0.9998032424778972
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 15,
+      "lam": 20.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.662368000846283,
+      "mae": 1.4496634678323885,
+      "r2": 0.560630055488553
+    },
+    "test_metrics": {
+      "mse": 3.7827316071344628,
+      "mae": 1.484904720015158,
+      "r2": 0.5619303292258874
+    },
+    "gam_metrics": {
+      "aic": 7733.065810477091,
+      "deviance": -89.89372733984487,
+      "edof": 57.035991387054835,
+      "gcv": 4.057226748968203,
+      "n_terms": 14
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9157739479659908,
+      "Harmlessness / Safety": 0.6894662583538267,
+      "Helpfulness / Utility": 0.2628140625985347,
+      "Honesty / Transparency": 0.951687960331483,
+      "Explanatory Depth / Detail": 0.11968150654619603,
+      "Instruction Following / Compliance": 0.9999997725655996,
+      "Clarity / Understandability": 0.7282902245267056,
+      "Conciseness / Efficiency": 0.8160482181569162,
+      "Logical Consistency / Reasoning": 0.6046994670768191,
+      "Creativity / Originality": 0.999754623822858
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 15,
+      "lam": 25.0,
+      "interaction_features": [
+        [
+          1,
+          2
+        ],
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.681887562864248,
+      "mae": 1.4558894444912744,
+      "r2": 0.5582883167886901
+    },
+    "test_metrics": {
+      "mse": 3.7867065266948234,
+      "mae": 1.4823443568513608,
+      "r2": 0.5614700026989202
+    },
+    "gam_metrics": {
+      "aic": 7735.610442889791,
+      "deviance": -87.97108490583832,
+      "edof": 53.56522807082014,
+      "gcv": 4.052899695994431,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9998001588613373,
+      "Harmlessness / Safety": 0.7043019238354297,
+      "Helpfulness / Utility": 0.5143340532891528,
+      "Honesty / Transparency": 0.9446780287105838,
+      "Explanatory Depth / Detail": 0.1413431602352636,
+      "Instruction Following / Compliance": 0.9999998550039442,
+      "Clarity / Understandability": 0.7741117990250672,
+      "Conciseness / Efficiency": 0.7337317568026032,
+      "Logical Consistency / Reasoning": 0.9235667515316996,
+      "Creativity / Originality": 0.9997677798336982
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 15,
+      "lam": 25.0,
+      "interaction_features": [
+        [
+          0,
+          2
+        ],
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.6783165412838077,
+      "mae": 1.451987692687253,
+      "r2": 0.5587167280115068
+    },
+    "test_metrics": {
+      "mse": 3.7911167686712544,
+      "mae": 1.4861767266346504,
+      "r2": 0.5609592624584534
+    },
+    "gam_metrics": {
+      "aic": 7733.791683212847,
+      "deviance": -88.32664119811898,
+      "edof": 53.81700322854413,
+      "gcv": 4.050841212277153,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9938856435253394,
+      "Harmlessness / Safety": 0.6853217836381832,
+      "Helpfulness / Utility": 0.14994755526130543,
+      "Honesty / Transparency": 0.950271959624477,
+      "Explanatory Depth / Detail": 0.12013565779641588,
+      "Instruction Following / Compliance": 0.9999995932832999,
+      "Clarity / Understandability": 0.8034143715513176,
+      "Conciseness / Efficiency": 0.9361733671513697,
+      "Logical Consistency / Reasoning": 0.6514862072287544,
+      "Creativity / Originality": 0.9998050788677094
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 10,
+      "lam": 3.0,
+      "interaction_features": [
+        [
+          1,
+          2
+        ],
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.6936010933260093,
+      "mae": 1.458825493699913,
+      "r2": 0.5568830584345794
+    },
+    "test_metrics": {
+      "mse": 3.7932463629152107,
+      "mae": 1.4836323841584025,
+      "r2": 0.5607126389212262
+    },
+    "gam_metrics": {
+      "aic": 7740.3927351547745,
+      "deviance": -86.35390784161086,
+      "edof": 52.41017548124866,
+      "gcv": 4.057184765009734,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999826515611984,
+      "Harmlessness / Safety": 0.17778295816000889,
+      "Helpfulness / Utility": 0.6697088004056435,
+      "Honesty / Transparency": 0.9258408164649007,
+      "Explanatory Depth / Detail": 0.1698235062903355,
+      "Instruction Following / Compliance": 0.9999989933683152,
+      "Clarity / Understandability": 0.7689251686599716,
+      "Conciseness / Efficiency": 0.7977293860268763,
+      "Logical Consistency / Reasoning": 0.973560309985531,
+      "Creativity / Originality": 0.9983704480194567
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 15,
+      "lam": 15.0,
+      "interaction_features": [
+        [
+          1,
+          2
+        ]
+      ],
+      "max_iter": 100,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.6687509133250638,
+      "mae": 1.453564420513967,
+      "r2": 0.5598643050503187
+    },
+    "test_metrics": {
+      "mse": 3.803785275288189,
+      "mae": 1.4857499744560638,
+      "r2": 0.5594921510957511
+    },
+    "gam_metrics": {
+      "aic": 7739.22496938894,
+      "deviance": -88.14414609819778,
+      "edof": 57.40059010127549,
+      "gcv": 4.06702864394731,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9998048682610232,
+      "Harmlessness / Safety": 0.6975890438925159,
+      "Helpfulness / Utility": 0.5503438152817788,
+      "Honesty / Transparency": 0.9472193076467397,
+      "Explanatory Depth / Detail": 0.13180667543653657,
+      "Instruction Following / Compliance": 0.9999998027062691,
+      "Clarity / Understandability": 0.7622361912026616,
+      "Conciseness / Efficiency": 0.9063435941553921,
+      "Logical Consistency / Reasoning": 0.9235714365857939,
+      "Creativity / Originality": 0.9998115370849311
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 15,
+      "lam": 15.0,
+      "interaction_features": [
+        [
+          0,
+          2
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.6706889720730898,
+      "mae": 1.4539907277315027,
+      "r2": 0.5596317984413751
+    },
+    "test_metrics": {
+      "mse": 3.8064110439381977,
+      "mae": 1.4848314161579912,
+      "r2": 0.5591880667124265
+    },
+    "gam_metrics": {
+      "aic": 7741.787125187204,
+      "deviance": -87.64306704804403,
+      "edof": 57.70661710012678,
+      "gcv": 4.071472546002603,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9917104367845792,
+      "Harmlessness / Safety": 0.7332824426498981,
+      "Helpfulness / Utility": 0.14056740955014313,
+      "Honesty / Transparency": 0.9418791489163368,
+      "Explanatory Depth / Detail": 0.12246852793524043,
+      "Instruction Following / Compliance": 0.9999996092341047,
+      "Clarity / Understandability": 0.8291163287168015,
+      "Conciseness / Efficiency": 0.9313049632729414,
+      "Logical Consistency / Reasoning": 0.918608876215101,
+      "Creativity / Originality": 0.9998643418728396
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 15,
+      "lam": 15.0,
+      "interaction_features": [
+        [
+          0,
+          2
+        ]
+      ],
+      "max_iter": 100,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.6706889720730898,
+      "mae": 1.4539907277315027,
+      "r2": 0.5596317984413751
+    },
+    "test_metrics": {
+      "mse": 3.8064110439381977,
+      "mae": 1.4848314161579912,
+      "r2": 0.5591880667124265
+    },
+    "gam_metrics": {
+      "aic": 7741.787125187204,
+      "deviance": -87.64306704804403,
+      "edof": 57.70661710012678,
+      "gcv": 4.071472546002603,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9917104367845792,
+      "Harmlessness / Safety": 0.7332824426498981,
+      "Helpfulness / Utility": 0.14056740955014313,
+      "Honesty / Transparency": 0.9418791489163368,
+      "Explanatory Depth / Detail": 0.12246852793524043,
+      "Instruction Following / Compliance": 0.9999996092341047,
+      "Clarity / Understandability": 0.8291163287168015,
+      "Conciseness / Efficiency": 0.9313049632729414,
+      "Logical Consistency / Reasoning": 0.918608876215101,
+      "Creativity / Originality": 0.9998643418728396
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 15,
+      "lam": 15.0,
+      "interaction_features": [
+        [
+          1,
+          2
+        ],
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.666043751177465,
+      "mae": 1.4528224590067835,
+      "r2": 0.5601890800817462
+    },
+    "test_metrics": {
+      "mse": 3.808048399058572,
+      "mae": 1.4866736919263082,
+      "r2": 0.5589984482850525
+    },
+    "gam_metrics": {
+      "aic": 7741.672799626711,
+      "deviance": -87.97569930451687,
+      "edof": 58.67136033775497,
+      "gcv": 4.073560040960266,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9998021159044742,
+      "Harmlessness / Safety": 0.6982932875078165,
+      "Helpfulness / Utility": 0.4962008970247147,
+      "Honesty / Transparency": 0.9454708763601163,
+      "Explanatory Depth / Detail": 0.13116100629320881,
+      "Instruction Following / Compliance": 0.9999997909033399,
+      "Clarity / Understandability": 0.7614634964163512,
+      "Conciseness / Efficiency": 0.7382054322779211,
+      "Logical Consistency / Reasoning": 0.9210463081371149,
+      "Creativity / Originality": 0.9998121325306425
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 10,
+      "lam": 2.0,
+      "interaction_features": [
+        [
+          1,
+          2
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.6858975380514822,
+      "mae": 1.457569096210327,
+      "r2": 0.557807244822383
+    },
+    "test_metrics": {
+      "mse": 3.8090660640479657,
+      "mae": 1.4866157906094548,
+      "r2": 0.558880594783096
+    },
+    "gam_metrics": {
+      "aic": 7741.518154004708,
+      "deviance": -86.40348121924808,
+      "edof": 54.37360328506613,
+      "gcv": 4.063342405836018,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9999830488897866,
+      "Harmlessness / Safety": 0.1697896934002261,
+      "Helpfulness / Utility": 0.6804492676543232,
+      "Honesty / Transparency": 0.9292630210299151,
+      "Explanatory Depth / Detail": 0.16505818617942003,
+      "Instruction Following / Compliance": 0.9999987764432875,
+      "Clarity / Understandability": 0.751172567854758,
+      "Conciseness / Efficiency": 0.9432565748936578,
+      "Logical Consistency / Reasoning": 0.9729047432750568,
+      "Creativity / Originality": 0.9984748740279478
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 12,
+      "lam": 5.0,
+      "interaction_features": [
+        [
+          0,
+          2
+        ],
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 100,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.6644606477299413,
+      "mae": 1.4497445003168536,
+      "r2": 0.5603790031243605
+    },
+    "test_metrics": {
+      "mse": 3.8156356530216455,
+      "mae": 1.4905838092171808,
+      "r2": 0.5581197854057156
+    },
+    "gam_metrics": {
+      "aic": 7739.82167328617,
+      "deviance": -88.08991677148788,
+      "edof": 58.48997690522839,
+      "gcv": 4.070438883818976,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9886513543811106,
+      "Harmlessness / Safety": 0.5849498765819865,
+      "Helpfulness / Utility": 0.17344655300746492,
+      "Honesty / Transparency": 0.9376468813490325,
+      "Explanatory Depth / Detail": 0.05783567606143125,
+      "Instruction Following / Compliance": 0.9999951984014905,
+      "Clarity / Understandability": 0.7640148924293153,
+      "Conciseness / Efficiency": 0.9683848744764695,
+      "Logical Consistency / Reasoning": 0.7229038094552178,
+      "Creativity / Originality": 0.9979897866659748
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 15,
+      "lam": 10.0,
+      "interaction_features": [
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 100,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.657740923997378,
+      "mae": 1.449572851429029,
+      "r2": 0.5611851604091627
+    },
+    "test_metrics": {
+      "mse": 3.8207057401767215,
+      "mae": 1.4924006627079052,
+      "r2": 0.557532629973744
+    },
+    "gam_metrics": {
+      "aic": 7745.007686069544,
+      "deviance": -87.92004637981995,
+      "edof": 61.3943065553531,
+      "gcv": 4.084826695393532,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.99973370656012,
+      "Harmlessness / Safety": 0.6941208036673323,
+      "Helpfulness / Utility": 0.19935620421096134,
+      "Honesty / Transparency": 0.9557271104319904,
+      "Explanatory Depth / Detail": 0.11490917534570988,
+      "Instruction Following / Compliance": 0.9999995904682293,
+      "Clarity / Understandability": 0.7722762155904501,
+      "Conciseness / Efficiency": 0.9272682882635072,
+      "Logical Consistency / Reasoning": 0.5051801569378278,
+      "Creativity / Originality": 0.9998137010508584
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 15,
+      "lam": 10.0,
+      "interaction_features": [
+        [
+          0,
+          2
+        ],
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 100,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.6492080553500195,
+      "mae": 1.4472583120403562,
+      "r2": 0.5622088385385171
+    },
+    "test_metrics": {
+      "mse": 3.833302358635537,
+      "mae": 1.493177112348431,
+      "r2": 0.5560738438175405
+    },
+    "gam_metrics": {
+      "aic": 7745.664385944416,
+      "deviance": -88.17194140941638,
+      "edof": 63.41558949587217,
+      "gcv": 4.090574005288605,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9798674795373636,
+      "Harmlessness / Safety": 0.7106215524805104,
+      "Helpfulness / Utility": 0.10801451120059324,
+      "Honesty / Transparency": 0.9504904243650187,
+      "Explanatory Depth / Detail": 0.09990625133529141,
+      "Instruction Following / Compliance": 0.9999992441670892,
+      "Clarity / Understandability": 0.7952858797752915,
+      "Conciseness / Efficiency": 0.9323892154632019,
+      "Logical Consistency / Reasoning": 0.5177002490562767,
+      "Creativity / Originality": 0.9998603558152072
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 15,
+      "lam": 5.0,
+      "interaction_features": [
+        [
+          0,
+          1
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          8,
+          9
+        ]
+      ],
+      "max_iter": 300,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.6059073108149566,
+      "mae": 1.4385161725521747,
+      "r2": 0.5674035774940995
+    },
+    "test_metrics": {
+      "mse": 3.8489724673693804,
+      "mae": 1.4934388679325032,
+      "r2": 0.5542591236399097
+    },
+    "gam_metrics": {
+      "aic": 7744.654569027017,
+      "deviance": -91.25333980895698,
+      "edof": 72.50359741512561,
+      "gcv": 4.1109666074275095,
+      "n_terms": 14
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.8651157440609355,
+      "Harmlessness / Safety": 0.7202385311265345,
+      "Helpfulness / Utility": 0.18809886510383,
+      "Honesty / Transparency": 0.943760120044528,
+      "Explanatory Depth / Detail": 0.0800171312075243,
+      "Instruction Following / Compliance": 0.9999995527926151,
+      "Clarity / Understandability": 0.6764558553306341,
+      "Conciseness / Efficiency": 0.8062285268123347,
+      "Logical Consistency / Reasoning": 0.33210799492526466,
+      "Creativity / Originality": 0.9998564699974558
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 15,
+      "lam": 5.0,
+      "interaction_features": [
+        [
+          1,
+          2
+        ],
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 200,
+      "tol": 1e-05
+    },
+    "train_metrics": {
+      "mse": 3.6295270338106103,
+      "mae": 1.4459151154330825,
+      "r2": 0.5645699473456333
+    },
+    "test_metrics": {
+      "mse": 3.8504381861206634,
+      "mae": 1.4944277681448568,
+      "r2": 0.5540893820358236
+    },
+    "gam_metrics": {
+      "aic": 7756.11039922712,
+      "deviance": -88.12180306542291,
+      "edof": 70.59596982323379,
+      "gcv": 4.123184502286366,
+      "n_terms": 13
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9998095121276447,
+      "Harmlessness / Safety": 0.7000526587596791,
+      "Helpfulness / Utility": 0.4738524415781311,
+      "Honesty / Transparency": 0.9441995919714072,
+      "Explanatory Depth / Detail": 0.1091339655302066,
+      "Instruction Following / Compliance": 0.9999996328931197,
+      "Clarity / Understandability": 0.6854788580942357,
+      "Conciseness / Efficiency": 0.7347115418218693,
+      "Logical Consistency / Reasoning": 0.9187907704830193,
+      "Creativity / Originality": 0.9998858065142494
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 15,
+      "lam": 5.0,
+      "interaction_features": [
+        [
+          6,
+          7
+        ]
+      ],
+      "max_iter": 100,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.643177142486534,
+      "mae": 1.450155239882879,
+      "r2": 0.5629323600004703
+    },
+    "test_metrics": {
+      "mse": 3.8555882242913833,
+      "mae": 1.4948187266965518,
+      "r2": 0.5534929676558907
+    },
+    "gam_metrics": {
+      "aic": 7759.236851848951,
+      "deviance": -86.5699094118595,
+      "edof": 68.52727491474246,
+      "gcv": 4.122767868155345,
+      "n_terms": 12
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9997354649135424,
+      "Harmlessness / Safety": 0.6940338633657845,
+      "Helpfulness / Utility": 0.16467531226196797,
+      "Honesty / Transparency": 0.9449804747285009,
+      "Explanatory Depth / Detail": 0.1179808854562131,
+      "Instruction Following / Compliance": 0.9999995730936777,
+      "Clarity / Understandability": 0.7623728573317964,
+      "Conciseness / Efficiency": 0.7991497894412043,
+      "Logical Consistency / Reasoning": 0.9147904233595132,
+      "Creativity / Originality": 0.9998753196768599
+    },
+    "normalize": true
+  },
+  {
+    "config": {
+      "n_splines": 15,
+      "lam": 2.0,
+      "interaction_features": [],
+      "max_iter": 100,
+      "tol": 0.0001
+    },
+    "train_metrics": {
+      "mse": 3.6244483091863584,
+      "mae": 1.4474610195353659,
+      "r2": 0.5651792359140762
+    },
+    "test_metrics": {
+      "mse": 3.886547154693508,
+      "mae": 1.498943059136318,
+      "r2": 0.549907683301273
+    },
+    "gam_metrics": {
+      "aic": 7771.52765404897,
+      "deviance": -85.86412951707166,
+      "edof": 76.01231921358088,
+      "gcv": 4.159329205905113,
+      "n_terms": 11
+    },
+    "feature_importance": {
+      "Truthfulness / Factual Accuracy": 0.9997215122256015,
+      "Harmlessness / Safety": 0.6868363496525646,
+      "Helpfulness / Utility": 0.13319649946328416,
+      "Honesty / Transparency": 0.9523941866823473,
+      "Explanatory Depth / Detail": 0.10643631072506854,
+      "Instruction Following / Compliance": 0.9999995128293268,
+      "Clarity / Understandability": 0.7794351952864758,
+      "Conciseness / Efficiency": 0.9144209391211465,
+      "Logical Consistency / Reasoning": 0.921052294468126,
+      "Creativity / Originality": 0.9998965594847885
+    },
+    "normalize": true
+  }
+]
