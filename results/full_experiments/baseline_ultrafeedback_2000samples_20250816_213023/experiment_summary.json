@@ -3,5 +3,22 @@
   "best_model_r2": 0.5390931367874146,
   "normalization_helps": false,
   "samples_processed": 2000,
-  "run_name": "ultrafeedback_2000samples_20250816_213023"
+  "run_name": "ultrafeedback_2000samples_20250816_213023",
+  "optimal_model": {
+    "r2_score": 0.5784513354301453,
+    "mae_score": 1.4654704332351685,
+    "improvement_vs_baseline": 0.03945133543014523,
+    "config": {
+      "hidden_dim": 64,
+      "learning_rate": 0.001,
+      "batch_size": 32,
+      "n_epochs": 400,
+      "dropout": 0.1,
+      "l2_reg": 0.1,
+      "early_stopping_patience": 20,
+      "min_delta": 0.0001
+    },
+    "model_path": "results/full_experiments/baseline_ultrafeedback_2000samples_20250816_213023/optimal_model.pt",
+    "retrained_timestamp": "2025-08-17T13:40:33.428732"
+  }
 }
