@@ -24,6 +24,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 from sklearn.model_selection import train_test_split
@@ -39,7 +40,8 @@ load_dotenv()
 from pipeline.core.dataset_loader import DatasetLoader
 from pipeline.core.persona_simulation import PersonaSimulator, PERSONAS
 from pipeline.core.judge_evaluation import JudgeEvaluator, JUDGE_IDS
-from pipeline.core.aggregator_training import MLPTrainer, GAMAggregator, compute_metrics, load_training_config, determine_training_scale
+from pipeline.core.aggregator_training import MLPTrainer, GAMAggregator, compute_metrics, load_training_config, determine_training_scale, plot_training_curves
+from hyperparameter_tuning import HyperparameterTuner
 from utils.logging_setup import (
     setup_universal_logging, log_experiment_start, log_experiment_progress,
     log_experiment_milestone, log_experiment_complete, log_model_results,
@@ -61,7 +63,9 @@ class FullExperiment:
         concurrency: int = 1,  # Reduced for API rate limiting
         checkpoint_interval: int = 10,
         normalize_features: bool = True,
-        run_name: Optional[str] = None
+        run_name: Optional[str] = None,
+        enable_hyperparameter_tuning: bool = False,
+        hyperparameter_trials: int = 30
     ):
         self.data_source = data_source
         self.data_size = data_size
@@ -70,6 +74,8 @@ class FullExperiment:
         self.concurrency = concurrency
         self.checkpoint_interval = checkpoint_interval
         self.normalize_features = normalize_features
+        self.enable_hyperparameter_tuning = enable_hyperparameter_tuning
+        self.hyperparameter_trials = hyperparameter_trials
         
         # Set random seeds
         random.seed(random_seed)
@@ -78,7 +84,7 @@ class FullExperiment:
         # Create run-specific directories
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.run_name = run_name or f"{data_source}_{data_size}samples_{timestamp}"
-        self.run_dir = Path("full_experiment_runs") / self.run_name
+        self.run_dir = Path("results/full_experiments") / self.run_name
         
         # Create subdirectories
         self.run_dir.mkdir(parents=True, exist_ok=True)
@@ -87,6 +93,8 @@ class FullExperiment:
         (self.run_dir / "logs").mkdir(exist_ok=True)
         (self.run_dir / "plots").mkdir(exist_ok=True)
         (self.run_dir / "checkpoints").mkdir(exist_ok=True)
+        if enable_hyperparameter_tuning:
+            (self.run_dir / "hyperparameter_tuning").mkdir(exist_ok=True)
         
         # Initialize components
         self.dataset_loader = DatasetLoader()
@@ -102,6 +110,8 @@ class FullExperiment:
             'concurrency': concurrency,
             'checkpoint_interval': checkpoint_interval,
             'normalize_features': normalize_features,
+            'enable_hyperparameter_tuning': enable_hyperparameter_tuning,
+            'hyperparameter_trials': hyperparameter_trials,
             'experiment_type': 'JUDGES_VS_PERSONAS',
             'run_name': self.run_name,
             'timestamp': timestamp
@@ -478,6 +488,191 @@ class FullExperiment:
         
         return results
     
+    def run_hyperparameter_tuning(self, data: pd.DataFrame) -> Dict[str, Any]:
+        """Run comprehensive hyperparameter tuning."""
+        if not self.enable_hyperparameter_tuning:
+            log_experiment_milestone("Hyperparameter tuning disabled, skipping")
+            return {}
+        
+        log_experiment_milestone(f"Running Hyperparameter Tuning ({self.hyperparameter_trials} trials)")
+        
+        # Prepare data for hyperparameter tuning
+        try:
+            # Initialize hyperparameter tuner with run-specific output
+            tuner = HyperparameterTuner(
+                experiment_data_path=str(self.run_dir / "data"),
+                output_dir=str(self.run_dir / "hyperparameter_tuning"),
+                test_size=self.test_size,
+                random_seed=self.random_seed
+            )
+            
+            # Load and prepare data
+            X, y = tuner.load_and_prepare_data()
+            
+            log_experiment_milestone(f"Hyperparameter tuning data prepared: {len(X)} samples")
+            
+            # Run random search
+            results = tuner.random_search(X, y, n_trials=self.hyperparameter_trials, normalize=True)
+            
+            # Run analysis and create visualizations
+            analysis = tuner.analyze_results(results)
+            tuner.create_visualizations(results)
+            
+            # Create best validation R² heatmap
+            self.create_hyperparameter_heatmap(results)
+            
+            log_experiment_milestone("Hyperparameter tuning complete", {
+                'best_r2': analysis.get('best_r2', 0),
+                'trials_completed': len(results),
+                'output_dir': str(self.run_dir / "hyperparameter_tuning")
+            })
+            
+            return {
+                'results': results,
+                'analysis': analysis,
+                'best_config': results[0]['config'] if results else {},
+                'best_r2': analysis.get('best_r2', 0)
+            }
+            
+        except Exception as e:
+            log_experiment_milestone(f"Hyperparameter tuning failed: {e}")
+            return {'error': str(e)}
+    
+    def create_hyperparameter_heatmap(self, results: List[Dict]):
+        """Create best validation R² heatmap for hyperparameter combinations."""
+        if not results:
+            return
+        
+        log_experiment_milestone("Creating hyperparameter heatmap")
+        
+        # Extract data for heatmap
+        hidden_dims = []
+        learning_rates = []
+        r2_scores = []
+        
+        for result in results:
+            config = result['config']
+            test_r2 = result['test_metrics']['r2']
+            
+            hidden_dims.append(config['hidden_dim'])
+            learning_rates.append(config['learning_rate'])
+            r2_scores.append(test_r2)
+        
+        # Create pivot table for heatmap
+        import pandas as pd
+        df = pd.DataFrame({
+            'hidden_dim': hidden_dims,
+            'learning_rate': learning_rates,
+            'r2_score': r2_scores
+        })
+        
+        # Create heatmap data
+        pivot_table = df.pivot_table(
+            values='r2_score', 
+            index='learning_rate', 
+            columns='hidden_dim', 
+            aggfunc='max'  # Take best R² for each combination
+        )
+        
+        # Create heatmap
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+        
+        # Heatmap 1: Best R² by Hidden Dim vs Learning Rate
+        import seaborn as sns
+        sns.heatmap(pivot_table, annot=True, fmt='.3f', cmap='RdYlGn', 
+                   cbar_kws={'label': 'Best Validation R²'}, ax=ax1)
+        ax1.set_title('Best Validation R² by Configuration')
+        ax1.set_xlabel('Hidden Dimension')
+        ax1.set_ylabel('Learning Rate')
+        
+        # Heatmap 2: Configuration frequency
+        freq_table = df.groupby(['learning_rate', 'hidden_dim']).size().unstack(fill_value=0)
+        sns.heatmap(freq_table, annot=True, fmt='d', cmap='Blues', 
+                   cbar_kws={'label': 'Number of Trials'}, ax=ax2)
+        ax2.set_title('Configuration Trial Frequency')
+        ax2.set_xlabel('Hidden Dimension')
+        ax2.set_ylabel('Learning Rate')
+        
+        plt.tight_layout()
+        
+        # Save heatmap
+        heatmap_path = self.run_dir / "plots" / "hyperparameter_heatmap.png"
+        plt.savefig(heatmap_path, dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        # Create additional analysis plots
+        self.create_hyperparameter_analysis_plots(results)
+        
+        log_experiment_milestone("Hyperparameter heatmap created", {'saved_to': str(heatmap_path)})
+    
+    def create_hyperparameter_analysis_plots(self, results: List[Dict]):
+        """Create comprehensive hyperparameter analysis plots."""
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 12))
+        
+        # Extract data
+        configs = [r['config'] for r in results]
+        test_r2s = [r['test_metrics']['r2'] for r in results]
+        train_r2s = [r['train_metrics']['r2'] for r in results]
+        
+        hidden_dims = [c['hidden_dim'] for c in configs]
+        learning_rates = [c['learning_rate'] for c in configs]
+        dropouts = [c['dropout'] for c in configs]
+        l2_regs = [c['l2_reg'] for c in configs]
+        
+        # Plot 1: Hidden Dimension vs R²
+        ax1.scatter(hidden_dims, test_r2s, alpha=0.6, c='blue', label='Test R²')
+        ax1.scatter(hidden_dims, train_r2s, alpha=0.6, c='red', label='Train R²')
+        ax1.set_xlabel('Hidden Dimension')
+        ax1.set_ylabel('R² Score')
+        ax1.set_title('Hidden Dimension vs Performance')
+        ax1.legend()
+        ax1.grid(True, alpha=0.3)
+        
+        # Plot 2: Learning Rate vs R²
+        ax2.scatter(learning_rates, test_r2s, alpha=0.6, c='blue', label='Test R²')
+        ax2.scatter(learning_rates, train_r2s, alpha=0.6, c='red', label='Train R²')
+        ax2.set_xlabel('Learning Rate')
+        ax2.set_ylabel('R² Score')
+        ax2.set_title('Learning Rate vs Performance')
+        ax2.set_xscale('log')
+        ax2.legend()
+        ax2.grid(True, alpha=0.3)
+        
+        # Plot 3: Dropout vs R²
+        ax3.scatter(dropouts, test_r2s, alpha=0.6, c='blue', label='Test R²')
+        ax3.scatter(dropouts, train_r2s, alpha=0.6, c='red', label='Train R²')
+        ax3.set_xlabel('Dropout Rate')
+        ax3.set_ylabel('R² Score')
+        ax3.set_title('Dropout vs Performance')
+        ax3.legend()
+        ax3.grid(True, alpha=0.3)
+        
+        # Plot 4: Overfitting analysis (Train R² - Test R²)
+        overfitting_gaps = [train - test for train, test in zip(train_r2s, test_r2s)]
+        ax4.scatter(test_r2s, overfitting_gaps, alpha=0.6, c='purple')
+        ax4.set_xlabel('Test R²')
+        ax4.set_ylabel('Overfitting Gap (Train R² - Test R²)')
+        ax4.set_title('Overfitting Analysis')
+        ax4.axhline(y=0, color='red', linestyle='--', alpha=0.5)
+        ax4.grid(True, alpha=0.3)
+        
+        # Add text annotations for best points
+        best_idx = np.argmax(test_r2s)
+        best_config = configs[best_idx]
+        best_r2 = test_r2s[best_idx]
+        
+        ax4.annotate(f'Best: R²={best_r2:.3f}\nH={best_config["hidden_dim"]}, LR={best_config["learning_rate"]:.4f}',
+                    xy=(best_r2, overfitting_gaps[best_idx]), xytext=(10, 10),
+                    textcoords='offset points', bbox=dict(boxstyle='round,pad=0.3', facecolor='yellow', alpha=0.7),
+                    arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0'))
+        
+        plt.tight_layout()
+        
+        # Save analysis plots
+        analysis_path = self.run_dir / "plots" / "hyperparameter_analysis.png"
+        plt.savefig(analysis_path, dpi=300, bbox_inches='tight')
+        plt.close()
+    
     def create_visualizations(self, correlation_analysis: Dict[str, Any], model_results: Dict[str, Any]):
         """Create comprehensive visualizations."""
         log_experiment_milestone("Creating Visualizations")
@@ -631,19 +826,29 @@ class FullExperiment:
             # Step 6: Test aggregation models
             model_results = self.test_aggregation_models(data_with_judges)
             
-            # Step 7: Create visualizations
+            # Step 7: Run hyperparameter tuning (if enabled)
+            hyperparameter_results = self.run_hyperparameter_tuning(data_with_judges)
+            
+            # Step 8: Create visualizations
             self.create_visualizations(correlation_analysis, model_results)
             
-            # Step 8: Compile results
+            # Step 9: Compile results
+            best_baseline_r2 = max([v['test_metrics']['r2'] for v in model_results.values() if 'test_metrics' in v], default=-1)
+            best_hyperparameter_r2 = hyperparameter_results.get('best_r2', -1)
+            
             experiment_results = {
                 'config': self.config,
                 'correlation_analysis': correlation_analysis,
                 'model_results': model_results,
+                'hyperparameter_results': hyperparameter_results,
                 'summary': {
                     'overall_correlation': correlation_analysis.get('overall_correlation', 0),
-                    'best_model_r2': max([v['test_metrics']['r2'] for v in model_results.values() if 'test_metrics' in v], default=-1),
+                    'best_baseline_r2': best_baseline_r2,
+                    'best_hyperparameter_r2': best_hyperparameter_r2,
+                    'hyperparameter_improvement': best_hyperparameter_r2 - best_baseline_r2 if best_hyperparameter_r2 > 0 and best_baseline_r2 > 0 else 0,
                     'normalization_helps': self._test_normalization_benefit(model_results),
                     'samples_processed': len(data_with_judges),
+                    'hyperparameter_trials': self.hyperparameter_trials if self.enable_hyperparameter_tuning else 0,
                     'run_name': self.run_name
                 }
             }
@@ -664,10 +869,13 @@ class FullExperiment:
             
             log_experiment_complete({
                 'overall_correlation': correlation_analysis.get('overall_correlation', 0),
-                'best_model_r2': experiment_results['summary']['best_model_r2'],
+                'best_baseline_r2': experiment_results['summary']['best_baseline_r2'],
+                'best_hyperparameter_r2': experiment_results['summary']['best_hyperparameter_r2'],
+                'hyperparameter_improvement': experiment_results['summary']['hyperparameter_improvement'],
                 'normalization_helps': experiment_results['summary']['normalization_helps'],
                 'samples_processed': len(data_with_judges),
                 'api_calls_made': len(data_with_judges) * len(JUDGE_IDS),
+                'hyperparameter_trials': experiment_results['summary']['hyperparameter_trials'],
                 'run_name': self.run_name
             })
             
@@ -702,6 +910,10 @@ async def main():
     parser.add_argument('--random-seed', type=int, default=42,
                         help='Random seed (default: 42)')
     parser.add_argument('--run-name', help='Custom run name (default: auto-generated)')
+    parser.add_argument('--hyperparameter-tuning', action='store_true',
+                        help='Enable hyperparameter tuning (default: False)')
+    parser.add_argument('--hyperparameter-trials', type=int, default=30,
+                        help='Number of hyperparameter trials (default: 30)')
     parser.add_argument('--dry-run', action='store_true',
                         help='Run with small dataset for testing')
     
@@ -720,7 +932,9 @@ async def main():
         test_size=args.test_size,
         random_seed=args.random_seed,
         concurrency=args.concurrency,
-        run_name=args.run_name
+        run_name=args.run_name,
+        enable_hyperparameter_tuning=args.hyperparameter_tuning,
+        hyperparameter_trials=args.hyperparameter_trials
     )
     
     try:
@@ -732,13 +946,20 @@ async def main():
         
         # Print key findings
         overall_corr = results['summary']['overall_correlation']
-        best_r2 = results['summary']['best_model_r2']
+        best_baseline_r2 = results['summary']['best_baseline_r2']
+        best_hyperparameter_r2 = results['summary']['best_hyperparameter_r2']
+        hyperparameter_improvement = results['summary']['hyperparameter_improvement']
         norm_helps = results['summary']['normalization_helps']
         run_name = results['summary']['run_name']
+        hyperparameter_trials = results['summary']['hyperparameter_trials']
         
         print(f"📊 KEY FINDINGS:")
         print(f"   Judge-Persona Correlation: {overall_corr:.3f}")
-        print(f"   Best Model R²: {best_r2:.3f}")
+        print(f"   Best Baseline R²: {best_baseline_r2:.3f}")
+        if hyperparameter_trials > 0:
+            print(f"   Best Hyperparameter R²: {best_hyperparameter_r2:.3f}")
+            print(f"   Hyperparameter Improvement: {hyperparameter_improvement:+.3f}")
+            print(f"   Hyperparameter Trials: {hyperparameter_trials}")
         print(f"   Normalization Helps: {norm_helps}")
         
         print(f"\n📁 RESULTS:")
