@@ -1,0 +1,7 @@
+{
+  "overall_correlation": 0.7989887500115027,
+  "best_model_r2": 0.5390931367874146,
+  "normalization_helps": false,
+  "samples_processed": 2000,
+  "run_name": "ultrafeedback_2000samples_20250816_213023"
+}
