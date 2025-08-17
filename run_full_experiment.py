@@ -422,14 +422,19 @@ class FullExperiment:
         
         # Test with and without normalization
         results = {}
+        best_model = None
+        best_scaler = None
+        best_r2 = -1
+        best_config = None
         
         for normalize in [False, True]:
             norm_suffix = "_normalized" if normalize else "_raw"
             
             X_test = X.copy()
+            current_scaler = None
             if normalize:
-                scaler = StandardScaler()
-                X_test = scaler.fit_transform(X_test)
+                current_scaler = StandardScaler()
+                X_test = current_scaler.fit_transform(X_test)
             
             # Split data
             X_train, X_val, y_train, y_val = train_test_split(
@@ -460,18 +465,63 @@ class FullExperiment:
                 train_pred = mlp_trainer.predict(X_train)
                 val_pred = mlp_trainer.predict(X_val)
                 
+                test_metrics = compute_metrics(y_val, val_pred)
+                test_r2 = test_metrics['r2']
+                
                 results[f'mlp{norm_suffix}'] = {
                     'train_metrics': compute_metrics(y_train, train_pred),
-                    'test_metrics': compute_metrics(y_val, val_pred),
+                    'test_metrics': test_metrics,
                     'normalization': normalize
                 }
+                
+                # Track best model
+                if test_r2 > best_r2:
+                    best_r2 = test_r2
+                    best_model = mlp_trainer
+                    best_scaler = current_scaler
+                    best_config = {
+                        **mlp_config,
+                        'normalization': normalize,
+                        'scale': scale,
+                        'test_r2': test_r2
+                    }
                 
                 log_model_results(f"MLP{norm_suffix}", 
                                 results[f'mlp{norm_suffix}']['train_metrics'], 
                                 results[f'mlp{norm_suffix}']['test_metrics'])
                 
+                # Save training curves for visualization
+                if train_losses and val_losses:
+                    curves_path = self.run_dir / "plots" / f"training_curves{norm_suffix}.png"
+                    plot_training_curves(train_losses, val_losses, save_path=curves_path, show=False)
+                    log_experiment_milestone(f"Training curves saved: {curves_path}")
+                
             except Exception as e:
                 log_experiment_milestone(f"MLP Training Failed{norm_suffix}: {e}")
+        
+        # Save the best model and scaler
+        if best_model is not None:
+            try:
+                # Save best model
+                model_path = self.run_dir / "baseline_model.pt"
+                best_model.save_model(model_path)
+                log_experiment_milestone(f"Best model saved: {model_path} (R²={best_r2:.4f})")
+                
+                # Save scaler if normalization was used
+                if best_scaler is not None:
+                    scaler_path = self.run_dir / "baseline_scaler.pkl"
+                    with open(scaler_path, 'wb') as f:
+                        pickle.dump(best_scaler, f)
+                    log_experiment_milestone(f"Best scaler saved: {scaler_path}")
+                
+                # Save best config
+                config_path = self.run_dir / "baseline_model_config.json"
+                with open(config_path, 'w') as f:
+                    json.dump(best_config, f, indent=2)
+                log_experiment_milestone(f"Best model config saved: {config_path}")
+                
+            except Exception as e:
+                log_experiment_milestone(f"Failed to save best model: {e}")
         
         # Save model results
         with open(self.run_dir / "results" / "model_results.json", 'w') as f:
