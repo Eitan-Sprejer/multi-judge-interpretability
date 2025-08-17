@@ -1,0 +1,76 @@
+{
+  "best_config": {
+    "hidden_dim": 512,
+    "learning_rate": 0.001,
+    "batch_size": 64,
+    "n_epochs": 300,
+    "dropout": 0.2,
+    "l2_reg": 0.1,
+    "early_stopping_patience": 20,
+    "min_delta": 0.0001
+  },
+  "best_r2": 0.581303596496582,
+  "best_mae": 1.4403246641159058,
+  "improvement_vs_baseline": 0.042303596496582,
+  "mean_r2": 0.5517989006638527,
+  "std_r2": 0.04034499093717121,
+  "top_5_configs": [
+    {
+      "hidden_dim": 512,
+      "learning_rate": 0.001,
+      "batch_size": 64,
+      "n_epochs": 300,
+      "dropout": 0.2,
+      "l2_reg": 0.1,
+      "early_stopping_patience": 20,
+      "min_delta": 0.0001
+    },
+    {
+      "hidden_dim": 64,
+      "learning_rate": 0.001,
+      "batch_size": 32,
+      "n_epochs": 400,
+      "dropout": 0.1,
+      "l2_reg": 0.1,
+      "early_stopping_patience": 20,
+      "min_delta": 0.0001
+    },
+    {
+      "hidden_dim": 64,
+      "learning_rate": 0.005,
+      "batch_size": 64,
+      "n_epochs": 400,
+      "dropout": 0.0,
+      "l2_reg": 0.1,
+      "early_stopping_patience": 20,
+      "min_delta": 0.0001
+    },
+    {
+      "hidden_dim": 128,
+      "learning_rate": 0.001,
+      "batch_size": 32,
+      "n_epochs": 200,
+      "dropout": 0.1,
+      "l2_reg": 0.1,
+      "early_stopping_patience": 20,
+      "min_delta": 0.0001
+    },
+    {
+      "hidden_dim": 512,
+      "learning_rate": 0.0005,
+      "batch_size": 64,
+      "n_epochs": 400,
+      "dropout": 0.3,
+      "l2_reg": 0.1,
+      "early_stopping_patience": 20,
+      "min_delta": 0.0001
+    }
+  ],
+  "top_5_r2": [
+    0.581303596496582,
+    0.5809009075164795,
+    0.5795273780822754,
+    0.5789517760276794,
+    0.5789452195167542
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "data_source": "ultrafeedback",
+  "data_size": 2000,
+  "test_size": 0.2,
+  "random_seed": 42,
+  "concurrency": 1,
+  "checkpoint_interval": 10,
+  "normalize_features": true,
+  "experiment_type": "JUDGES_VS_PERSONAS",
+  "run_name": "ultrafeedback_2000samples_20250816_213023",
+  "timestamp": "20250816_213023"
+}
