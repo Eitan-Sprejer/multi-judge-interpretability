@@ -111,17 +111,19 @@ def determine_training_scale(n_samples: int) -> str:
 
 
 class SingleLayerMLP(nn.Module):
-    """Single hidden layer MLP for aggregating judge scores."""
+    """Single hidden layer MLP for aggregating judge scores with dropout and regularization."""
     
-    def __init__(self, n_judges: int = 10, hidden_dim: int = 64):
+    def __init__(self, n_judges: int = 10, hidden_dim: int = 64, dropout: float = 0.0):
         super(SingleLayerMLP, self).__init__()
         self.fc1 = nn.Linear(n_judges, hidden_dim)
         self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(dropout) if dropout > 0 else nn.Identity()
         self.fc2 = nn.Linear(hidden_dim, 1)
     
     def forward(self, x):
         x = self.fc1(x)
         x = self.relu(x)
+        x = self.dropout(x)
         x = self.fc2(x)
         return x.squeeze()
 
@@ -185,7 +187,7 @@ class GAMAggregator:
 
 
 class MLPTrainer:
-    """Trainer for MLP aggregation model."""
+    """Trainer for MLP aggregation model with early stopping and checkpointing."""
     
     def __init__(
         self,
@@ -193,6 +195,10 @@ class MLPTrainer:
         learning_rate: float = 0.001,
         batch_size: int = 32,
         n_epochs: int = 100,
+        dropout: float = 0.0,
+        l2_reg: float = 0.0,
+        early_stopping_patience: int = 15,
+        min_delta: float = 1e-4,
         device: str = 'cpu'
     ):
         """
@@ -202,15 +208,26 @@ class MLPTrainer:
             hidden_dim: Hidden layer dimension
             learning_rate: Learning rate for optimizer
             batch_size: Batch size for training
-            n_epochs: Number of training epochs
+            n_epochs: Maximum number of training epochs
+            dropout: Dropout probability (0.0 = no dropout)
+            l2_reg: L2 regularization strength (0.0 = no regularization)
+            early_stopping_patience: Epochs to wait before stopping if no improvement
+            min_delta: Minimum change to qualify as improvement
             device: Device to train on ('cpu' or 'cuda')
         """
         self.hidden_dim = hidden_dim
         self.learning_rate = learning_rate
         self.batch_size = batch_size
         self.n_epochs = n_epochs
+        self.dropout = dropout
+        self.l2_reg = l2_reg
+        self.early_stopping_patience = early_stopping_patience
+        self.min_delta = min_delta
         self.device = torch.device(device if torch.cuda.is_available() else 'cpu')
         self.model = None
+        self.best_model_state = None
+        self.best_val_loss = float('inf')
+        self.patience_counter = 0
     
     def fit(self, X_train: np.ndarray, y_train: np.ndarray, X_val: Optional[np.ndarray] = None, y_val: Optional[np.ndarray] = None):
         """
@@ -232,16 +249,21 @@ class MLPTrainer:
         
         # Initialize model
         n_features = X_train.shape[1]
-        self.model = SingleLayerMLP(n_judges=n_features, hidden_dim=self.hidden_dim).to(self.device)
+        self.model = SingleLayerMLP(n_judges=n_features, hidden_dim=self.hidden_dim, dropout=self.dropout).to(self.device)
         
-        # Loss and optimizer
+        # Loss and optimizer with L2 regularization
         criterion = nn.MSELoss()
-        optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
+        optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate, weight_decay=self.l2_reg)
         
-        # Training loop
+        # Training loop with early stopping
         self.model.train()
         train_losses = []
         val_losses = []
+        self.best_val_loss = float('inf')
+        self.patience_counter = 0
+        best_epoch = 0
+        
+        logger.info(f"Training MLP with early stopping (patience={self.early_stopping_patience})")
         
         for epoch in range(self.n_epochs):
             epoch_loss = 0.0
@@ -256,15 +278,34 @@ class MLPTrainer:
             avg_train_loss = epoch_loss / len(train_loader)
             train_losses.append(avg_train_loss)
             
-            # Validation
+            # Validation and early stopping
             if X_val is not None and y_val is not None:
                 val_loss = self._evaluate(X_val, y_val, criterion)
                 val_losses.append(val_loss)
                 
-                if (epoch + 1) % 10 == 0:
-                    logger.info(f"Epoch {epoch+1}/{self.n_epochs}, Train Loss: {avg_train_loss:.4f}, Val Loss: {val_loss:.4f}")
+                # Check for improvement
+                if val_loss < self.best_val_loss - self.min_delta:
+                    self.best_val_loss = val_loss
+                    self.best_model_state = self.model.state_dict().copy()
+                    self.patience_counter = 0
+                    best_epoch = epoch + 1
+                    logger.info(f"✓ Epoch {epoch+1}/{self.n_epochs}, Train: {avg_train_loss:.4f}, Val: {val_loss:.4f} (Best)")
+                else:
+                    self.patience_counter += 1
+                    if (epoch + 1) % 10 == 0:
+                        logger.info(f"  Epoch {epoch+1}/{self.n_epochs}, Train: {avg_train_loss:.4f}, Val: {val_loss:.4f} (Patience: {self.patience_counter}/{self.early_stopping_patience})")
+                
+                # Early stopping
+                if self.patience_counter >= self.early_stopping_patience:
+                    logger.info(f"Early stopping at epoch {epoch+1}. Best validation loss: {self.best_val_loss:.4f} at epoch {best_epoch}")
+                    break
             elif (epoch + 1) % 10 == 0:
                 logger.info(f"Epoch {epoch+1}/{self.n_epochs}, Train Loss: {avg_train_loss:.4f}")
+        
+        # Restore best model if we have validation data
+        if self.best_model_state is not None:
+            self.model.load_state_dict(self.best_model_state)
+            logger.info(f"Restored best model from epoch {best_epoch} (val_loss: {self.best_val_loss:.4f})")
         
         return train_losses, val_losses
     
@@ -333,6 +374,63 @@ def compute_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
         'mae': mean_absolute_error(y_true, y_pred),
         'r2': r2_score(y_true, y_pred)
     }
+
+
+def plot_training_curves(train_losses: List[float], val_losses: List[float], 
+                        save_path: Optional[str] = None, show: bool = True) -> None:
+    """
+    Plot training and validation loss curves.
+    
+    Args:
+        train_losses: List of training losses per epoch
+        val_losses: List of validation losses per epoch
+        save_path: Optional path to save the plot
+        show: Whether to display the plot
+    """
+    plt.figure(figsize=(10, 6))
+    
+    epochs = range(1, len(train_losses) + 1)
+    
+    plt.plot(epochs, train_losses, 'b-', label='Training Loss', linewidth=2)
+    if val_losses:
+        val_epochs = range(1, len(val_losses) + 1)
+        plt.plot(val_epochs, val_losses, 'r-', label='Validation Loss', linewidth=2)
+        
+        # Mark best validation loss
+        best_val_epoch = np.argmin(val_losses) + 1
+        best_val_loss = min(val_losses)
+        plt.axvline(x=best_val_epoch, color='r', linestyle='--', alpha=0.7, 
+                   label=f'Best Val (Epoch {best_val_epoch})')
+        plt.plot(best_val_epoch, best_val_loss, 'ro', markersize=8)
+    
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss (MSE)')
+    plt.title('Training and Validation Loss Curves')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    
+    # Add text box with final metrics
+    final_train = train_losses[-1]
+    if val_losses:
+        final_val = val_losses[-1]
+        textstr = f'Final Train Loss: {final_train:.4f}\nFinal Val Loss: {final_val:.4f}\nBest Val Loss: {best_val_loss:.4f}'
+    else:
+        textstr = f'Final Train Loss: {final_train:.4f}'
+    
+    props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+    plt.text(0.02, 0.98, textstr, transform=plt.gca().transAxes, fontsize=10,
+             verticalalignment='top', bbox=props)
+    
+    plt.tight_layout()
+    
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        logger.info(f"Training curves saved to {save_path}")
+    
+    if show:
+        plt.show()
+    else:
+        plt.close()
 
 
 def plot_partial_dependence(
