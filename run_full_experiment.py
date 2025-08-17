@@ -43,6 +43,7 @@ from pipeline.core.judge_evaluation import JudgeEvaluator, JUDGE_IDS
 from pipeline.core.aggregator_training import MLPTrainer, GAMAggregator, compute_metrics, load_training_config, determine_training_scale, plot_training_curves
 from hyperparameter_tuning import HyperparameterTuner
 from gam_hyperparameter_tuning import GAMHyperparameterTuner
+from correlation_analysis import CorrelationAnalyzer
 from utils.logging_setup import (
     setup_universal_logging, log_experiment_start, log_experiment_progress,
     log_experiment_milestone, log_experiment_complete, log_model_results,
@@ -939,10 +940,13 @@ class FullExperiment:
             # Step 9: Run GAM hyperparameter tuning (if enabled)
             gam_results = self.run_gam_hyperparameter_tuning(data_with_judges)
             
-            # Step 10: Create visualizations
+            # Step 10: Run cross-correlation analysis
+            cross_correlation_results = self.run_cross_correlation_analysis(data_with_judges)
+            
+            # Step 11: Create visualizations
             self.create_visualizations(correlation_analysis, model_results)
             
-            # Step 11: Compile results
+            # Step 12: Compile results
             best_baseline_r2 = max([v['test_metrics']['r2'] for v in model_results.values() if 'test_metrics' in v], default=-1)
             best_hyperparameter_r2 = hyperparameter_results.get('best_r2', -1)
             best_gam_r2 = gam_results.get('best_r2', -1)
@@ -956,6 +960,7 @@ class FullExperiment:
             experiment_results = {
                 'config': self.config,
                 'correlation_analysis': correlation_analysis,
+                'cross_correlation_results': cross_correlation_results,
                 'model_results': model_results,
                 'baseline_results': baseline_results,
                 'hyperparameter_results': hyperparameter_results,
@@ -1142,6 +1147,52 @@ class FullExperiment:
         })
         
         return baselines
+    
+    def run_cross_correlation_analysis(self, data_with_judges: pd.DataFrame) -> Dict[str, Any]:
+        """Run detailed cross-correlation analysis between judges and personas."""
+        log_experiment_milestone("Running Cross-Correlation Analysis")
+        
+        try:
+            # Initialize correlation analyzer
+            analyzer = CorrelationAnalyzer(self.run_dir)
+            
+            # Save the current data to the expected location for the analyzer
+            data_path = self.run_dir / "data" / "data_with_judge_scores.pkl"
+            if not data_path.exists():
+                with open(data_path, 'wb') as f:
+                    pickle.dump(data_with_judges, f)
+            
+            # Run the correlation analysis
+            correlation_results = analyzer.run_correlation_analysis()
+            
+            # Extract summary statistics for logging
+            summary_stats = analyzer._calculate_summary_stats(
+                correlation_results['judge_corr_matrix'], "Judge-Judge"
+            )
+            cross_stats = analyzer._calculate_summary_stats(
+                correlation_results['judge_persona_corr_matrix'], "Judge-Persona"
+            )
+            
+            log_experiment_milestone("Cross-correlation analysis complete", {
+                'judge_matrix_shape': str(correlation_results['judge_matrix'].shape),
+                'persona_matrix_shape': str(correlation_results['persona_matrix'].shape),
+                'judge_avg_correlation': f"{summary_stats['mean']:.3f}",
+                'judge_persona_avg_correlation': f"{cross_stats['mean']:.3f}",
+                'strong_judge_correlations': summary_stats['strong_count'],
+                'strong_cross_correlations': cross_stats['strong_count']
+            })
+            
+            return {
+                'correlation_results': correlation_results,
+                'summary_stats': {
+                    'judge_judge': summary_stats,
+                    'judge_persona': cross_stats
+                }
+            }
+            
+        except Exception as e:
+            log_experiment_milestone(f"Cross-correlation analysis failed: {e}")
+            return {'error': str(e)}
 
 
 async def main():
