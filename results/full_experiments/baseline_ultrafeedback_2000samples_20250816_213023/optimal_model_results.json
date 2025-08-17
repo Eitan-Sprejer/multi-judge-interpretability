@@ -1,0 +1,36 @@
+{
+  "experiment_info": {
+    "original_r2": 0.539,
+    "optimal_r2": 0.5784513354301453,
+    "improvement": 0.03945133543014523,
+    "improvement_percent": 7.319357222661452,
+    "retrained_timestamp": "2025-08-17T13:40:33.427965"
+  },
+  "optimal_config": {
+    "hidden_dim": 64,
+    "learning_rate": 0.001,
+    "batch_size": 32,
+    "n_epochs": 400,
+    "dropout": 0.1,
+    "l2_reg": 0.1,
+    "early_stopping_patience": 20,
+    "min_delta": 0.0001
+  },
+  "training_metrics": {
+    "mse": 3.740182399749756,
+    "mae": 1.4626421928405762,
+    "r2": 0.5590461492538452
+  },
+  "test_metrics": {
+    "mse": 3.585524320602417,
+    "mae": 1.4654704332351685,
+    "r2": 0.5784513354301453
+  },
+  "training_details": {
+    "total_epochs": 121,
+    "best_epoch": "101",
+    "early_stopped": true,
+    "final_train_loss": 3.8348591566085815,
+    "final_val_loss": 3.585524320602417
+  }
+}
