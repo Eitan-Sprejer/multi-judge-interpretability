@@ -42,7 +42,7 @@ class HyperparameterTuner:
         self.output_dir = Path(output_dir) if not str(output_dir).startswith("results/") else Path(output_dir)
         # If default output dir, use organized structure
         if output_dir == "hyperparameter_tuning_results":
-            self.output_dir = Path("results/hyperparameter_search")
+            self.output_dir = Path("results/hyperparameter_tuning")
         self.test_size = test_size
         self.random_seed = random_seed
         
