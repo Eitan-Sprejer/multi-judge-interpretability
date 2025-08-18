@@ -134,17 +134,22 @@ def generate_minimal_combinations() -> List[Dict]:
 
 def calculate_api_calls(n_combinations: int, n_examples: int, n_judges: int = 10) -> Dict:
     """
-    Calculate API call requirements for different configurations.
+    Calculate API call requirements for efficient score reuse approach.
+    
+    NOTE: With score reuse, API calls = unique variants × judges × examples
+    NOT combinations × judges × examples (that would be naive approach)
     
     Args:
-        n_combinations: Number of judge combinations
+        n_combinations: Number of judge combinations (for reference only)
         n_examples: Number of examples to evaluate
         n_judges: Number of judges per combination (default: 10)
         
     Returns:
         Dictionary with API call statistics
     """
-    total_calls = n_combinations * n_examples * n_judges
+    # CORRECTED: With efficient score reuse, we only need unique variant evaluations
+    n_variants = 4  # strict, lenient, bottom_heavy, top_heavy
+    total_calls = n_variants * n_judges * n_examples  # 4 × 10 × N
     
     # Estimate time (assuming ~1 second per API call with parallelization)
     time_seconds = total_calls / 10  # With 10 parallel workers
@@ -157,11 +162,14 @@ def calculate_api_calls(n_combinations: int, n_examples: int, n_judges: int = 10
     
     return {
         'total_api_calls': total_calls,
-        'calls_per_combination': n_examples * n_judges,
+        'unique_evaluations': total_calls,
+        'combinations_created': n_combinations,
+        'combinations_reuse_cached_scores': True,
         'estimated_time_minutes': round(time_minutes, 1),
         'estimated_time_hours': round(time_hours, 2),
         'estimated_cost_usd': round(estimated_cost, 2),
         'configuration': {
+            'unique_variants': n_variants,
             'combinations': n_combinations,
             'examples': n_examples,
             'judges': n_judges
@@ -176,10 +184,10 @@ def print_comparison():
     print("="*60)
     
     configs = [
-        ("Original (44 combos, 100 examples)", 44, 100),
-        ("Optimized (7 combos, 500 examples)", 7, 500),
+        ("Legacy Naive (44 combos, 100 examples)", 44, 100),
+        ("Current Optimized (7 combos, 1000 examples)", 7, 1000),
         ("Minimal (3 combos, 1000 examples)", 3, 1000),
-        ("Balanced (5 combos, 600 examples)", 5, 600),
+        ("Future Reduced (5 combos, 1000 examples)", 5, 1000),
     ]
     
     for name, n_combos, n_examples in configs:
@@ -192,11 +200,12 @@ def print_comparison():
         print(f"  Estimated cost: ${stats['estimated_cost_usd']:.2f}")
     
     print("\n" + "="*60)
-    print("RECOMMENDATION: Balanced (5 combos, 600 examples)")
-    print("- Sufficient training data (480 samples per model)")
-    print("- Tests key robustness properties")
-    print("- Reasonable API calls (30,000)")
-    print("- ~3 hours runtime with parallelization")
+    print("CURRENT APPROACH: Efficient Score Reuse (7 combos, 1000 examples)")
+    print("- Score reuse: Only 40,000 API calls for ALL combinations")
+    print("- Sufficient training data (800 samples per model)")
+    print("- Tests comprehensive robustness properties")
+    print("- ~4 hours runtime with parallelization")
+    print("- Future: Could reduce to 5 combos with same API calls")
     print("="*60)
 
 
