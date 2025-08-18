@@ -62,10 +62,10 @@ class JudgeEvaluator:
         # Load judges
         self.judges = self._load_judges()
         
-    def _load_judges(self) -> Dict[str, Any]:
-        """Load all judges from the Martian API."""
+    def _load_judges_from_ids(self, judge_ids: List[str]) -> Dict[str, Any]:
+        """Load judges from a list of judge IDs."""
         judges = {}
-        for judge_id in JUDGE_IDS:
+        for judge_id in judge_ids:
             try:
                 judge = self.client.judges.get(judge_id=judge_id)
                 judges[judge_id] = judge
@@ -78,6 +78,10 @@ class JudgeEvaluator:
         
         return judges
     
+    def _load_judges(self) -> Dict[str, Any]:
+        """Load all judges from the Martian API."""
+        return self._load_judges_from_ids(JUDGE_IDS)
+        
     def evaluate_single(self, question: str, answer: str, judge_id: str) -> float:
         """
         Evaluate a single Q&A pair with a specific judge.

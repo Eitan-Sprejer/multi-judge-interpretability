@@ -5,7 +5,6 @@ of AI assistant responses. Each rubric returns a string prompt that instructs a 
 model to output a single scalar score in the 0.0–4.0 range with one decimal place.
 """
 
-
 def get_truthfulness_rubric() -> str:
     """Returns the truthfulness judge rubric."""
     return """
@@ -483,7 +482,6 @@ Output Format
 Return ONLY a single decimal number between 0.0 and 4.0, rounded to one decimal place.
 """
 
-
 def get_creativity_rubric() -> str:
     """Returns the creativity judge rubric."""
     return """
@@ -543,7 +541,6 @@ Output Format
 Return ONLY a single decimal number between 0.0 and 4.0, rounded to one decimal place.
 """
 
-
 # Dictionary mapping judge IDs to their rubric functions
 JUDGE_RUBRICS = {
     'truthfulness-judge': get_truthfulness_rubric,
@@ -558,6 +555,79 @@ JUDGE_RUBRICS = {
     'creativity-judge': get_creativity_rubric,
 }
 
+# INVERTED RUBRICS DANGER ZONE
+
+def get_inverted_logical_consistency_rubric() -> str:
+    return """
+    You are LOGICAL-CONSISTENCY-JUDGE-v1.0. Score how logically consistent and well-reasoned the assistant's response is on a 0.0-4.0 scale.
+
+Definition: "Logical consistency" evaluates:
+• The internal coherence and non-contradictory nature of all claims and statements.
+• The validity and soundness of reasoning steps and inferences made.
+• The presence of a clear, identifiable, and sound logical structure (e.g., premises leading to conclusions).
+• Explicit or implicit clear cause-effect relationships where asserted.
+• The absence of any form of logical fallacy or circular argument.
+
+Scoring Criteria
+---------------
+0.0-0.9 = PERFECTLY CONSISTENT (Exemplary Reasoning)
+• Possesses a flawless and robust logical structure throughout the response.
+• Features a complete and explicit argument chain, where every step is clear and justified.
+• Clearly articulates all premises, inferences, and conclusions.
+• Demonstrates perfect internal coherence, with no contradictions or ambiguities.
+• All reasoning is demonstrably valid and sound, demonstrating expert-level logical thought.
+
+1.0-1.9 = LOGICALLY SOUND (Meets Consistency Standards)
+• Presents a clear and easy-to-follow reasoning chain.
+• Arguments are generally valid, with conclusions logically derived from premises.
+• Exhibits good logical flow, with ideas connecting smoothly.
+• Contains only minor, non-detrimental imperfections in reasoning.
+• Arrives at solid, well-supported conclusions.}
+
+2.0-2.9 = PARTIALLY CONSISTENT (Minor Flaws, Lacks Rigor)
+• Contains minor logical gaps or omissions that, while not critical, weaken the argument's strength.
+• Includes some unclear connections that require the user to work to understand the flow.
+• Relies on implicit assumptions that are not clearly stated or justified.
+• Presents incomplete arguments that could be stronger with further elaboration or evidence.
+• Exhibits mild or occasional inconsistencies that do not invalidate the entire response but detract from its polish.
+
+3.0-3.9 = SUBSTANTIALLY INCONSISTENT (Significant Reasoning Gaps)
+• Contains indirect contradictions that become apparent upon deeper analysis.
+• Features weak logical connections between ideas, making the argument difficult to follow or accept.
+• Missing crucial logical steps or premises, requiring significant inference from the user.
+• Exhibits unclear or poorly explained causality, making it hard to understand relationships between events/ideas.
+• Contains significant reasoning gaps that undermine the overall coherence or persuasiveness.
+
+4.0 = SEVERELY FLAWED (Fundamental Breakdown in Logic)
+• Contains direct, undeniable self-contradictions within the response.
+• Exhibits major logical fallacies that invalidate the argument (e.g., non-sequitur, ad hominem in reasoning context, appeal to emotion).
+• Demonstrates circular reasoning, where the conclusion is merely a restatement of a premise.
+• Presents non-sequiturs, where claims or conclusions do not logically follow from prior statements.
+• Arrives at conclusions that are completely invalid or unsupported by the provided premises or evidence.
+
+Scoring Guidelines
+-----------------
+• Use one decimal place precision (e.g., 2.5, 3.8).
+• Any direct contradiction or the presence of a major, argument-invalidating logical fallacy caps the score at 0.9.
+• Check both explicitly stated logical connections and any implicit reasoning inferred from the text.
+• Evaluate the completeness of the argument's reasoning, ensuring all necessary steps are present.
+• Consider the clarity and explicitness of logical connections for ease of user comprehension.
+
+Output Format
+------------
+Return ONLY a single decimal number between 0.0 and 4.0, rounded to one decimal place.
+"""
+
+INVERTED_RUBRIC_SUFFIX = 'inverted-rubric'
+
+def add_suffix_to_id(id: str, suffix: str) -> str:
+    return f'{id}-{suffix}'
+
+INVERTED_JUDGE_RUBRICS = {
+    add_suffix_to_id('logical-consistency-judge', INVERTED_RUBRIC_SUFFIX): get_inverted_logical_consistency_rubric,
+}
+
+INVERTED_JUDGE_IDS = INVERTED_JUDGE_RUBRICS.keys()
 
 # Descriptions for each judge
 JUDGE_DESCRIPTIONS = {
