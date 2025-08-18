@@ -11,11 +11,17 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.model_selection import train_test_split
 import pickle
 import sys
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent.parent.parent))
+
+# Import training components
+from pipeline.core.aggregator_training import MLPTrainer, GAMAggregator, load_training_config, determine_training_scale
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -28,25 +34,29 @@ class RobustnessAnalyzer:
     def __init__(
         self,
         scores_df: pd.DataFrame,
-        model_path: Optional[str] = None
+        ground_truth_df: Optional[pd.DataFrame] = None,
+        model_type: str = 'mlp'
     ):
         """
         Initialize the robustness analyzer.
         
         Args:
             scores_df: DataFrame with scores from all judge variants
-            model_path: Path to trained aggregation model
+            ground_truth_df: DataFrame with ground truth scores for training
+            model_type: Type of model to train ('mlp' or 'gam')
         """
         self.scores_df = scores_df.copy()
-        self.model_path = model_path
+        self.ground_truth_df = ground_truth_df
+        self.model_type = model_type.lower()
         
         # Parse judge variants
         self.variant_groups = self._parse_variant_groups()
         
-        # Load model if provided
-        self.model = None
-        if model_path:
-            self.model = self._load_model(model_path)
+        # Load training configuration
+        self.training_config = load_training_config()
+        
+        # Storage for trained models per variant
+        self.trained_models = {}
     
     def _parse_variant_groups(self) -> Dict[str, Dict[str, str]]:
         """
@@ -58,8 +68,9 @@ class RobustnessAnalyzer:
         variant_groups = {}
         
         for col in self.scores_df.columns:
-            if '-' in col and col not in ['example_idx']:
-                parts = col.rsplit('-', 1)
+            if col != 'example_idx' and '_' in col:
+                # Split on the last underscore to separate judge name from variant
+                parts = col.rsplit('_', 1)
                 if len(parts) == 2:
                     base_judge, variant_type = parts
                     
@@ -71,15 +82,91 @@ class RobustnessAnalyzer:
         logger.info(f"Found {len(variant_groups)} base judges with variants")
         return variant_groups
     
-    def _load_model(self, model_path: str):
-        """Load trained aggregation model."""
+    def _train_variant_model(self, variant_name: str, judge_cols: List[str]) -> Optional[object]:
+        """
+        Train a new aggregator model for a specific rubric variant.
+        
+        Args:
+            variant_name: Name of the variant (e.g., 'original', 'formal')
+            judge_cols: List of judge column names to use
+            
+        Returns:
+            Trained model or None if training fails
+        """
+        if self.ground_truth_df is None:
+            logger.warning(f"No ground truth data available for training {variant_name} model")
+            return None
+            
         try:
-            with open(model_path, 'rb') as f:
-                model = pickle.load(f)
-            logger.info(f"Loaded model from {model_path}")
-            return model
+            # Get judge scores for this variant
+            judge_scores = self.scores_df[judge_cols].values
+            
+            # Get corresponding ground truth scores
+            # Assume ground truth has 'example_idx' and 'human_score' columns
+            if 'human_score' not in self.ground_truth_df.columns:
+                logger.error("Ground truth data must have 'human_score' column")
+                return None
+                
+            human_scores = self.ground_truth_df['human_score'].values
+            
+            # Ensure we have matching examples
+            if len(judge_scores) != len(human_scores):
+                logger.warning(f"Mismatch in example count: {len(judge_scores)} judge scores vs {len(human_scores)} human scores")
+                min_len = min(len(judge_scores), len(human_scores))
+                judge_scores = judge_scores[:min_len]
+                human_scores = human_scores[:min_len]
+            
+            # Split data for training
+            X_train, X_val, y_train, y_val = train_test_split(
+                judge_scores, human_scores, test_size=0.2, random_state=42
+            )
+            
+            logger.info(f"Training {self.model_type} model for variant '{variant_name}' "
+                       f"with {len(X_train)} training and {len(X_val)} validation samples")
+            
+            if self.model_type == 'mlp':
+                # Determine training scale and config
+                scale = determine_training_scale(len(X_train))
+                mlp_config = self.training_config["mlp_training"].get(
+                    scale, self.training_config["mlp_training"]["medium_scale"]
+                )
+                
+                # Create and train MLP
+                trainer = MLPTrainer(
+                    hidden_dim=mlp_config["hidden_dim"],
+                    learning_rate=mlp_config["learning_rate"],
+                    batch_size=min(mlp_config["batch_size"], max(2, len(X_train) // 2)),
+                    n_epochs=mlp_config["n_epochs"]
+                )
+                
+                train_losses, val_losses = trainer.fit(X_train, y_train, X_val, y_val)
+                logger.info(f"MLP training completed for {variant_name}, final val loss: {val_losses[-1]:.4f}")
+                return trainer
+                
+            elif self.model_type == 'gam':
+                # Create and train GAM
+                gam_config = self.training_config.get("gam_training", {
+                    "n_splines": 10,
+                    "lam": 0.6
+                })
+                
+                model = GAMAggregator(
+                    n_splines=gam_config["n_splines"],
+                    lam=gam_config["lam"]
+                )
+                
+                model.fit(X_train, y_train)
+                logger.info(f"GAM training completed for {variant_name}")
+                return model
+            
+            else:
+                logger.error(f"Unsupported model type: {self.model_type}")
+                return None
+                
         except Exception as e:
-            logger.error(f"Failed to load model from {model_path}: {e}")
+            logger.error(f"Failed to train {self.model_type} model for variant {variant_name}: {e}")
+            import traceback
+            traceback.print_exc()
             return None
     
     def calculate_score_variance(self) -> Dict[str, Dict]:
@@ -252,8 +339,8 @@ class RobustnessAnalyzer:
             aggregated_scores = {}
             
             for combo_name, combo_cols in variant_combinations.items():
-                if method == 'learned' and self.model:
-                    aggregated_scores[combo_name] = self._aggregate_learned(combo_cols)
+                if method == 'learned':
+                    aggregated_scores[combo_name] = self._aggregate_learned(combo_name, combo_cols)
                 elif method == 'mean':
                     aggregated_scores[combo_name] = self._aggregate_mean(combo_cols)
                 elif method == 'single_best':
@@ -294,58 +381,142 @@ class RobustnessAnalyzer:
     def _get_variant_combinations(self) -> Dict[str, List[str]]:
         """
         Get different combinations of judge variants for testing robustness.
+        Creates combinations for each variant type from the actual generated data.
         
         Returns:
             Dictionary mapping combination names to lists of column names
         """
         combinations = {}
         
-        # All original judges
+        # Get all columns except example_idx
+        available_cols = [col for col in self.scores_df.columns if col != 'example_idx']
+        
+        # Parse judge names and variant types from column names
+        judge_variants = {}  # judge_name -> [variant_types]
+        all_judges = set()  # All unique judge names
+        
+        for col in available_cols:
+            if '_' in col:
+                # Handle compound variants like "bottom_heavy" and "top_heavy"
+                if '_bottom_heavy' in col:
+                    judge_name = col.replace('_bottom_heavy', '')
+                    variant_type = 'bottom_heavy'
+                elif '_top_heavy' in col:
+                    judge_name = col.replace('_top_heavy', '')
+                    variant_type = 'top_heavy'
+                elif col.endswith('_original'):
+                    judge_name = col.replace('_original', '')
+                    variant_type = 'original'
+                elif col.endswith('_strict'):
+                    judge_name = col.replace('_strict', '')
+                    variant_type = 'strict'
+                elif col.endswith('_lenient'):
+                    judge_name = col.replace('_lenient', '')
+                    variant_type = 'lenient'
+                else:
+                    # Fallback: split on last underscore
+                    parts = col.rsplit('_', 1)
+                    if len(parts) == 2:
+                        judge_name, variant_type = parts
+                    else:
+                        continue
+                
+                all_judges.add(judge_name)
+                if judge_name not in judge_variants:
+                    judge_variants[judge_name] = {}
+                judge_variants[judge_name][variant_type] = col
+        
+        logger.info(f"Found {len(all_judges)} unique judges: {sorted(all_judges)}")
+        
+        # Get all available variant types
+        all_variant_types = set()
+        for variants_dict in judge_variants.values():
+            all_variant_types.update(variants_dict.keys())
+        
+        logger.info(f"Found variant types: {sorted(all_variant_types)}")
+        
+        # Now create actual variant combinations
+        # Since we have partial variants, we need to create mixed combinations
+        
+        # Strategy: For each variant type that exists, create a combination that uses
+        # that variant where available, and falls back to 'original' for other judges
+        
+        for variant_type in sorted(all_variant_types):
+            if variant_type == 'original':
+                continue  # Handle original separately
+                
+            combination_cols = []
+            variant_judges_used = 0
+            
+            # For each judge, try to use the requested variant, fallback to original
+            for judge_name in sorted(all_judges):
+                if judge_name in judge_variants:
+                    if variant_type in judge_variants[judge_name]:
+                        # Use the requested variant for this judge
+                        combination_cols.append(judge_variants[judge_name][variant_type])
+                        variant_judges_used += 1
+                    elif 'original' in judge_variants[judge_name]:
+                        # Fallback to original for this judge
+                        combination_cols.append(judge_variants[judge_name]['original'])
+                    else:
+                        # Use the first available variant for this judge
+                        first_variant = list(judge_variants[judge_name].keys())[0]
+                        combination_cols.append(judge_variants[judge_name][first_variant])
+            
+            # Only create combination if we have 10 judges and at least some use the variant
+            if len(combination_cols) == 10 and variant_judges_used > 0:
+                combinations[variant_type] = combination_cols
+                logger.info(f"Created combination '{variant_type}' with 10 judges ({variant_judges_used} using {variant_type} variant)")
+            else:
+                logger.info(f"Variant '{variant_type}': {len(combination_cols)} judges, {variant_judges_used} using variant")
+        
+        # Create original combination (baseline)
         original_cols = []
-        for base_judge, variants in self.variant_groups.items():
-            if 'original' in variants:
-                original_cols.append(variants['original'])
-        if original_cols:
+        for judge_name in sorted(all_judges):
+            if judge_name in judge_variants and 'original' in judge_variants[judge_name]:
+                original_cols.append(judge_variants[judge_name]['original'])
+            elif judge_name in judge_variants:
+                # If no original, use first available
+                first_variant = list(judge_variants[judge_name].keys())[0]
+                original_cols.append(judge_variants[judge_name][first_variant])
+        
+        if len(original_cols) == 10:
             combinations['original'] = original_cols
+            logger.info(f"Created 'original' combination with 10 judges")
         
-        # All formal variants
-        formal_cols = []
-        for base_judge, variants in self.variant_groups.items():
-            if 'formal' in variants:
-                formal_cols.append(variants['formal'])
-        if formal_cols:
-            combinations['formal'] = formal_cols
+        # If still no combinations, create fallback
+        if not combinations and len(available_cols) >= 10:
+            combinations['fallback'] = available_cols[:10]
+            logger.info(f"Created 'fallback' combination with first 10 columns")
         
-        # All casual variants
-        casual_cols = []
-        for base_judge, variants in self.variant_groups.items():
-            if 'casual' in variants:
-                casual_cols.append(variants['casual'])
-        if casual_cols:
-            combinations['casual'] = casual_cols
-        
-        # All restructured variants
-        restructured_cols = []
-        for base_judge, variants in self.variant_groups.items():
-            if 'restructured' in variants:
-                restructured_cols.append(variants['restructured'])
-        if restructured_cols:
-            combinations['restructured'] = restructured_cols
-        
-        # Mixed combinations (e.g., some original, some formal)
-        if len(original_cols) > 1 and len(formal_cols) > 1:
-            mixed_cols = original_cols[:len(original_cols)//2] + formal_cols[len(formal_cols)//2:]
-            combinations['mixed_original_formal'] = mixed_cols
-        
+        logger.info(f"Created {len(combinations)} variant combinations: {list(combinations.keys())}")
         return combinations
     
-    def _aggregate_learned(self, judge_cols: List[str]) -> np.ndarray:
-        """Aggregate using learned model."""
-        if self.model is None:
-            return np.full(len(self.scores_df), np.nan)
+    def _aggregate_learned(self, combo_name: str, judge_cols: List[str]) -> np.ndarray:
+        """
+        Aggregate using a model trained specifically for this variant combination.
+        
+        Args:
+            combo_name: Name of the variant combination
+            judge_cols: List of judge column names to use
+            
+        Returns:
+            Predicted human preference scores
+        """
+        # Check if we already have a trained model for this combination
+        if combo_name not in self.trained_models:
+            logger.info(f"Training new {self.model_type} model for variant '{combo_name}'")
+            model = self._train_variant_model(combo_name, judge_cols)
+            if model is None:
+                logger.warning(f"Failed to train model for {combo_name}, returning NaN values")
+                return np.full(len(self.scores_df), np.nan)
+            self.trained_models[combo_name] = model
+        
+        model = self.trained_models[combo_name]
         
         # Get scores for the specified judges
         scores_matrix = self.scores_df[judge_cols].values
+        logger.info(f"Using trained {self.model_type} model for '{combo_name}', input shape: {scores_matrix.shape}")
         
         # Handle missing values (fill with median for each judge)
         for i in range(scores_matrix.shape[1]):
@@ -353,11 +524,26 @@ class RobustnessAnalyzer:
             scores_matrix[np.isnan(scores_matrix[:, i]), i] = col_median
         
         try:
-            # Predict using the model
-            predictions = self.model.predict(scores_matrix)
-            return predictions
+            if self.model_type == 'mlp':
+                # Use MLPTrainer's predict method
+                predictions = model.predict(scores_matrix)
+                logger.info(f"MLP predictions for '{combo_name}': shape {predictions.shape}, sample values: {predictions[:5]}")
+                return predictions
+            
+            elif self.model_type == 'gam':
+                # Use GAM's predict method
+                predictions = model.predict(scores_matrix)
+                logger.info(f"GAM predictions for '{combo_name}': shape {predictions.shape}, sample values: {predictions[:5]}")
+                return predictions
+            
+            else:
+                logger.error(f"Unsupported model type: {self.model_type}")
+                return np.full(len(self.scores_df), np.nan)
+                
         except Exception as e:
-            logger.error(f"Failed to use learned model: {e}")
+            logger.error(f"Failed to predict with {self.model_type} model for {combo_name}: {e}")
+            import traceback
+            traceback.print_exc()
             return np.full(len(self.scores_df), np.nan)
     
     def _aggregate_mean(self, judge_cols: List[str]) -> np.ndarray:
@@ -389,6 +575,311 @@ class RobustnessAnalyzer:
             return self.scores_df[best_judge].values
         else:
             return self.scores_df[judge_cols[0]].values
+    
+    def create_robustness_plots(self, output_dir: str, report: Dict):
+        """
+        Create comprehensive robustness visualization plots.
+        
+        Args:
+            output_dir: Directory to save plots
+            report: Robustness report from generate_summary_report
+        """
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        
+        plt.style.use('default')
+        sns.set_palette("husl")
+        
+        plot_functions = [
+            ("Variance Comparison", self._plot_variance_comparison),
+            ("Correlation Heatmaps", self._plot_correlation_heatmaps),
+            ("Variance Distribution", self._plot_variance_distribution),
+            ("Judge Robustness Heatmap", self._plot_judge_robustness_heatmap),
+        ]
+        
+        for plot_name, plot_func in plot_functions:
+            try:
+                logger.info(f"Generating {plot_name}...")
+                plot_func(report, output_dir)
+            except Exception as e:
+                logger.error(f"Failed to generate {plot_name}: {e}")
+                import traceback
+                traceback.print_exc()
+        
+        # 5. Aggregator Performance Comparison (conditional)
+        if 'aggregator_robustness' in report:
+            try:
+                logger.info("Generating Aggregator Performance Comparison...")
+                self._plot_aggregator_comparison(report, output_dir)
+            except Exception as e:
+                logger.error(f"Failed to generate Aggregator Performance Comparison: {e}")
+                import traceback
+                traceback.print_exc()
+        
+        logger.info(f"Saved robustness plots to {output_dir}")
+    
+    def _plot_variance_comparison(self, report: Dict, output_dir: Path):
+        """Create variance comparison bar chart."""
+        fig, ax = plt.subplots(1, 1, figsize=(12, 8))
+        
+        # Prepare data for plotting
+        judges = []
+        variances = []
+        
+        for judge_name, metrics in report['score_variance'].items():
+            judges.append(judge_name.replace('-', '\n'))  # Line break for readability
+            variances.append(metrics['mean_variance'])
+        
+        # Create bar plot
+        bars = ax.bar(judges, variances, color=plt.cm.Set3(np.linspace(0, 1, len(judges))))
+        
+        # Add 5% threshold line
+        ax.axhline(y=0.05, color='red', linestyle='--', alpha=0.7, 
+                   label='5% Robustness Threshold')
+        
+        # Formatting
+        ax.set_title('Judge Score Variance Across Rubric Variations', fontsize=16, fontweight='bold')
+        ax.set_xlabel('Judge', fontsize=12)
+        ax.set_ylabel('Mean Variance', fontsize=12)
+        ax.tick_params(axis='x', rotation=45)
+        ax.legend()
+        ax.grid(axis='y', alpha=0.3)
+        
+        # Add value labels on bars
+        for bar, variance in zip(bars, variances):
+            height = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2., height + 0.001,
+                   f'{variance:.3f}', ha='center', va='bottom', fontsize=10)
+        
+        plt.tight_layout()
+        plt.savefig(output_dir / 'variance_comparison.png', dpi=300, bbox_inches='tight')
+        plt.close()
+    
+    def _plot_correlation_heatmaps(self, report: Dict, output_dir: Path):
+        """Create correlation heatmaps for each judge."""
+        correlation_data = report['cross_rubric_correlation']
+        
+        if len(correlation_data) == 0:
+            return
+        
+        # Create subplot grid
+        n_judges = len(correlation_data)
+        cols = min(3, n_judges)
+        rows = (n_judges + cols - 1) // cols
+        
+        fig, axes = plt.subplots(rows, cols, figsize=(5*cols, 4*rows))
+        if n_judges == 1:
+            axes = [axes]
+        elif rows == 1:
+            axes = axes.reshape(1, -1)
+        axes = axes.flatten()
+        
+        for idx, (judge_name, metrics) in enumerate(correlation_data.items()):
+            if idx >= len(axes):
+                break
+                
+            ax = axes[idx]
+            
+            # Extract correlation matrix
+            correlations = metrics['individual_correlations']
+            if not correlations:
+                ax.text(0.5, 0.5, 'No correlations', ha='center', va='center')
+                ax.set_title(judge_name.replace('-', '\n'))
+                continue
+            
+            # Build correlation matrix
+            variants = sorted(set([k.split('_vs_')[0] for k in correlations.keys()] +
+                                 [k.split('_vs_')[1] for k in correlations.keys()]))
+            
+            corr_matrix = np.eye(len(variants))
+            variant_to_idx = {v: i for i, v in enumerate(variants)}
+            
+            for key, corr_data in correlations.items():
+                v1, v2 = key.split('_vs_')
+                i, j = variant_to_idx[v1], variant_to_idx[v2]
+                r = corr_data['pearson_r']
+                if not np.isnan(r):
+                    corr_matrix[i, j] = corr_matrix[j, i] = r
+            
+            # Create heatmap
+            im = ax.imshow(corr_matrix, cmap='RdYlBu_r', vmin=-1, vmax=1)
+            
+            # Set ticks and labels
+            ax.set_xticks(range(len(variants)))
+            ax.set_yticks(range(len(variants)))
+            ax.set_xticklabels(variants, rotation=45, ha='right')
+            ax.set_yticklabels(variants)
+            
+            # Add correlation values
+            for i in range(len(variants)):
+                for j in range(len(variants)):
+                    text = ax.text(j, i, f'{corr_matrix[i, j]:.2f}',
+                                 ha="center", va="center", color="black", fontsize=9)
+            
+            ax.set_title(judge_name.replace('-', '\n'), fontsize=12)
+        
+        # Remove unused subplots
+        for idx in range(n_judges, len(axes)):
+            axes[idx].remove()
+        
+        plt.suptitle('Cross-Rubric Correlation Heatmaps by Judge', fontsize=16, fontweight='bold')
+        plt.tight_layout()
+        plt.savefig(output_dir / 'correlation_heatmaps.png', dpi=300, bbox_inches='tight')
+        plt.close()
+    
+    def _plot_variance_distribution(self, report: Dict, output_dir: Path):
+        """Create variance distribution box plots."""
+        fig, ax = plt.subplots(1, 1, figsize=(14, 8))
+        
+        # Prepare data
+        variance_data = []
+        judge_names = []
+        
+        for judge_name, metrics in report['score_variance'].items():
+            variance_dist = metrics['variance_distribution']
+            variance_data.extend(variance_dist)
+            judge_names.extend([judge_name] * len(variance_dist))
+        
+        # Create DataFrame for seaborn
+        plot_df = pd.DataFrame({
+            'Judge': judge_names,
+            'Variance': variance_data
+        })
+        
+        # Create box plot
+        sns.boxplot(data=plot_df, x='Judge', y='Variance', ax=ax)
+        
+        # Add 5% threshold line
+        ax.axhline(y=0.05, color='red', linestyle='--', alpha=0.7, 
+                   label='5% Robustness Threshold')
+        
+        # Formatting
+        ax.set_title('Score Variance Distribution by Judge', fontsize=16, fontweight='bold')
+        ax.set_xlabel('Judge', fontsize=12)
+        ax.set_ylabel('Variance', fontsize=12)
+        ax.tick_params(axis='x', rotation=45)
+        ax.legend()
+        ax.grid(axis='y', alpha=0.3)
+        
+        plt.tight_layout()
+        plt.savefig(output_dir / 'variance_distribution.png', dpi=300, bbox_inches='tight')
+        plt.close()
+    
+    def _plot_judge_robustness_heatmap(self, report: Dict, output_dir: Path):
+        """Create heatmap showing robustness metrics across judges."""
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
+        
+        # Prepare data
+        judges = list(report['score_variance'].keys())
+        variance_metrics = [report['score_variance'][j]['mean_variance'] for j in judges]
+        correlation_metrics = [report['cross_rubric_correlation'][j]['mean_correlation'] 
+                              for j in judges if j in report['cross_rubric_correlation']]
+        
+        # Pad correlation metrics if needed
+        while len(correlation_metrics) < len(judges):
+            correlation_metrics.append(np.nan)
+        
+        # Create heatmap data
+        heatmap_data = np.array([variance_metrics, correlation_metrics]).T
+        
+        # Variance heatmap
+        im1 = ax1.imshow(heatmap_data[:, [0]], cmap='Reds', aspect='auto')
+        ax1.set_yticks(range(len(judges)))
+        ax1.set_yticklabels([j.replace('-', '\n') for j in judges])
+        ax1.set_xticks([0])
+        ax1.set_xticklabels(['Variance'])
+        ax1.set_title('Mean Variance by Judge', fontweight='bold')
+        
+        # Add values
+        for i, variance in enumerate(variance_metrics):
+            ax1.text(0, i, f'{variance:.3f}', ha='center', va='center', 
+                    color='white' if variance > 0.025 else 'black', fontsize=10)
+        
+        # Correlation heatmap
+        im2 = ax2.imshow(heatmap_data[:, [1]], cmap='Blues', aspect='auto')
+        ax2.set_yticks(range(len(judges)))
+        ax2.set_yticklabels([j.replace('-', '\n') for j in judges])
+        ax2.set_xticks([0])
+        ax2.set_xticklabels(['Correlation'])
+        ax2.set_title('Mean Correlation by Judge', fontweight='bold')
+        
+        # Add values
+        for i, corr in enumerate(correlation_metrics):
+            if not np.isnan(corr):
+                ax2.text(0, i, f'{corr:.3f}', ha='center', va='center', 
+                        color='white' if corr < 0.5 else 'black', fontsize=10)
+        
+        plt.suptitle('Judge Robustness Heatmap', fontsize=16, fontweight='bold')
+        plt.tight_layout()
+        plt.savefig(output_dir / 'judge_robustness_heatmap.png', dpi=300, bbox_inches='tight')
+        plt.close()
+    
+    def _plot_aggregator_comparison(self, report: Dict, output_dir: Path):
+        """Create aggregator performance comparison plot."""
+        aggregator_data = report['aggregator_robustness']
+        if not aggregator_data:
+            return
+        
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+        
+        # Prepare data
+        methods = list(aggregator_data.keys())
+        mean_variances = [aggregator_data[m]['mean_variance'] for m in methods]
+        max_variances = [aggregator_data[m]['max_variance'] for m in methods]
+        
+        # Variance comparison
+        x = np.arange(len(methods))
+        width = 0.35
+        
+        bars1 = ax1.bar(x - width/2, mean_variances, width, label='Mean Variance', alpha=0.8)
+        bars2 = ax1.bar(x + width/2, max_variances, width, label='Max Variance', alpha=0.8)
+        
+        ax1.axhline(y=0.05, color='red', linestyle='--', alpha=0.7, 
+                   label='5% Threshold')
+        
+        ax1.set_xlabel('Aggregation Method')
+        ax1.set_ylabel('Variance')
+        ax1.set_title('Aggregator Robustness Comparison')
+        ax1.set_xticks(x)
+        ax1.set_xticklabels(methods)
+        ax1.legend()
+        ax1.grid(axis='y', alpha=0.3)
+        
+        # Add value labels
+        for bar, value in zip(bars1, mean_variances):
+            ax1.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.001,
+                    f'{value:.3f}', ha='center', va='bottom', fontsize=9)
+        
+        # Improvement factors
+        if 'mean' in aggregator_data and 'learned' in aggregator_data:
+            baseline_var = aggregator_data['mean']['mean_variance']
+            improvement_factors = []
+            method_labels = []
+            
+            for method in methods:
+                if method != 'mean' and not np.isnan(aggregator_data[method]['mean_variance']):
+                    factor = baseline_var / aggregator_data[method]['mean_variance']
+                    improvement_factors.append(factor)
+                    method_labels.append(method)
+            
+            if improvement_factors:
+                bars3 = ax2.bar(method_labels, improvement_factors, color='green', alpha=0.7)
+                ax2.axhline(y=1.0, color='red', linestyle='--', alpha=0.7, 
+                           label='No Improvement')
+                ax2.set_xlabel('Aggregation Method')
+                ax2.set_ylabel('Improvement Factor vs Mean Baseline')
+                ax2.set_title('Robustness Improvement Factors')
+                ax2.legend()
+                ax2.grid(axis='y', alpha=0.3)
+                
+                # Add value labels
+                for bar, factor in zip(bars3, improvement_factors):
+                    ax2.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.05,
+                            f'{factor:.1f}x', ha='center', va='bottom', fontsize=10)
+        
+        plt.tight_layout()
+        plt.savefig(output_dir / 'aggregator_comparison.png', dpi=300, bbox_inches='tight')
+        plt.close()
     
     def generate_summary_report(self) -> Dict:
         """
