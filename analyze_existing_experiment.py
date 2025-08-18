@@ -48,6 +48,7 @@ except ImportError:
 # Import project modules
 from pipeline.core.aggregator_training import GAMAggregator, compute_metrics, FEATURE_LABELS
 from pipeline.core.persona_simulation import PERSONAS
+from pipeline.core.baseline_models import BaselineEvaluator
 from gam_hyperparameter_tuning import GAMHyperparameterTuner
 
 
@@ -112,7 +113,37 @@ class ExistingExperimentAnalyzer:
         return data, existing_summary
     
     def compute_baseline_comparisons(self, data: pd.DataFrame) -> Dict[str, Any]:
-        """Compute baseline model comparisons: best single judge and naive mean."""
+        """Compute comprehensive baseline model comparisons using unified system."""
+        print("🔬 Computing comprehensive baseline comparisons...")
+        
+        try:
+            # Use unified baseline evaluation system
+            evaluator = BaselineEvaluator(
+                random_seed=self.random_seed,
+                test_size=0.2
+            )
+            
+            # Get comprehensive baseline results
+            baseline_results = evaluator.evaluate_all_baselines(data)
+            
+            # Extract key metrics for summary
+            baselines = baseline_results['baselines']
+            summary = baseline_results['summary']
+            
+            print(f"✅ Computed {len(baselines)} baseline approaches")
+            print(f"   Best baseline: {summary['best_baseline']} (R² = {summary['best_r2']:.4f})")
+            print(f"   Samples used: {summary['data_info']['total_samples']}")
+            
+            return baseline_results
+            
+        except Exception as e:
+            print(f"❌ Unified baseline system failed: {e}")
+            # Fallback to legacy method
+            return self._legacy_baseline_comparison(data)
+    
+    def _legacy_baseline_comparison(self, data: pd.DataFrame) -> Dict[str, Any]:
+        """Legacy baseline comparison for fallback."""
+        print("⚠️  Using legacy baseline comparison as fallback...")
         print("🔬 Computing baseline model comparisons...")
         
         # Prepare data for baseline analysis
@@ -259,7 +290,15 @@ class ExistingExperimentAnalyzer:
         print(f"   Best Judge R² ({best_judge_name}): {judge_metrics[best_judge_idx]['r2']:.4f}")
         print(f"   Weighted Mean R²: {scaled_metrics['r2']:.4f}")
         
-        return baselines
+        return {
+            'baselines': baselines,
+            'summary': {
+                'best_baseline': 'legacy_fallback',
+                'methodology': 'legacy_fallback',
+                'best_r2': max([b['test_metrics']['r2'] for b in baselines.values()]),
+                'data_info': {'total_samples': len(X)}
+            }
+        }
     
     def run_gam_analysis(self) -> Dict[str, Any]:
         """Run GAM hyperparameter tuning on existing experiment data."""
@@ -291,16 +330,21 @@ class ExistingExperimentAnalyzer:
         """Update experiment_summary.json with new analysis results."""
         print("📝 Updating experiment summary with new results...")
         
-        # Add baseline analysis
+        # Add baseline analysis (handle unified baseline structure)
+        baselines = baseline_results.get('baselines', baseline_results)
+        
         existing_summary['baseline_analysis'] = {
             'timestamp': datetime.now().isoformat(),
             'baselines': baseline_results,
+            'methodology': baseline_results.get('summary', {}).get('methodology', 'unknown'),
             'baseline_comparison': {
-                'naive_mean_r2': baseline_results['naive_mean']['test_metrics']['r2'],
-                'best_judge_r2': baseline_results['best_single_judge']['test_metrics']['r2'],
-                'weighted_mean_r2': baseline_results['correlation_weighted_mean']['test_metrics']['r2'],
-                'best_baseline_method': max(baseline_results.keys(), 
-                                          key=lambda k: baseline_results[k]['test_metrics']['r2'])
+                'naive_mean_r2': baselines.get('naive_mean', {}).get('test_metrics', {}).get('r2', 0) or baselines.get('naive_mean', {}).get('metrics', {}).get('r2', 0),
+                'best_judge_r2': (baselines.get('best_judge_linear_scaling', {}).get('test_metrics', {}).get('r2', 0) or 
+                                baselines.get('best_judge_linear_scaling', {}).get('metrics', {}).get('r2', 0) or
+                                baselines.get('best_single_judge', {}).get('test_metrics', {}).get('r2', 0)),
+                'linear_scaling_mean_r2': baselines.get('linear_scaling_mean', {}).get('metrics', {}).get('r2', 0),
+                'standardscaler_lr_mean_r2': baselines.get('standardscaler_lr_mean', {}).get('metrics', {}).get('r2', 0),
+                'best_baseline_method': baseline_results.get('summary', {}).get('best_baseline', 'unknown')
             }
         }
         
@@ -321,12 +365,34 @@ class ExistingExperimentAnalyzer:
                 'feature_importance': gam_results['feature_importance_best']
             }
         
-        # Add overall comparison
-        all_r2_scores = {
-            'naive_mean': baseline_results['naive_mean']['test_metrics']['r2'],
-            'best_judge': baseline_results['best_single_judge']['test_metrics']['r2'],
-            'weighted_mean': baseline_results['correlation_weighted_mean']['test_metrics']['r2']
-        }
+        # Add overall comparison (handle both unified and legacy baseline structures)
+        all_r2_scores = {}
+        
+        # Extract R2 scores safely from either structure
+        def safe_extract_r2(model_dict):
+            if isinstance(model_dict, dict):
+                return (model_dict.get('test_metrics', {}).get('r2') or 
+                       model_dict.get('metrics', {}).get('r2', 0))
+            return 0
+        
+        all_r2_scores = {}
+        
+        # Add heuristic baselines
+        if baselines.get('linear_scaling_mean'):
+            all_r2_scores['10_judge_mean'] = safe_extract_r2(baselines['linear_scaling_mean'])
+        if baselines.get('best_judge_linear_scaling'):
+            all_r2_scores['best_judge'] = safe_extract_r2(baselines['best_judge_linear_scaling'])
+        if baselines.get('ultrafeedback_4judge'):
+            all_r2_scores['ultrafeedback_4judge'] = safe_extract_r2(baselines['ultrafeedback_4judge'])
+        
+        # Add learned baselines
+        if baselines.get('standardscaler_lr_mean'):
+            all_r2_scores['standardscaler_lr_mean'] = safe_extract_r2(baselines['standardscaler_lr_mean'])
+        if baselines.get('best_judge_standardscaler_lr'):
+            all_r2_scores['best_judge_lr'] = safe_extract_r2(baselines['best_judge_standardscaler_lr'])
+        
+        # Remove zero scores to clean up comparison
+        all_r2_scores = {k: v for k, v in all_r2_scores.items() if v > 0}
         
         if gam_results:
             all_r2_scores['gam'] = gam_results['best_r2']
@@ -337,20 +403,44 @@ class ExistingExperimentAnalyzer:
         elif 'optimal_model' in existing_summary:
             all_r2_scores['mlp'] = existing_summary['optimal_model'].get('r2_score', 0)
         
+        # Calculate improvement over best heuristic baseline
+        heuristic_keys = ['10_judge_mean', 'best_judge', 'ultrafeedback_4judge']
+        heuristic_scores = {k: v for k, v in all_r2_scores.items() if k in heuristic_keys}
+        best_heuristic_score = max(heuristic_scores.values()) if heuristic_scores else 0
+        
         existing_summary['model_comparison'] = {
             'all_r2_scores': all_r2_scores,
-            'best_model': max(all_r2_scores.keys(), key=lambda k: all_r2_scores[k]),
-            'best_r2': max(all_r2_scores.values()),
-            'improvement_over_baseline': {
-                model: all_r2_scores[model] - all_r2_scores['naive_mean'] 
+            'best_model': max(all_r2_scores.keys(), key=lambda k: all_r2_scores[k]) if all_r2_scores else 'none',
+            'best_r2': max(all_r2_scores.values()) if all_r2_scores else 0,
+            'best_heuristic_baseline': best_heuristic_score,
+            'improvement_over_heuristic': {
+                model: all_r2_scores[model] - best_heuristic_score 
                 for model in all_r2_scores.keys()
-            }
+            } if all_r2_scores else {}
         }
+        
+        # Convert numpy types for JSON serialization
+        def convert_numpy_types(obj):
+            """Convert numpy types to JSON-serializable types."""
+            if isinstance(obj, np.ndarray):
+                return obj.tolist()
+            elif isinstance(obj, (np.int64, np.int32, np.integer)):
+                return int(obj)
+            elif isinstance(obj, (np.float64, np.float32, np.floating)):
+                return float(obj)
+            elif isinstance(obj, dict):
+                return {k: convert_numpy_types(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_numpy_types(item) for item in obj]
+            return obj
+
+        # Convert the entire summary
+        existing_summary_clean = convert_numpy_types(existing_summary)
         
         # Save updated summary
         summary_path = self.experiment_dir / "experiment_summary.json"
         with open(summary_path, 'w') as f:
-            json.dump(existing_summary, f, indent=2)
+            json.dump(existing_summary_clean, f, indent=2)
         
         print(f"✅ Updated experiment summary: {summary_path}")
         
@@ -362,86 +452,171 @@ class ExistingExperimentAnalyzer:
         gam_results: Dict, 
         existing_summary: Dict
     ):
-        """Create visualization comparing all model results."""
-        print("📊 Creating model comparison visualization...")
+        """Create single comprehensive comparison visualization with heuristic vs learned distinction."""
+        print("📊 Creating comprehensive model comparison visualization...")
         
-        # Prepare data for visualization
-        models = ['Naive Mean', 'Best Judge', 'Weighted Mean']
-        r2_scores = [
-            baseline_results['naive_mean']['test_metrics']['r2'],
-            baseline_results['best_single_judge']['test_metrics']['r2'],
-            baseline_results['correlation_weighted_mean']['test_metrics']['r2']
-        ]
-        mae_scores = [
-            baseline_results['naive_mean']['test_metrics']['mae'],
-            baseline_results['best_single_judge']['test_metrics']['mae'],
-            baseline_results['correlation_weighted_mean']['test_metrics']['mae']
-        ]
+        # Handle both unified and legacy baseline structures
+        baselines = baseline_results.get('baselines', baseline_results)
         
-        if gam_results:
-            models.append('GAM')
-            r2_scores.append(gam_results['best_r2'])
-            mae_scores.append(gam_results['best_mae'])
+        # Create single comprehensive plot
+        fig, ax = plt.subplots(1, 1, figsize=(14, 8))
         
-        # Check if MLP results exist (could be in 'mlp_analysis' or 'optimal_model')
+        # Extract models and organize by type
+        def safe_extract_metrics(model_dict, metrics_key='test_metrics'):
+            if metrics_key in model_dict:
+                return model_dict[metrics_key].get('r2', 0), model_dict[metrics_key].get('mae', 0)
+            elif 'metrics' in model_dict:
+                return model_dict['metrics'].get('r2', 0), model_dict['metrics'].get('mae', 0)
+            return 0, 0
+        
+        # Organize models by type
+        heuristic_models = {}
+        learned_models = {}
+        
+        # Heuristic models (no training)
+        heuristic_keys = ['linear_scaling_mean', 'best_judge_linear_scaling', 'ultrafeedback_4judge']
+        heuristic_labels = ['10-Judge Mean', 'Best Judge', 'UltraFeedback 4-Judge']
+        
+        for key, label in zip(heuristic_keys, heuristic_labels):
+            if baselines.get(key):
+                r2, mae = safe_extract_metrics(baselines[key])
+                if r2 != 0:  # Only include valid results
+                    heuristic_models[label] = r2
+        
+        # Learned models (trained parameters)
+        if baselines.get('standardscaler_lr_mean'):
+            r2, mae = safe_extract_metrics(baselines['standardscaler_lr_mean'])
+            learned_models['StandardScaler + LR'] = r2
+            
+        if baselines.get('best_judge_standardscaler_lr'):
+            r2, mae = safe_extract_metrics(baselines['best_judge_standardscaler_lr'])
+            learned_models['Best Judge + LR'] = r2
+            
+        if gam_results and gam_results.get('best_r2', -1) > 0:
+            learned_models['GAM'] = gam_results['best_r2']
+            
         if 'mlp_analysis' in existing_summary:
-            models.append('MLP')
-            r2_scores.append(existing_summary['mlp_analysis'].get('best_test_r2', 0))
-            mae_scores.append(existing_summary['mlp_analysis'].get('best_test_mae', 0))
+            learned_models['MLP'] = existing_summary['mlp_analysis'].get('best_test_r2', 0)
         elif 'optimal_model' in existing_summary:
-            models.append('MLP')
-            r2_scores.append(existing_summary['optimal_model'].get('r2_score', 0))
-            mae_scores.append(existing_summary['optimal_model'].get('mae_score', 0))
+            learned_models['MLP'] = existing_summary['optimal_model'].get('r2_score', 0)
         
-        # Create comparison plot
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+        # Combine all models for plotting
+        all_models = list(heuristic_models.keys()) + list(learned_models.keys())
+        all_r2s = list(heuristic_models.values()) + list(learned_models.values())
         
-        # R² comparison
-        bars1 = ax1.bar(models, r2_scores, color=['lightcoral', 'orange', 'gold', 'lightgreen', 'lightblue'][:len(models)])
-        ax1.set_title('Model Performance Comparison - R² Score', fontsize=14)
-        ax1.set_ylabel('R² Score')
-        ax1.set_ylim(0, max(r2_scores) * 1.1)
-        ax1.grid(True, alpha=0.3)
+        # Create colors: coral for heuristic, steelblue for learned
+        colors = ['lightcoral'] * len(heuristic_models) + ['steelblue'] * len(learned_models)
         
-        # Add value labels on bars
-        for bar, score in zip(bars1, r2_scores):
-            height = bar.get_height()
-            ax1.text(bar.get_x() + bar.get_width()/2., height + 0.01,
-                    f'{score:.3f}', ha='center', va='bottom', fontweight='bold')
+        # Create the plot
+        bars = ax.bar(all_models, all_r2s, color=colors, alpha=0.8, edgecolor='black', linewidth=1)
         
-        # Color best performing model
-        best_idx = np.argmax(r2_scores)
-        bars1[best_idx].set_color('gold')
-        bars1[best_idx].set_edgecolor('darkgoldenrod')
-        bars1[best_idx].set_linewidth(2)
+        # Styling
+        ax.set_title('Model Performance Comparison - R² Score\n(Heuristic vs Learned Approaches)', 
+                    fontsize=16, fontweight='bold', pad=20)
+        ax.set_ylabel('R² Score', fontsize=14, fontweight='bold')
+        ax.grid(True, alpha=0.3, axis='y')
+        ax.set_ylim(0, max(all_r2s) * 1.15 if all_r2s else 1)
         
-        # MAE comparison (lower is better)
-        bars2 = ax2.bar(models, mae_scores, color=['lightcoral', 'orange', 'gold', 'lightgreen', 'lightblue'][:len(models)])
-        ax2.set_title('Model Performance Comparison - MAE', fontsize=14)
-        ax2.set_ylabel('Mean Absolute Error (Lower is Better)')
-        ax2.set_ylim(0, max(mae_scores) * 1.1)
-        ax2.grid(True, alpha=0.3)
+        # Add value labels
+        for bar, score in zip(bars, all_r2s):
+            ax.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.01,
+                    f'{score:.3f}', ha='center', va='bottom', fontweight='bold', fontsize=12)
         
-        # Add value labels on bars
-        for bar, score in zip(bars2, mae_scores):
-            height = bar.get_height()
-            ax2.text(bar.get_x() + bar.get_width()/2., height + 0.01,
-                    f'{score:.3f}', ha='center', va='bottom', fontweight='bold')
+        # Highlight best model
+        if all_r2s:
+            best_idx = np.argmax(all_r2s)
+            bars[best_idx].set_color('gold')
+            bars[best_idx].set_edgecolor('darkgoldenrod')
+            bars[best_idx].set_linewidth(3)
+            
+            # Add crown emoji to best model
+            best_bar = bars[best_idx]
+            ax.text(best_bar.get_x() + best_bar.get_width()/2., best_bar.get_height() + 0.05,
+                    '👑', ha='center', va='bottom', fontsize=20)
         
-        # Color best performing model (lowest MAE)
-        best_mae_idx = np.argmin(mae_scores)
-        bars2[best_mae_idx].set_color('gold')
-        bars2[best_mae_idx].set_edgecolor('darkgoldenrod')
-        bars2[best_mae_idx].set_linewidth(2)
+        # Rotate x-axis labels for better readability
+        ax.set_xticklabels(all_models, rotation=45, ha='right', fontweight='bold')
+        
+        # Add legend
+        from matplotlib.patches import Patch
+        legend_elements = [
+            Patch(facecolor='lightcoral', alpha=0.8, label='Heuristic Approaches'),
+            Patch(facecolor='steelblue', alpha=0.8, label='Learned Models')
+        ]
+        ax.legend(handles=legend_elements, loc='upper left', fontsize=12, frameon=True, shadow=True)
+        
+        # Add dividing line between heuristic and learned
+        if len(heuristic_models) > 0:
+            divider_x = len(heuristic_models) - 0.5
+            ax.axvline(x=divider_x, color='gray', linestyle='--', alpha=0.7, linewidth=2)
+            
+            # Add text labels for sections
+            ax.text(len(heuristic_models)/2 - 0.5, max(all_r2s) * 1.05, 'HEURISTIC', 
+                   ha='center', va='center', fontweight='bold', fontsize=14, 
+                   bbox=dict(boxstyle="round,pad=0.3", facecolor='lightcoral', alpha=0.3))
+            ax.text(len(heuristic_models) + len(learned_models)/2 - 0.5, max(all_r2s) * 1.05, 'LEARNED', 
+                   ha='center', va='center', fontweight='bold', fontsize=14,
+                   bbox=dict(boxstyle="round,pad=0.3", facecolor='steelblue', alpha=0.3))
         
         plt.tight_layout()
         
-        # Save comparison plot
-        comparison_path = self.experiment_dir / "model_comparison.png"
+        # Save comprehensive comparison
+        comparison_path = self.experiment_dir / "model_comparison_comprehensive.png"
         plt.savefig(comparison_path, dpi=300, bbox_inches='tight')
         plt.close()
         
-        print(f"📊 Model comparison plot saved: {comparison_path}")
+        print(f"📊 Comprehensive model comparison plot saved: {comparison_path}")
+        
+        # Also save as the standard model_comparison.png for compatibility
+        simple_path = self.experiment_dir / "model_comparison.png" 
+        fig, ax = plt.subplots(1, 1, figsize=(14, 8))
+        
+        # Recreate the same plot
+        bars = ax.bar(all_models, all_r2s, color=colors, alpha=0.8, edgecolor='black', linewidth=1)
+        ax.set_title('Model Performance Comparison - R² Score\n(Heuristic vs Learned Approaches)', 
+                    fontsize=16, fontweight='bold', pad=20)
+        ax.set_ylabel('R² Score', fontsize=14, fontweight='bold')
+        ax.grid(True, alpha=0.3, axis='y')
+        ax.set_ylim(0, max(all_r2s) * 1.15 if all_r2s else 1)
+        
+        for bar, score in zip(bars, all_r2s):
+            ax.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.01,
+                    f'{score:.3f}', ha='center', va='bottom', fontweight='bold', fontsize=12)
+        
+        if all_r2s:
+            best_idx = np.argmax(all_r2s)
+            bars[best_idx].set_color('gold')
+            bars[best_idx].set_edgecolor('darkgoldenrod')
+            bars[best_idx].set_linewidth(3)
+            best_bar = bars[best_idx]
+            ax.text(best_bar.get_x() + best_bar.get_width()/2., best_bar.get_height() + 0.05,
+                    '👑', ha='center', va='bottom', fontsize=20)
+        
+        ax.set_xticklabels(all_models, rotation=45, ha='right', fontweight='bold')
+        
+        from matplotlib.patches import Patch
+        legend_elements = [
+            Patch(facecolor='lightcoral', alpha=0.8, label='Heuristic Approaches'),
+            Patch(facecolor='steelblue', alpha=0.8, label='Learned Models')
+        ]
+        ax.legend(handles=legend_elements, loc='upper left', fontsize=12, frameon=True, shadow=True)
+        
+        if len(heuristic_models) > 0:
+            divider_x = len(heuristic_models) - 0.5
+            ax.axvline(x=divider_x, color='gray', linestyle='--', alpha=0.7, linewidth=2)
+            ax.text(len(heuristic_models)/2 - 0.5, max(all_r2s) * 1.05, 'HEURISTIC', 
+                   ha='center', va='center', fontweight='bold', fontsize=14, 
+                   bbox=dict(boxstyle="round,pad=0.3", facecolor='lightcoral', alpha=0.3))
+            ax.text(len(heuristic_models) + len(learned_models)/2 - 0.5, max(all_r2s) * 1.05, 'LEARNED', 
+                   ha='center', va='center', fontweight='bold', fontsize=14,
+                   bbox=dict(boxstyle="round,pad=0.3", facecolor='steelblue', alpha=0.3))
+        
+        plt.tight_layout()
+        plt.savefig(simple_path, dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        print(f"📊 Standard model comparison plot saved: {simple_path}")
+    
     
     def run_analysis(self):
         """Run complete analysis of existing experiment."""
@@ -482,11 +657,17 @@ class ExistingExperimentAnalyzer:
         
         print("\n📊 BASELINE MODEL RESULTS:")
         print("-" * 40)
-        for name, result in baseline_results.items():
-            r2 = result['test_metrics']['r2']
-            mae = result['test_metrics']['mae']
+        
+        # Handle both unified and legacy baseline structures
+        baselines = baseline_results.get('baselines', baseline_results)
+        
+        for name, result in baselines.items():
+            # Try to get metrics from either test_metrics or metrics
+            metrics = result.get('test_metrics', result.get('metrics', {}))
+            r2 = metrics.get('r2', 0)
+            mae = metrics.get('mae', 0)
             print(f"   {name.replace('_', ' ').title()}: R²={r2:.4f}, MAE={mae:.3f}")
-            if name == 'best_single_judge':
+            if name in ['best_single_judge', 'best_judge_linear_scaling'] and 'judge_name' in result:
                 print(f"      Best Judge: {result['judge_name']}")
         
         if gam_results:
@@ -506,13 +687,29 @@ class ExistingExperimentAnalyzer:
             comparison = updated_summary['model_comparison']
             print(f"\n🏆 OVERALL MODEL COMPARISON:")
             print("-" * 40)
-            for model, r2 in comparison['all_r2_scores'].items():
-                improvement = comparison['improvement_over_baseline'][model]
-                status = "👑" if model == comparison['best_model'] else "  "
-                print(f"   {status} {model.upper()}: R²={r2:.4f} (+{improvement:.4f} vs baseline)")
             
-            print(f"\n🎖️  Best Model: {comparison['best_model'].upper()}")
+            # Separate heuristic and learned models
+            heuristic_keys = ['10_judge_mean', 'best_judge', 'ultrafeedback_4judge']
+            learned_keys = [k for k in comparison['all_r2_scores'].keys() if k not in heuristic_keys]
+            
+            print("   HEURISTIC APPROACHES:")
+            for model in heuristic_keys:
+                if model in comparison['all_r2_scores']:
+                    r2 = comparison['all_r2_scores'][model]
+                    status = "👑" if model == comparison['best_model'] else "  "
+                    print(f"   {status} {model.replace('_', ' ').title()}: R²={r2:.4f}")
+            
+            print("\n   LEARNED MODELS:")
+            for model in learned_keys:
+                if model in comparison['all_r2_scores']:
+                    r2 = comparison['all_r2_scores'][model]
+                    improvement = comparison['improvement_over_heuristic'][model]
+                    status = "👑" if model == comparison['best_model'] else "  "
+                    print(f"   {status} {model.replace('_', ' ').upper()}: R²={r2:.4f} (+{improvement:.4f} vs best heuristic)")
+            
+            print(f"\n🎖️  Best Model: {comparison['best_model'].replace('_', ' ').upper()}")
             print(f"🎯 Best R² Score: {comparison['best_r2']:.4f}")
+            print(f"📈 Best Heuristic Baseline: {comparison['best_heuristic_baseline']:.4f}")
         
         print(f"\n📁 Results saved to: {self.experiment_dir}")
         print("="*80)
