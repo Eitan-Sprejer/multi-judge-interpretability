@@ -1,8 +1,39 @@
-# Experiment 1B: Persona Poisoning
+# Aggregator Robustness Study
 
-## Overview
+**Research Question**: How robust is the learned MLP aggregator to realistic human feedback contamination?
 
-This experiment tests the robustness of learned aggregation functions against contaminated training data ("troll personas"). We train separate models on increasingly contaminated data and evaluate all models on clean test data.
+## Experiment Design
+
+**Approach**: Train MLP aggregator on contaminated human feedback, evaluate on clean test set.
+
+**Contamination Strategies**:
+- **Random Noise**: ±3 random error per rating (inconsistent annotators)
+- **Systematic Bias**: Consistent +2/-2 offset per annotator (scale misalignment)  
+- **Scaled Down**: Compress [0,10] → [3,7] (annotators avoiding extremes)
+
+**Contamination Rates**: 0%, 5%, 10%, 15%, 20%, 25%, 30%, 40%, 50%
+
+## Key Results
+
+| Strategy | Clean R² | 50% Contamination | Degradation |
+|----------|----------|-------------------|-------------|
+| Random Noise | 0.537 | 0.524 | **2.4%** |
+| Systematic Bias | 0.532 | 0.480 | **9.8%** |  
+| Scaled Down | 0.517 | 0.392 | **24.1%** |
+
+**Finding**: Aggregator maintains reasonable performance (R² > 0.39) even under heavy contamination. Most robust to noise, most vulnerable to scale compression.
+
+## Files
+
+- `run_aggregator_robustness.py` - Main experiment script
+- `results/aggregator_robustness_analysis.png` - Visualization
+- `results/aggregator_robustness_20250818_131617.json` - Full results
+
+## Usage
+
+```bash
+python run_aggregator_robustness.py --data ../../dataset/data_with_judge_scores.pkl
+```
 
 ## Key Finding
 
