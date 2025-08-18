@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 from typing import Dict, Optional
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 sys.path.append(str(ROOT))
 
 
