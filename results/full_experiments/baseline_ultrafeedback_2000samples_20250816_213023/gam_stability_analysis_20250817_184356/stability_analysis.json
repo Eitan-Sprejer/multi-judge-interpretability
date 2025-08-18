@@ -1,0 +1,296 @@
+{
+  "feature_importance_stability": {
+    "Truthfulness / Factual Accuracy": {
+      "mean": 0.9989293512887215,
+      "std": 0.0008831278381743173,
+      "cv": 0.0008840743624103627,
+      "min": 0.998065337636709,
+      "max": 0.9999982985020786,
+      "runs": 10
+    },
+    "Harmlessness / Safety": {
+      "mean": 0.2667846819197051,
+      "std": 0.06549343202102731,
+      "cv": 0.24549171674639803,
+      "min": 0.18976694995606702,
+      "max": 0.4194731679632544,
+      "runs": 10
+    },
+    "Helpfulness / Utility": {
+      "mean": 0.8155686946198543,
+      "std": 0.07952953214860636,
+      "cv": 0.0975142029090927,
+      "min": 0.6214476924540451,
+      "max": 0.9071262758471577,
+      "runs": 10
+    },
+    "Honesty / Transparency": {
+      "mean": 0.5665651305061787,
+      "std": 0.09422647682694367,
+      "cv": 0.1663118149887587,
+      "min": 0.46701189710423385,
+      "max": 0.7732582441892188,
+      "runs": 10
+    },
+    "Explanatory Depth / Detail": {
+      "mean": 0.3045273901803666,
+      "std": 0.09824289222934933,
+      "cv": 0.32260772650067504,
+      "min": 0.10868971358460355,
+      "max": 0.4033999808584037,
+      "runs": 10
+    },
+    "Instruction Following / Compliance": {
+      "mean": 0.9999999990214219,
+      "std": 1.1054142844396627e-09,
+      "cv": 1.1054142744672543e-09,
+      "min": 0.9999999957404947,
+      "max": 0.999999999549958,
+      "runs": 10
+    },
+    "Clarity / Understandability": {
+      "mean": 0.9639876946597852,
+      "std": 0.037486255699717405,
+      "cv": 0.038886653344761504,
+      "min": 0.8648338584166307,
+      "max": 0.9893481147803502,
+      "runs": 10
+    },
+    "Conciseness / Efficiency": {
+      "mean": 0.9888216196854209,
+      "std": 0.008446325136698277,
+      "cv": 0.00854180863679666,
+      "min": 0.9646713497921803,
+      "max": 0.9936412793886208,
+      "runs": 10
+    },
+    "Logical Consistency / Reasoning": {
+      "mean": 0.996531749312801,
+      "std": 0.0008340910435232939,
+      "cv": 0.000836993939960805,
+      "min": 0.9941973219656701,
+      "max": 0.9973148861826386,
+      "runs": 10
+    },
+    "Creativity / Originality": {
+      "mean": 0.8333876162633729,
+      "std": 0.07256993807724985,
+      "cv": 0.08707825241254037,
+      "min": 0.6628043803965553,
+      "max": 0.9795225926859958,
+      "runs": 10
+    }
+  },
+  "partial_dependence_stability": {
+    "Truthfulness / Factual Accuracy": {
+      "mean_correlation": 0.9981132940151463,
+      "std_correlation": 0.002712840833580828,
+      "min_correlation": 0.9912828590036652,
+      "n_comparisons": 45,
+      "stability_score": 0.9981132940151463
+    },
+    "Harmlessness / Safety": {
+      "mean_correlation": 0.8174292838854976,
+      "std_correlation": 0.2566458697381796,
+      "min_correlation": 0.18490205686819242,
+      "n_comparisons": 45,
+      "stability_score": 0.8174292838854976
+    },
+    "Helpfulness / Utility": {
+      "mean_correlation": 0.9975737483029445,
+      "std_correlation": 0.003391043207401167,
+      "min_correlation": 0.9872593172588889,
+      "n_comparisons": 45,
+      "stability_score": 0.9975737483029445
+    },
+    "Honesty / Transparency": {
+      "mean_correlation": 0.9392237916454925,
+      "std_correlation": 0.08473454208326534,
+      "min_correlation": 0.7403359626718407,
+      "n_comparisons": 45,
+      "stability_score": 0.9392237916454925
+    },
+    "Explanatory Depth / Detail": {
+      "mean_correlation": 0.9975299336872078,
+      "std_correlation": 0.004223269311392455,
+      "min_correlation": 0.9864832083044611,
+      "n_comparisons": 45,
+      "stability_score": 0.9975299336872078
+    },
+    "Instruction Following / Compliance": {
+      "mean_correlation": 0.9966420167376512,
+      "std_correlation": 0.004919079318458298,
+      "min_correlation": 0.985101748126689,
+      "n_comparisons": 45,
+      "stability_score": 0.9966420167376512
+    },
+    "Clarity / Understandability": {
+      "mean_correlation": 0.9989857218903238,
+      "std_correlation": 0.0015706636758125345,
+      "min_correlation": 0.9953099967154239,
+      "n_comparisons": 45,
+      "stability_score": 0.9989857218903238
+    },
+    "Conciseness / Efficiency": {
+      "mean_correlation": 0.9991612337779865,
+      "std_correlation": 0.0012462780667191582,
+      "min_correlation": 0.9960820011474731,
+      "n_comparisons": 45,
+      "stability_score": 0.9991612337779865
+    },
+    "Logical Consistency / Reasoning": {
+      "mean_correlation": 0.9994055524654112,
+      "std_correlation": 0.0009294628885417029,
+      "min_correlation": 0.996919364731484,
+      "n_comparisons": 45,
+      "stability_score": 0.9994055524654112
+    },
+    "Creativity / Originality": {
+      "mean_correlation": 0.9744824307900483,
+      "std_correlation": 0.03561667925933303,
+      "min_correlation": 0.9028887225393631,
+      "n_comparisons": 45,
+      "stability_score": 0.9744824307900483
+    }
+  },
+  "performance_stability": {
+    "r2": {
+      "mean": 0.5744132915233381,
+      "std": 0.0007097752212249819,
+      "cv": 0.0012356525026478154,
+      "range": 0.0023100125978134933
+    },
+    "mae": {
+      "mean": 1.4574916862940313,
+      "std": 0.0012784913513119436,
+      "cv": 0.0008771860336046016,
+      "range": 0.00400902564441874
+    }
+  },
+  "reliability_scores": {
+    "Truthfulness / Factual Accuracy": {
+      "reliability_score": 0.998046223459388,
+      "mean_importance": 0.9989293512887215,
+      "cv": 0.0008840743624103627,
+      "interpretation": "reliable"
+    },
+    "Harmlessness / Safety": {
+      "reliability_score": 0.20129125235359496,
+      "mean_importance": 0.2667846819197051,
+      "cv": 0.24549171674639803,
+      "interpretation": "unreliable"
+    },
+    "Helpfulness / Utility": {
+      "reliability_score": 0.7360391634463899,
+      "mean_importance": 0.8155686946198543,
+      "cv": 0.0975142029090927,
+      "interpretation": "reliable"
+    },
+    "Honesty / Transparency": {
+      "reliability_score": 0.4723386553423532,
+      "mean_importance": 0.5665651305061787,
+      "cv": 0.1663118149887587,
+      "interpretation": "moderate"
+    },
+    "Explanatory Depth / Detail": {
+      "reliability_score": 0.20628450117709454,
+      "mean_importance": 0.3045273901803666,
+      "cv": 0.32260772650067504,
+      "interpretation": "unreliable"
+    },
+    "Instruction Following / Compliance": {
+      "reliability_score": 0.9999999979160076,
+      "mean_importance": 0.9999999990214219,
+      "cv": 1.1054142744672543e-09,
+      "interpretation": "reliable"
+    },
+    "Clarity / Understandability": {
+      "reliability_score": 0.9265014393489344,
+      "mean_importance": 0.9639876946597852,
+      "cv": 0.038886653344761504,
+      "interpretation": "reliable"
+    },
+    "Conciseness / Efficiency": {
+      "reliability_score": 0.9803752946341407,
+      "mean_importance": 0.9888216196854209,
+      "cv": 0.00854180863679666,
+      "interpretation": "reliable"
+    },
+    "Logical Consistency / Reasoning": {
+      "reliability_score": 0.9956976582776476,
+      "mean_importance": 0.996531749312801,
+      "cv": 0.000836993939960805,
+      "interpretation": "reliable"
+    },
+    "Creativity / Originality": {
+      "reliability_score": 0.7608176790569056,
+      "mean_importance": 0.8333876162633729,
+      "cv": 0.08707825241254037,
+      "interpretation": "reliable"
+    }
+  },
+  "rankings": {
+    "most_stable_importance": [
+      "Instruction Following / Compliance",
+      "Logical Consistency / Reasoning",
+      "Truthfulness / Factual Accuracy",
+      "Conciseness / Efficiency",
+      "Clarity / Understandability"
+    ],
+    "least_stable_importance": [
+      "Creativity / Originality",
+      "Helpfulness / Utility",
+      "Honesty / Transparency",
+      "Harmlessness / Safety",
+      "Explanatory Depth / Detail"
+    ],
+    "most_reliable_features": [
+      "Instruction Following / Compliance",
+      "Truthfulness / Factual Accuracy",
+      "Logical Consistency / Reasoning",
+      "Conciseness / Efficiency",
+      "Clarity / Understandability"
+    ],
+    "least_reliable_features": [
+      "Creativity / Originality",
+      "Helpfulness / Utility",
+      "Honesty / Transparency",
+      "Explanatory Depth / Detail",
+      "Harmlessness / Safety"
+    ],
+    "most_stable_partial_dependence": [
+      "Logical Consistency / Reasoning",
+      "Conciseness / Efficiency",
+      "Clarity / Understandability",
+      "Truthfulness / Factual Accuracy",
+      "Helpfulness / Utility"
+    ],
+    "least_stable_partial_dependence": [
+      "Explanatory Depth / Detail",
+      "Instruction Following / Compliance",
+      "Creativity / Originality",
+      "Honesty / Transparency",
+      "Harmlessness / Safety"
+    ]
+  },
+  "summary": {
+    "n_successful_runs": 10,
+    "performance_is_stable": true,
+    "reliable_features": [
+      "Truthfulness / Factual Accuracy",
+      "Helpfulness / Utility",
+      "Instruction Following / Compliance",
+      "Clarity / Understandability",
+      "Conciseness / Efficiency",
+      "Logical Consistency / Reasoning",
+      "Creativity / Originality"
+    ],
+    "moderate_features": [
+      "Honesty / Transparency"
+    ],
+    "unreliable_features": [
+      "Harmlessness / Safety",
+      "Explanatory Depth / Detail"
+    ]
+  }
+}

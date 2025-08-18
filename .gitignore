@@ -1,8 +1,49 @@
 martian-sdk-python
-dataset/*
+# dataset/*
 .env
 *.DS_Store
-**/*.pkl
-models/*
+# **/*.pkl
+# models/*
 .venv/
+!judges_annotated_data.pkl
 !judges_annotated_data.pkl.env.local
+
+# Ignore pycache files
+*__pycache__/
+
+# Organized results directory (generated files)
+# Ignore all results except the specific experiment we want
+results/full_experiments/*/
+!results/full_experiments/baseline_ultrafeedback_2000samples_20250816_213023/
+!results/full_experiments/baseline_ultrafeedback_2000samples_20250816_213023/**
+
+# Exclude large data files (pickle files) from version control
+*.pkl
+
+# Hyperparameter search results are now organized within experiment folders
+# results/hyperparameter_search/*/ (deprecated - now in experiment folders)
+results/quick_tests/*/
+results/single_configs/*/
+
+# Always include summary files and configs from all experiments
+!results/**/config.json
+!results/**/analysis_summary.json
+
+!results/.gitkeep
+
+# Include important results (uncomment specific ones you want to keep)
+# !results/full_experiments/your_important_experiment/
+# !results/full_experiments/your_important_experiment/**
+# Hyperparameter results are now within experiment folders:
+# !results/full_experiments/your_experiment/hyperparameter_tuning/
+# !results/full_experiments/your_experiment/hyperparameter_tuning/**
+
+# Legacy result directories (to be cleaned up)
+full_experiment_runs/
+hyperparameter_tuning_results/
+
+# Generated plots and configs in root (legacy)
+# *.png
+*.log
+rapid_tune_*.json
+hyperparameter_*.json
