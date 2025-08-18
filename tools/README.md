@@ -34,6 +34,6 @@ For the primary experiment workflows, use the main scripts in the project root:
 All tools write outputs to the organized `results/` directory:
 
 - `results/full_experiments/` - Main experiment outputs
-- `results/hyperparameter_search/` - Hyperparameter tuning results
+- `results/full_experiments/*/hyperparameter_tuning/` - Hyperparameter tuning results (within each experiment)
 - `results/quick_tests/` - Rapid tuning and utility outputs
 - `results/single_configs/` - Single configuration training results

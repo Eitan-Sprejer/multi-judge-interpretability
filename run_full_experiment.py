@@ -41,7 +41,10 @@ from pipeline.core.dataset_loader import DatasetLoader
 from pipeline.core.persona_simulation import PersonaSimulator, PERSONAS
 from pipeline.core.judge_evaluation import JudgeEvaluator, JUDGE_IDS
 from pipeline.core.aggregator_training import MLPTrainer, GAMAggregator, compute_metrics, load_training_config, determine_training_scale, plot_training_curves
+from pipeline.core.baseline_models import BaselineEvaluator
 from hyperparameter_tuning import HyperparameterTuner
+from gam_hyperparameter_tuning import GAMHyperparameterTuner
+from correlation_analysis import CorrelationAnalyzer
 from utils.logging_setup import (
     setup_universal_logging, log_experiment_start, log_experiment_progress,
     log_experiment_milestone, log_experiment_complete, log_model_results,
@@ -65,7 +68,9 @@ class FullExperiment:
         normalize_features: bool = True,
         run_name: Optional[str] = None,
         enable_hyperparameter_tuning: bool = False,
-        hyperparameter_trials: int = 30
+        hyperparameter_trials: int = 30,
+        enable_gam_tuning: bool = False,
+        gam_trials: int = 30
     ):
         self.data_source = data_source
         self.data_size = data_size
@@ -76,6 +81,8 @@ class FullExperiment:
         self.normalize_features = normalize_features
         self.enable_hyperparameter_tuning = enable_hyperparameter_tuning
         self.hyperparameter_trials = hyperparameter_trials
+        self.enable_gam_tuning = enable_gam_tuning
+        self.gam_trials = gam_trials
         
         # Set random seeds
         random.seed(random_seed)
@@ -95,6 +102,8 @@ class FullExperiment:
         (self.run_dir / "checkpoints").mkdir(exist_ok=True)
         if enable_hyperparameter_tuning:
             (self.run_dir / "hyperparameter_tuning").mkdir(exist_ok=True)
+        if enable_gam_tuning:
+            (self.run_dir / "gam_tuning").mkdir(exist_ok=True)
         
         # Initialize components
         self.dataset_loader = DatasetLoader()
@@ -112,6 +121,8 @@ class FullExperiment:
             'normalize_features': normalize_features,
             'enable_hyperparameter_tuning': enable_hyperparameter_tuning,
             'hyperparameter_trials': hyperparameter_trials,
+            'enable_gam_tuning': enable_gam_tuning,
+            'gam_trials': gam_trials,
             'experiment_type': 'JUDGES_VS_PERSONAS',
             'run_name': self.run_name,
             'timestamp': timestamp
@@ -588,6 +599,51 @@ class FullExperiment:
             log_experiment_milestone(f"Hyperparameter tuning failed: {e}")
             return {'error': str(e)}
     
+    def run_gam_hyperparameter_tuning(self, data: pd.DataFrame) -> Dict[str, Any]:
+        """Run GAM hyperparameter tuning."""
+        if not self.enable_gam_tuning:
+            log_experiment_milestone("GAM hyperparameter tuning disabled, skipping")
+            return {}
+        
+        log_experiment_milestone(f"Running GAM Hyperparameter Tuning ({self.gam_trials} trials)")
+        
+        try:
+            # Initialize GAM hyperparameter tuner with run-specific output
+            tuner = GAMHyperparameterTuner(
+                experiment_data_path=str(self.run_dir / "data"),
+                output_dir=str(self.run_dir / "gam_tuning"),
+                test_size=self.test_size,
+                random_seed=self.random_seed
+            )
+            
+            # Run GAM tuning
+            analysis = tuner.run_tuning(
+                n_trials=self.gam_trials,
+                normalize=self.normalize_features
+            )
+            
+            if analysis:
+                log_experiment_milestone("GAM hyperparameter tuning complete", {
+                    'best_r2': analysis.get('best_r2', 0),
+                    'best_aic': analysis.get('best_aic', 0),
+                    'trials_completed': analysis.get('successful_trials', 0),
+                    'output_dir': str(self.run_dir / "gam_tuning")
+                })
+                
+                return {
+                    'analysis': analysis,
+                    'best_config': analysis.get('best_config', {}),
+                    'best_r2': analysis.get('best_r2', 0),
+                    'best_aic': analysis.get('best_aic', 0),
+                    'feature_importance': analysis.get('feature_importance_best', {})
+                }
+            else:
+                return {'error': 'No successful GAM trials'}
+            
+        except Exception as e:
+            log_experiment_milestone(f"GAM hyperparameter tuning failed: {e}")
+            return {'error': str(e)}
+    
     def create_hyperparameter_heatmap(self, results: List[Dict]):
         """Create best validation R² heatmap for hyperparameter combinations."""
         if not results:
@@ -873,32 +929,64 @@ class FullExperiment:
             # Step 5: Analyze correlations
             correlation_analysis = self.analyze_correlations(data_with_judges)
             
-            # Step 6: Test aggregation models
+            # Step 6: Compute baseline comparisons
+            baseline_results = self.compute_baseline_comparisons(data_with_judges)
+            
+            # Step 7: Test aggregation models
             model_results = self.test_aggregation_models(data_with_judges)
             
-            # Step 7: Run hyperparameter tuning (if enabled)
+            # Step 8: Run hyperparameter tuning (if enabled)
             hyperparameter_results = self.run_hyperparameter_tuning(data_with_judges)
             
-            # Step 8: Create visualizations
+            # Step 9: Run GAM hyperparameter tuning (if enabled)
+            gam_results = self.run_gam_hyperparameter_tuning(data_with_judges)
+            
+            # Step 10: Run cross-correlation analysis
+            cross_correlation_results = self.run_cross_correlation_analysis(data_with_judges)
+            
+            # Step 11: Create visualizations
             self.create_visualizations(correlation_analysis, model_results)
             
-            # Step 9: Compile results
+            # Step 11.5: Create baseline comparison plots
+            self.create_baseline_comparison_plots(baseline_results, model_results, hyperparameter_results, gam_results)
+            
+            # Step 12: Compile results
             best_baseline_r2 = max([v['test_metrics']['r2'] for v in model_results.values() if 'test_metrics' in v], default=-1)
             best_hyperparameter_r2 = hyperparameter_results.get('best_r2', -1)
+            best_gam_r2 = gam_results.get('best_r2', -1)
+            
+            # Extract baseline comparison results from unified system
+            baselines = baseline_results.get('baselines', {})
+            naive_mean_r2 = baselines.get('naive_mean', {}).get('metrics', {}).get('r2', -1)
+            best_judge_r2 = baselines.get('best_judge_linear_scaling', {}).get('metrics', {}).get('r2', -1)
+            scaled_mean_r2 = baselines.get('linear_scaling_mean', {}).get('metrics', {}).get('r2', -1)
+            best_judge_name = baselines.get('best_judge_linear_scaling', {}).get('judge_name', 'Unknown')
             
             experiment_results = {
                 'config': self.config,
                 'correlation_analysis': correlation_analysis,
+                'cross_correlation_results': cross_correlation_results,
                 'model_results': model_results,
+                'baseline_results': baseline_results,
                 'hyperparameter_results': hyperparameter_results,
+                'gam_results': gam_results,
                 'summary': {
                     'overall_correlation': correlation_analysis.get('overall_correlation', 0),
                     'best_baseline_r2': best_baseline_r2,
                     'best_hyperparameter_r2': best_hyperparameter_r2,
+                    'best_gam_r2': best_gam_r2,
+                    'naive_mean_r2': naive_mean_r2,
+                    'best_judge_r2': best_judge_r2,
+                    'scaled_mean_r2': scaled_mean_r2,
+                    'best_judge_name': best_judge_name,
                     'hyperparameter_improvement': best_hyperparameter_r2 - best_baseline_r2 if best_hyperparameter_r2 > 0 and best_baseline_r2 > 0 else 0,
+                    'gam_improvement': best_gam_r2 - best_baseline_r2 if best_gam_r2 > 0 and best_baseline_r2 > 0 else 0,
+                    'gam_vs_naive_mean': best_gam_r2 - naive_mean_r2 if best_gam_r2 > 0 and naive_mean_r2 > 0 else 0,
+                    'gam_vs_best_judge': best_gam_r2 - best_judge_r2 if best_gam_r2 > 0 and best_judge_r2 > 0 else 0,
                     'normalization_helps': self._test_normalization_benefit(model_results),
                     'samples_processed': len(data_with_judges),
                     'hyperparameter_trials': self.hyperparameter_trials if self.enable_hyperparameter_tuning else 0,
+                    'gam_trials': self.gam_trials if self.enable_gam_tuning else 0,
                     'run_name': self.run_name
                 }
             }
@@ -921,11 +1009,19 @@ class FullExperiment:
                 'overall_correlation': correlation_analysis.get('overall_correlation', 0),
                 'best_baseline_r2': experiment_results['summary']['best_baseline_r2'],
                 'best_hyperparameter_r2': experiment_results['summary']['best_hyperparameter_r2'],
+                'best_gam_r2': experiment_results['summary']['best_gam_r2'],
+                'naive_mean_r2': experiment_results['summary']['naive_mean_r2'],
+                'best_judge_r2': experiment_results['summary']['best_judge_r2'],
+                'best_judge_name': experiment_results['summary']['best_judge_name'],
                 'hyperparameter_improvement': experiment_results['summary']['hyperparameter_improvement'],
+                'gam_improvement': experiment_results['summary']['gam_improvement'],
+                'gam_vs_naive_mean': experiment_results['summary']['gam_vs_naive_mean'],
+                'gam_vs_best_judge': experiment_results['summary']['gam_vs_best_judge'],
                 'normalization_helps': experiment_results['summary']['normalization_helps'],
                 'samples_processed': len(data_with_judges),
                 'api_calls_made': len(data_with_judges) * len(JUDGE_IDS),
                 'hyperparameter_trials': experiment_results['summary']['hyperparameter_trials'],
+                'gam_trials': experiment_results['summary']['gam_trials'],
                 'run_name': self.run_name
             })
             
@@ -944,6 +1040,170 @@ class FullExperiment:
             return False
         
         return norm_r2 > raw_r2 + 0.05  # Meaningful improvement threshold
+    
+    def compute_baseline_comparisons(self, data: pd.DataFrame) -> Dict[str, Any]:
+        """Compute baseline model comparisons: best single judge and naive mean."""
+        log_experiment_milestone("Computing Baseline Comparisons")
+        
+        # Prepare data similar to test_aggregation_models
+        X_list = []
+        y_list = []
+        
+        # Uniform persona sampling
+        available_personas = list(PERSONAS.keys())
+        samples_per_persona = len(data) // len(available_personas)
+        remaining_samples = len(data) % len(available_personas)
+        
+        persona_assignment = []
+        for persona in available_personas:
+            persona_assignment.extend([persona] * samples_per_persona)
+        for _ in range(remaining_samples):
+            persona_assignment.append(random.choice(available_personas))
+        random.shuffle(persona_assignment)
+        
+        # Extract features and targets
+        for idx, (row, assigned_persona) in enumerate(zip(data.iterrows(), persona_assignment)):
+            row = row[1]
+            
+            if ('human_feedback' not in row or 'personas' not in row['human_feedback'] or
+                'judge_scores' not in row or not isinstance(row['judge_scores'], list)):
+                continue
+            
+            personas_feedback = row['human_feedback']['personas']
+            if assigned_persona not in personas_feedback or 'score' not in personas_feedback[assigned_persona]:
+                continue
+            
+            selected_score = personas_feedback[assigned_persona]['score']
+            judge_scores = row['judge_scores']
+            
+            if selected_score is None or len(judge_scores) != len(JUDGE_IDS):
+                continue
+            
+            X_list.append(judge_scores)
+            y_list.append(selected_score)
+        
+        if len(X_list) < 10:
+            log_experiment_milestone(f"Insufficient Data for Baseline Comparison: {len(X_list)} samples")
+            return {}
+        
+        X = np.array(X_list)
+        y = np.array(y_list)
+        
+        # Split data
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=self.test_size, random_state=self.random_seed
+        )
+        
+        baselines = {}
+        
+        # 1. Naive Mean Baseline - average of all judges
+        naive_mean_pred = np.mean(X_test, axis=1)
+        naive_mean_metrics = compute_metrics(y_test, naive_mean_pred)
+        baselines['naive_mean'] = {
+            'description': 'Average of all judge scores',
+            'metrics': naive_mean_metrics,
+            'predictions': naive_mean_pred
+        }
+        
+        # 2. Best Single Judge Baseline - find best individual judge
+        best_judge_r2 = -1
+        best_judge_idx = 0
+        best_judge_metrics = None
+        best_judge_pred = None
+        
+        for judge_idx in range(len(JUDGE_IDS)):
+            judge_pred = X_test[:, judge_idx]
+            judge_metrics = compute_metrics(y_test, judge_pred)
+            
+            if judge_metrics['r2'] > best_judge_r2:
+                best_judge_r2 = judge_metrics['r2']
+                best_judge_idx = judge_idx
+                best_judge_metrics = judge_metrics
+                best_judge_pred = judge_pred
+        
+        best_judge_name = JUDGE_IDS[best_judge_idx] if best_judge_idx < len(JUDGE_IDS) else f"Judge_{best_judge_idx}"
+        baselines['best_single_judge'] = {
+            'description': f'Best individual judge: {best_judge_name}',
+            'judge_name': best_judge_name,
+            'judge_index': best_judge_idx,
+            'metrics': best_judge_metrics,
+            'predictions': best_judge_pred
+        }
+        
+        # 3. Scaled Mean Baseline - mean scaled to match target range
+        y_min, y_max = np.min(y_test), np.max(y_test)
+        judges_mean = np.mean(X_test, axis=1)
+        judges_min, judges_max = np.min(judges_mean), np.max(judges_mean)
+        
+        # Scale judge mean to target range
+        scaled_mean_pred = (judges_mean - judges_min) / (judges_max - judges_min) * (y_max - y_min) + y_min
+        scaled_mean_metrics = compute_metrics(y_test, scaled_mean_pred)
+        baselines['scaled_mean'] = {
+            'description': 'Average of judges scaled to target range',
+            'metrics': scaled_mean_metrics,
+            'predictions': scaled_mean_pred
+        }
+        
+        log_experiment_milestone("Baseline Comparisons Complete", {
+            'naive_mean_r2': naive_mean_metrics['r2'],
+            'best_judge_r2': best_judge_metrics['r2'],
+            'best_judge': best_judge_name,
+            'scaled_mean_r2': scaled_mean_metrics['r2']
+        })
+        
+        return baselines
+    
+    def _legacy_baseline_comparison(self, data: pd.DataFrame) -> Dict[str, Any]:
+        \"\"\"Legacy baseline comparison method as fallback.\"\"\"\n        # Prepare data similar to test_aggregation_models\n        X_list = []\n        y_list = []\n        \n        # Uniform persona sampling\n        available_personas = list(PERSONAS.keys())\n        samples_per_persona = len(data) // len(available_personas)\n        remaining_samples = len(data) % len(available_personas)\n        \n        persona_assignment = []\n        for persona in available_personas:\n            persona_assignment.extend([persona] * samples_per_persona)\n        for _ in range(remaining_samples):\n            persona_assignment.append(random.choice(available_personas))\n        random.shuffle(persona_assignment)\n        \n        # Extract features and targets\n        for idx, (row, assigned_persona) in enumerate(zip(data.iterrows(), persona_assignment)):\n            row = row[1]\n            \n            if ('human_feedback' not in row or 'personas' not in row['human_feedback'] or\n                'judge_scores' not in row or not isinstance(row['judge_scores'], list)):\n                continue\n            \n            personas_feedback = row['human_feedback']['personas']\n            if assigned_persona not in personas_feedback or 'score' not in personas_feedback[assigned_persona]:\n                continue\n            \n            selected_score = personas_feedback[assigned_persona]['score']\n            judge_scores = row['judge_scores']\n            \n            if selected_score is None or len(judge_scores) != len(JUDGE_IDS):\n                continue\n            \n            X_list.append(judge_scores)\n            y_list.append(selected_score)\n        \n        if len(X_list) < 10:\n            return {'baselines': {}, 'summary': {'error': 'insufficient_data'}}\n        \n        X = np.array(X_list)\n        y = np.array(y_list)\n        \n        # Split data\n        X_train, X_test, y_train, y_test = train_test_split(\n            X, y, test_size=self.test_size, random_state=self.random_seed\n        )\n        \n        legacy_baselines = {}\n        \n        # 1. Naive Mean Baseline\n        naive_mean_pred = np.mean(X_test, axis=1)\n        legacy_baselines['naive_mean'] = {\n            'metrics': compute_metrics(y_test, naive_mean_pred)\n        }\n        \n        # 2. Best Single Judge\n        best_judge_r2 = -1\n        best_judge_idx = 0\n        for judge_idx in range(len(JUDGE_IDS)):\n            judge_pred = X_test[:, judge_idx]\n            judge_metrics = compute_metrics(y_test, judge_pred)\n            if judge_metrics['r2'] > best_judge_r2:\n                best_judge_r2 = judge_metrics['r2']\n                best_judge_idx = judge_idx\n        \n        best_judge_name = JUDGE_IDS[best_judge_idx] if best_judge_idx < len(JUDGE_IDS) else f\"Judge_{best_judge_idx}\"\n        legacy_baselines['best_judge_linear_scaling'] = {\n            'metrics': compute_metrics(y_test, X_test[:, best_judge_idx]),\n            'judge_name': best_judge_name\n        }\n        \n        # 3. Scaled Mean\n        y_min, y_max = np.min(y_test), np.max(y_test)\n        judges_mean = np.mean(X_test, axis=1)\n        judges_min, judges_max = np.min(judges_mean), np.max(judges_mean)\n        scaled_mean_pred = (judges_mean - judges_min) / (judges_max - judges_min) * (y_max - y_min) + y_min\n        legacy_baselines['linear_scaling_mean'] = {\n            'metrics': compute_metrics(y_test, scaled_mean_pred)\n        }\n        \n        return {\n            'baselines': legacy_baselines,\n            'summary': {\n                'best_baseline': 'legacy_fallback',\n                'methodology': 'legacy_fallback'\n            }\n        }
+    
+    def create_baseline_comparison_plots(self, baseline_results: Dict[str, Any], model_results: Dict[str, Any], 
+                                       hyperparameter_results: Dict[str, Any], gam_results: Dict[str, Any]):\n        \"\"\"Create focused baseline comparison plots distinguishing learned vs non-learned approaches.\"\"\"\n        log_experiment_milestone(\"Creating Baseline Comparison Visualizations\")\n        \n        baselines = baseline_results.get('baselines', {})\n        \n        # Define model categories\n        non_learned_models = {\n            'Naive Mean': baselines.get('naive_mean', {}),\n            'Best Judge': baselines.get('best_judge_linear_scaling', {}),\n            'Scaled Mean': baselines.get('linear_scaling_mean', {})\n        }\n        \n        learned_models = {}\n        \n        # Add learned aggregators\n        if model_results:\n            best_mlp = max([(k, v) for k, v in model_results.items() if 'test_metrics' in v], \n                          key=lambda x: x[1]['test_metrics']['r2'], default=None)\n            if best_mlp:\n                learned_models['MLP'] = best_mlp[1]\n        \n        if gam_results and gam_results.get('best_r2', -1) > 0:\n            learned_models['GAM'] = {\n                'test_metrics': {\n                    'r2': gam_results['best_r2'],\n                    'mae': gam_results['best_mae']\n                }\n            }\n        \n        if hyperparameter_results and hyperparameter_results.get('best_r2', -1) > 0:\n            learned_models['MLP (Tuned)'] = {\n                'test_metrics': {\n                    'r2': hyperparameter_results['best_r2'],\n                    'mae': hyperparameter_results.get('best_mae', 0)\n                }\n            }\n        \n        # Add learned baselines\n        learned_baselines = {\n            'LR (Normalized)': baselines.get('linear_regression_norm', {}),\n            'LR (Raw)': baselines.get('linear_regression_raw', {}),\n            'Ridge (Normalized)': baselines.get('ridge_regression_norm', {})\n        }\n        \n        # Remove empty entries\n        learned_baselines = {k: v for k, v in learned_baselines.items() if v}\n        \n        # Create two comparison plots\n        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))\n        \n        # Plot 1: Main Comparison (Non-learned + Best Learned)\n        main_models = list(non_learned_models.keys())\n        main_r2s = [model.get('metrics', {}).get('r2', 0) for model in non_learned_models.values()]\n        main_maes = [model.get('metrics', {}).get('mae', 0) for model in non_learned_models.values()]\n        \n        # Add best learned model\n        if learned_models:\n            best_learned = max(learned_models.items(), key=lambda x: x[1]['test_metrics']['r2'])\n            main_models.append(best_learned[0])\n            main_r2s.append(best_learned[1]['test_metrics']['r2'])\n            main_maes.append(best_learned[1]['test_metrics']['mae'])\n        \n        colors = ['lightcoral', 'orange', 'gold', 'lightgreen'][:len(main_models)]\n        bars1 = ax1.bar(main_models, main_r2s, color=colors)\n        ax1.set_title('Main Model Comparison - R² Score', fontsize=14, fontweight='bold')\n        ax1.set_ylabel('R² Score')\n        ax1.grid(True, alpha=0.3)\n        ax1.set_ylim(0, max(main_r2s) * 1.15)\n        \n        # Add value labels\n        for bar, score in zip(bars1, main_r2s):\n            ax1.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.01,\n                    f'{score:.3f}', ha='center', va='bottom', fontweight='bold')\n        \n        # Highlight best model\n        best_idx = np.argmax(main_r2s)\n        bars1[best_idx].set_color('gold')\n        bars1[best_idx].set_edgecolor('darkgoldenrod')\n        bars1[best_idx].set_linewidth(2)\n        \n        # Plot 2: MAE Comparison\n        bars2 = ax2.bar(main_models, main_maes, color=colors)\n        ax2.set_title('Main Model Comparison - MAE', fontsize=14, fontweight='bold')\n        ax2.set_ylabel('Mean Absolute Error (Lower is Better)')\n        ax2.grid(True, alpha=0.3)\n        ax2.set_ylim(0, max(main_maes) * 1.15)\n        \n        for bar, score in zip(bars2, main_maes):\n            ax2.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.01,\n                    f'{score:.3f}', ha='center', va='bottom', fontweight='bold')\n        \n        # Plot 3: Comprehensive Learned Models\n        all_learned = {**learned_models, **learned_baselines}\n        if all_learned:\n            learned_names = list(all_learned.keys())\n            learned_r2s = [model['test_metrics']['r2'] for model in all_learned.values()]\n            \n            # Color by type\n            learned_colors = []\n            for name in learned_names:\n                if name in learned_models:\n                    learned_colors.append('lightblue')  # Aggregators\n                else:\n                    learned_colors.append('lightsteelblue')  # Learned baselines\n            \n            bars3 = ax3.bar(learned_names, learned_r2s, color=learned_colors)\n            ax3.set_title('Learned Models Comparison - R² Score', fontsize=14, fontweight='bold')\n            ax3.set_ylabel('R² Score')\n            ax3.grid(True, alpha=0.3)\n            ax3.set_xticklabels(learned_names, rotation=45, ha='right')\n            ax3.set_ylim(0, max(learned_r2s) * 1.15)\n            \n            for bar, score in zip(bars3, learned_r2s):\n                ax3.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.01,\n                        f'{score:.3f}', ha='center', va='bottom', fontweight='bold')\n        \n        # Plot 4: All Baselines (Non-learned)\n        all_non_learned = {**non_learned_models}\n        \n        # Add more baselines if available\n        additional_baselines = {\n            'Best Judge (Naive)': baselines.get('best_judge_naive', {}),\n            'StandardScaler+LR Mean': baselines.get('standardscaler_lr_mean', {}),\n            'Best Judge (StandardScaler+LR)': baselines.get('best_judge_standardscaler_lr', {})\n        }\n        \n        for name, baseline in additional_baselines.items():\n            if baseline:\n                all_non_learned[name] = baseline\n        \n        if all_non_learned:\n            baseline_names = list(all_non_learned.keys())\n            baseline_r2s = [model.get('metrics', {}).get('r2', 0) for model in all_non_learned.values()]\n            \n            bars4 = ax4.bar(baseline_names, baseline_r2s, color='lightcoral', alpha=0.7)\n            ax4.set_title('Non-Learned Baselines - R² Score', fontsize=14, fontweight='bold')\n            ax4.set_ylabel('R² Score')\n            ax4.grid(True, alpha=0.3)\n            ax4.set_xticklabels(baseline_names, rotation=45, ha='right')\n            ax4.set_ylim(0, max(baseline_r2s) * 1.15 if baseline_r2s else 1)\n            \n            for bar, score in zip(bars4, baseline_r2s):\n                ax4.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.01,\n                        f'{score:.3f}', ha='center', va='bottom', fontweight='bold')\n        \n        plt.tight_layout()\n        \n        # Save plots\n        comparison_path = self.run_dir / \"plots\" / \"baseline_comparison_comprehensive.png\"\n        plt.savefig(comparison_path, dpi=300, bbox_inches='tight')\n        plt.close()\n        \n        log_experiment_milestone(\"Baseline comparison plots saved\", {'saved_to': str(comparison_path)})
+    
+    def run_cross_correlation_analysis(self, data_with_judges: pd.DataFrame) -> Dict[str, Any]:
+        """Run detailed cross-correlation analysis between judges and personas."""
+        log_experiment_milestone("Running Cross-Correlation Analysis")
+        
+        try:
+            # Initialize correlation analyzer
+            analyzer = CorrelationAnalyzer(self.run_dir)
+            
+            # Save the current data to the expected location for the analyzer
+            data_path = self.run_dir / "data" / "data_with_judge_scores.pkl"
+            if not data_path.exists():
+                with open(data_path, 'wb') as f:
+                    pickle.dump(data_with_judges, f)
+            
+            # Run the correlation analysis
+            correlation_results = analyzer.run_correlation_analysis()
+            
+            # Extract summary statistics for logging
+            summary_stats = analyzer._calculate_summary_stats(
+                correlation_results['judge_corr_matrix'], "Judge-Judge"
+            )
+            cross_stats = analyzer._calculate_summary_stats(
+                correlation_results['judge_persona_corr_matrix'], "Judge-Persona"
+            )
+            
+            log_experiment_milestone("Cross-correlation analysis complete", {
+                'judge_matrix_shape': str(correlation_results['judge_matrix'].shape),
+                'persona_matrix_shape': str(correlation_results['persona_matrix'].shape),
+                'judge_avg_correlation': f"{summary_stats['mean']:.3f}",
+                'judge_persona_avg_correlation': f"{cross_stats['mean']:.3f}",
+                'strong_judge_correlations': summary_stats['strong_count'],
+                'strong_cross_correlations': cross_stats['strong_count']
+            })
+            
+            return {
+                'correlation_results': correlation_results,
+                'summary_stats': {
+                    'judge_judge': summary_stats,
+                    'judge_persona': cross_stats
+                }
+            }
+            
+        except Exception as e:
+            log_experiment_milestone(f"Cross-correlation analysis failed: {e}")
+            return {'error': str(e)}
 
 
 async def main():
@@ -964,6 +1224,10 @@ async def main():
                         help='Enable hyperparameter tuning (default: False)')
     parser.add_argument('--hyperparameter-trials', type=int, default=30,
                         help='Number of hyperparameter trials (default: 30)')
+    parser.add_argument('--gam-tuning', action='store_true',
+                        help='Enable GAM hyperparameter tuning (default: False)')
+    parser.add_argument('--gam-trials', type=int, default=30,
+                        help='Number of GAM trials (default: 30)')
     parser.add_argument('--dry-run', action='store_true',
                         help='Run with small dataset for testing')
     
@@ -984,7 +1248,9 @@ async def main():
         concurrency=args.concurrency,
         run_name=args.run_name,
         enable_hyperparameter_tuning=args.hyperparameter_tuning,
-        hyperparameter_trials=args.hyperparameter_trials
+        hyperparameter_trials=args.hyperparameter_trials,
+        enable_gam_tuning=args.gam_tuning,
+        gam_trials=args.gam_trials
     )
     
     try:
@@ -998,18 +1264,38 @@ async def main():
         overall_corr = results['summary']['overall_correlation']
         best_baseline_r2 = results['summary']['best_baseline_r2']
         best_hyperparameter_r2 = results['summary']['best_hyperparameter_r2']
+        best_gam_r2 = results['summary']['best_gam_r2']
+        naive_mean_r2 = results['summary']['naive_mean_r2']
+        best_judge_r2 = results['summary']['best_judge_r2']
+        best_judge_name = results['summary']['best_judge_name']
         hyperparameter_improvement = results['summary']['hyperparameter_improvement']
+        gam_improvement = results['summary']['gam_improvement']
+        gam_vs_naive_mean = results['summary']['gam_vs_naive_mean']
+        gam_vs_best_judge = results['summary']['gam_vs_best_judge']
         norm_helps = results['summary']['normalization_helps']
         run_name = results['summary']['run_name']
         hyperparameter_trials = results['summary']['hyperparameter_trials']
+        gam_trials = results['summary']['gam_trials']
         
         print(f"📊 KEY FINDINGS:")
         print(f"   Judge-Persona Correlation: {overall_corr:.3f}")
+        print(f"\n🎯 BASELINE COMPARISONS:")
+        print(f"   Naive Mean R²: {naive_mean_r2:.3f}")
+        print(f"   Best Single Judge R²: {best_judge_r2:.3f} ({best_judge_name})")
         print(f"   Best Baseline R²: {best_baseline_r2:.3f}")
         if hyperparameter_trials > 0:
+            print(f"\n🔧 HYPERPARAMETER TUNING:")
             print(f"   Best Hyperparameter R²: {best_hyperparameter_r2:.3f}")
-            print(f"   Hyperparameter Improvement: {hyperparameter_improvement:+.3f}")
-            print(f"   Hyperparameter Trials: {hyperparameter_trials}")
+            print(f"   Improvement vs Baseline: {hyperparameter_improvement:+.3f}")
+            print(f"   Trials: {hyperparameter_trials}")
+        if gam_trials > 0:
+            print(f"\n🧠 GAM RESULTS:")
+            print(f"   Best GAM R²: {best_gam_r2:.3f}")
+            print(f"   Improvement vs Baseline: {gam_improvement:+.3f}")
+            print(f"   Improvement vs Naive Mean: {gam_vs_naive_mean:+.3f}")
+            print(f"   Improvement vs Best Judge: {gam_vs_best_judge:+.3f}")
+            print(f"   Trials: {gam_trials}")
+        print(f"\n⚙️ OTHER:")
         print(f"   Normalization Helps: {norm_helps}")
         
         print(f"\n📁 RESULTS:")

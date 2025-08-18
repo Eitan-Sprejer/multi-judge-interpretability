@@ -1,0 +1,386 @@
+{
+  "systematic_bias": {
+    "0.0": {
+      "metrics": {
+        "mse": 4.042332172393799,
+        "mae": 1.5435137748718262,
+        "r2": 0.5318665504455566
+      },
+      "contamination_info": {
+        "rate": 0.0,
+        "strategy": "systematic_bias",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.899375,
+        "mean_shift": 0.0
+      }
+    },
+    "0.05": {
+      "metrics": {
+        "mse": 4.031008243560791,
+        "mae": 1.541079044342041,
+        "r2": 0.5331779718399048
+      },
+      "contamination_info": {
+        "rate": 0.05,
+        "strategy": "systematic_bias",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.906875,
+        "mean_shift": 0.007500000000000284
+      }
+    },
+    "0.1": {
+      "metrics": {
+        "mse": 3.9005730152130127,
+        "mae": 1.516474962234497,
+        "r2": 0.5482833385467529
+      },
+      "contamination_info": {
+        "rate": 0.1,
+        "strategy": "systematic_bias",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.909375,
+        "mean_shift": 0.009999999999999787
+      }
+    },
+    "0.15": {
+      "metrics": {
+        "mse": 4.0962815284729,
+        "mae": 1.5641001462936401,
+        "r2": 0.5256187915802002
+      },
+      "contamination_info": {
+        "rate": 0.15,
+        "strategy": "systematic_bias",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.921875,
+        "mean_shift": 0.022499999999999964
+      }
+    },
+    "0.2": {
+      "metrics": {
+        "mse": 4.249876022338867,
+        "mae": 1.5960040092468262,
+        "r2": 0.5078313946723938
+      },
+      "contamination_info": {
+        "rate": 0.2,
+        "strategy": "systematic_bias",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.930625,
+        "mean_shift": 0.03125
+      }
+    },
+    "0.25": {
+      "metrics": {
+        "mse": 4.160560131072998,
+        "mae": 1.5978060960769653,
+        "r2": 0.5181748867034912
+      },
+      "contamination_info": {
+        "rate": 0.25,
+        "strategy": "systematic_bias",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.938125,
+        "mean_shift": 0.038750000000000284
+      }
+    },
+    "0.3": {
+      "metrics": {
+        "mse": 4.386537551879883,
+        "mae": 1.6412166357040405,
+        "r2": 0.4920048713684082
+      },
+      "contamination_info": {
+        "rate": 0.3,
+        "strategy": "systematic_bias",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.93125,
+        "mean_shift": 0.03187500000000032
+      }
+    },
+    "0.4": {
+      "metrics": {
+        "mse": 4.240804672241211,
+        "mae": 1.6096267700195312,
+        "r2": 0.5088819265365601
+      },
+      "contamination_info": {
+        "rate": 0.4,
+        "strategy": "systematic_bias",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.921875,
+        "mean_shift": 0.022499999999999964
+      }
+    },
+    "0.5": {
+      "metrics": {
+        "mse": 4.491682052612305,
+        "mae": 1.666109323501587,
+        "r2": 0.4798283576965332
+      },
+      "contamination_info": {
+        "rate": 0.5,
+        "strategy": "systematic_bias",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.92,
+        "mean_shift": 0.020624999999999893
+      }
+    }
+  },
+  "random_noise": {
+    "0.0": {
+      "metrics": {
+        "mse": 4.000445365905762,
+        "mae": 1.5253313779830933,
+        "r2": 0.5367173552513123
+      },
+      "contamination_info": {
+        "rate": 0.0,
+        "strategy": "random_noise",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.899375,
+        "mean_shift": 0.0
+      }
+    },
+    "0.05": {
+      "metrics": {
+        "mse": 4.0287065505981445,
+        "mae": 1.5662176609039307,
+        "r2": 0.5334445238113403
+      },
+      "contamination_info": {
+        "rate": 0.05,
+        "strategy": "random_noise",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.879375,
+        "mean_shift": -0.020000000000000462
+      }
+    },
+    "0.1": {
+      "metrics": {
+        "mse": 4.049095630645752,
+        "mae": 1.5601475238800049,
+        "r2": 0.531083345413208
+      },
+      "contamination_info": {
+        "rate": 0.1,
+        "strategy": "random_noise",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.860625,
+        "mean_shift": -0.038750000000000284
+      }
+    },
+    "0.15": {
+      "metrics": {
+        "mse": 4.400624752044678,
+        "mae": 1.6462167501449585,
+        "r2": 0.49037349224090576
+      },
+      "contamination_info": {
+        "rate": 0.15,
+        "strategy": "random_noise",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.83625,
+        "mean_shift": -0.06312500000000032
+      }
+    },
+    "0.2": {
+      "metrics": {
+        "mse": 4.078451633453369,
+        "mae": 1.5692864656448364,
+        "r2": 0.5276836156845093
+      },
+      "contamination_info": {
+        "rate": 0.2,
+        "strategy": "random_noise",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.8125,
+        "mean_shift": -0.08687500000000004
+      }
+    },
+    "0.25": {
+      "metrics": {
+        "mse": 4.369263172149658,
+        "mae": 1.6551871299743652,
+        "r2": 0.49400538206100464
+      },
+      "contamination_info": {
+        "rate": 0.25,
+        "strategy": "random_noise",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.7975,
+        "mean_shift": -0.10187499999999972
+      }
+    },
+    "0.3": {
+      "metrics": {
+        "mse": 4.181252479553223,
+        "mae": 1.5970312356948853,
+        "r2": 0.5157785415649414
+      },
+      "contamination_info": {
+        "rate": 0.3,
+        "strategy": "random_noise",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.76,
+        "mean_shift": -0.13937500000000025
+      }
+    },
+    "0.4": {
+      "metrics": {
+        "mse": 4.100536346435547,
+        "mae": 1.5826488733291626,
+        "r2": 0.5251260995864868
+      },
+      "contamination_info": {
+        "rate": 0.4,
+        "strategy": "random_noise",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.714375,
+        "mean_shift": -0.1849999999999996
+      }
+    },
+    "0.5": {
+      "metrics": {
+        "mse": 4.110658645629883,
+        "mae": 1.5908279418945312,
+        "r2": 0.5239537954330444
+      },
+      "contamination_info": {
+        "rate": 0.5,
+        "strategy": "random_noise",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.6725,
+        "mean_shift": -0.22687499999999972
+      }
+    }
+  },
+  "scaled_down": {
+    "0.0": {
+      "metrics": {
+        "mse": 4.172275066375732,
+        "mae": 1.592469334602356,
+        "r2": 0.5168181657791138
+      },
+      "contamination_info": {
+        "rate": 0.0,
+        "strategy": "scaled_down",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.899375,
+        "mean_shift": 0.0
+      }
+    },
+    "0.05": {
+      "metrics": {
+        "mse": 4.126447677612305,
+        "mae": 1.5848034620285034,
+        "r2": 0.5221253633499146
+      },
+      "contamination_info": {
+        "rate": 0.05,
+        "strategy": "scaled_down",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.856875,
+        "mean_shift": -0.042500000000000426
+      }
+    },
+    "0.1": {
+      "metrics": {
+        "mse": 4.239492416381836,
+        "mae": 1.6119821071624756,
+        "r2": 0.5090339183807373
+      },
+      "contamination_info": {
+        "rate": 0.1,
+        "strategy": "scaled_down",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.813125,
+        "mean_shift": -0.08624999999999972
+      }
+    },
+    "0.15": {
+      "metrics": {
+        "mse": 4.291445732116699,
+        "mae": 1.6396085023880005,
+        "r2": 0.5030173063278198
+      },
+      "contamination_info": {
+        "rate": 0.15,
+        "strategy": "scaled_down",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.7625,
+        "mean_shift": -0.13687499999999986
+      }
+    },
+    "0.2": {
+      "metrics": {
+        "mse": 4.290844917297363,
+        "mae": 1.653364896774292,
+        "r2": 0.5030869245529175
+      },
+      "contamination_info": {
+        "rate": 0.2,
+        "strategy": "scaled_down",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.719375,
+        "mean_shift": -0.17999999999999972
+      }
+    },
+    "0.25": {
+      "metrics": {
+        "mse": 4.3842692375183105,
+        "mae": 1.680000901222229,
+        "r2": 0.4922676086425781
+      },
+      "contamination_info": {
+        "rate": 0.25,
+        "strategy": "scaled_down",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.665625,
+        "mean_shift": -0.23374999999999968
+      }
+    },
+    "0.3": {
+      "metrics": {
+        "mse": 4.481983184814453,
+        "mae": 1.7248345613479614,
+        "r2": 0.48095160722732544
+      },
+      "contamination_info": {
+        "rate": 0.3,
+        "strategy": "scaled_down",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.594375,
+        "mean_shift": -0.3049999999999997
+      }
+    },
+    "0.4": {
+      "metrics": {
+        "mse": 4.775813579559326,
+        "mae": 1.807166337966919,
+        "r2": 0.44692373275756836
+      },
+      "contamination_info": {
+        "rate": 0.4,
+        "strategy": "scaled_down",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.508125,
+        "mean_shift": -0.3912500000000003
+      }
+    },
+    "0.5": {
+      "metrics": {
+        "mse": 5.248145580291748,
+        "mae": 1.926419734954834,
+        "r2": 0.3922240138053894
+      },
+      "contamination_info": {
+        "rate": 0.5,
+        "strategy": "scaled_down",
+        "original_mean": 5.899375,
+        "contaminated_mean": 5.41,
+        "mean_shift": -0.4893749999999999
+      }
+    }
+  }
+}

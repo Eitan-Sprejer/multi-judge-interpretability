@@ -103,6 +103,52 @@ Follow these steps in order:
    - Handles complex judge interactions
    - Less interpretable than GAM
 
+## 🔍 Analysis & Results Scripts
+
+**For Existing Experiments** (Run analysis without re-running full pipeline):
+
+If you have a completed experiment and want to add GAM analysis, baseline comparisons, or stability analysis:
+
+```bash
+# Add GAM hyperparameter tuning + baseline comparisons to existing experiment
+python analyze_existing_experiment.py --experiment-dir results/full_experiments/your_experiment_name
+
+# Analyze stability of GAM interpretability features (feature importance & partial dependence)
+python gam_stability_analysis.py --experiment-dir results/full_experiments/your_experiment_name --n-runs 20
+```
+
+**Key Features of Analysis Scripts:**
+- **Non-destructive**: Don't re-run judge inference or persona simulation
+- **Comprehensive**: Include GAM heatmaps, partial dependence plots, baseline analysis, and stability metrics
+- **Research-ready**: Update `experiment_summary.json` with all metrics for papers
+- **Organized**: Save results in structured subdirectories within experiment folder
+
+**What You Get:**
+- 3 baseline comparisons (naive mean, best judge, correlation-weighted)
+- GAM hyperparameter tuning with ~75 trials  
+- Feature importance stability analysis across multiple model variants
+- Partial dependence curve consistency analysis
+- Complete model comparison visualization (Naive, Best Judge, Weighted, GAM, MLP)
+- All results properly integrated into experiment summary
+
+**Example Workflow:**
+```bash
+# You already have: results/full_experiments/baseline_ultrafeedback_2000samples_20250816_213023/
+# Run analysis to add GAM + baselines:
+python analyze_existing_experiment.py --experiment-dir results/full_experiments/baseline_ultrafeedback_2000samples_20250816_213023
+
+# Results added to your experiment directory:
+# ├── experiment_summary.json          # Updated with all new metrics
+# ├── model_comparison.png            # Visualization comparing all 5 models  
+# ├── gam_analysis/                    # Complete GAM hyperparameter tuning
+# │   ├── gam_hyperparameter_heatmap.png
+# │   ├── gam_partial_dependence_plots.png
+# │   └── best_gam_model.pkl
+# └── gam_stability_analysis_*/        # Feature stability analysis
+#     ├── gam_stability_analysis.png
+#     └── stability_analysis.json
+```
+
 ## 📚 Additional Notes
 
 - Make sure to handle API keys and credentials properly
