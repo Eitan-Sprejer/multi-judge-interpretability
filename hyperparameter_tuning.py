@@ -42,7 +42,7 @@ class HyperparameterTuner:
         self.output_dir = Path(output_dir) if not str(output_dir).startswith("results/") else Path(output_dir)
         # If default output dir, use organized structure
         if output_dir == "hyperparameter_tuning_results":
-            self.output_dir = Path("results/hyperparameter_search")
+            self.output_dir = Path("results/hyperparameter_tuning")
         self.test_size = test_size
         self.random_seed = random_seed
         
@@ -118,12 +118,12 @@ class HyperparameterTuner:
     def define_hyperparameter_grid(self) -> Dict[str, List]:
         """Define hyperparameter search grid (with early stopping, epochs matter less)."""
         return {
-            'hidden_dim': [32, 64, 128, 256, 512],
-            'learning_rate': [0.0001, 0.0005, 0.001, 0.005, 0.01],
-            'batch_size': [16, 32, 64, 128],
-            'n_epochs': [200, 300, 400],  # Reduced since early stopping will find optimal point
-            'dropout': [0.0, 0.1, 0.2, 0.3],
-            'l2_reg': [0.0, 0.001, 0.01, 0.1]
+            'hidden_dim': [16, 32, 48, 64, 96, 128, 256, 512],  # Added smaller sizes
+            'learning_rate': [0.0001, 0.0005, 0.001, 0.002, 0.005, 0.007, 0.01, 0.015, 0.02],  # Expanded high LR range
+            'batch_size': [8, 16, 24, 32, 48, 64, 128, 256],  # Added smaller batch sizes
+            'n_epochs': [100, 150, 200, 300, 400],  # Added lower epoch count like persona poisoning
+            'dropout': [0.0, 0.05, 0.1, 0.15, 0.2, 0.3],  # More granular dropout options
+            'l2_reg': [0.0, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]  # More granular regularization
         }
     
     def random_search(
@@ -196,6 +196,55 @@ class HyperparameterTuner:
             except Exception as e:
                 print(f"  ❌ Trial failed: {e}")
                 continue
+        
+        # Test the "persona poisoning" high-performing configuration
+        print("🎯 Testing persona poisoning high-performance config...")
+        try:
+            persona_config = {
+                'hidden_dim': 32,
+                'learning_rate': 0.01,
+                'batch_size': min(64, len(X) // 2),  # Use reasonable batch size
+                'n_epochs': 100,
+                'dropout': 0.0,
+                'l2_reg': 0.0,
+                'early_stopping_patience': 20,
+                'min_delta': 1e-4
+            }
+            
+            # Split data for persona config test
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=self.test_size, random_state=self.random_seed + 9999
+            )
+            
+            # Normalize data
+            scaler = StandardScaler()
+            X_train = scaler.fit_transform(X_train)
+            X_test = scaler.transform(X_test)
+            
+            # Train persona config
+            trainer = MLPTrainer(**persona_config)
+            train_losses, val_losses = trainer.fit(X_train, y_train, X_test, y_test)
+            
+            # Evaluate
+            train_pred = trainer.predict(X_train)
+            test_pred = trainer.predict(X_test)
+            
+            train_metrics = compute_metrics(y_train, train_pred)
+            test_metrics = compute_metrics(y_test, test_pred)
+            
+            persona_result = {
+                'trial': 'persona_poisoning_config',
+                'config': persona_config,
+                'train_metrics': train_metrics,
+                'test_metrics': test_metrics,
+                'normalize': True
+            }
+            
+            results.append(persona_result)
+            print(f"  🎯 Persona config R²: {test_metrics['r2']:.4f}")
+            
+        except Exception as e:
+            print(f"  ❌ Persona config failed: {e}")
         
         # Sort by test R²
         results.sort(key=lambda x: x['test_metrics']['r2'], reverse=True)
@@ -283,9 +332,9 @@ class HyperparameterTuner:
         variations = []
         
         # Learning rate variations
-        for lr_factor in [0.5, 0.75, 1.25, 1.5]:
+        for lr_factor in [0.5, 0.75, 1.25, 1.5, 2.0]:  # Extended range
             new_lr = base_config['learning_rate'] * lr_factor
-            if 0.0001 <= new_lr <= 0.01:
+            if 0.0001 <= new_lr <= 0.02:  # Extended upper limit
                 var = base_config.copy()
                 var['learning_rate'] = new_lr
                 var['early_stopping_patience'] = 20
