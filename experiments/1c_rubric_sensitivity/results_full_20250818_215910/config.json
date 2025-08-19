@@ -1,0 +1,9 @@
+{
+  "data_path": "../../dataset/data_with_judge_scores.pkl",
+  "output_dir": "../results_full_20250818_215910",
+  "n_examples": 1000,
+  "max_workers": 10,
+  "quick_mode": false,
+  "use_real_api": false,
+  "timestamp": "2025-08-19T03:17:28.091202"
+}
