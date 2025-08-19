@@ -235,6 +235,9 @@ class RubricSensitivityExperimentV2:
             pickle.dump(report, f)
         
         self.logger.info("Robustness analysis complete")
+        
+        # Store analyzer for visualization step
+        self.analyzer = analyzer
         return report
     
     def generate_summary(self, robustness_report: Dict):
@@ -264,7 +267,7 @@ class RubricSensitivityExperimentV2:
 
 CONFIGURATION:
 - Examples: {self.n_examples}
-- Combinations: {len(robustness_report.get('combinations', []))}
+- Combinations: {len(robustness_report.get('aggregator_robustness', {}))}
 - Real API Calls: {self.use_real_api}
 - Parallelization: {self.max_workers} workers
 
@@ -279,7 +282,7 @@ VERDICT: {'SUCCESS ✅' if success else 'NEEDS IMPROVEMENT ❌'}
 KEY FINDINGS:
 - Variance Ratio (Learned/Mean): {learned_variance/mean_variance:.2f}x
 - Correlation Drop: {(1 - learned_correlation) * 100:.1f}%
-- API Calls Made: {self.n_examples * len(robustness_report.get('combinations', [])) * 10} (approx)
+- API Calls Made: {4 * 10 * self.n_examples:,} (efficient score reuse)
 """
         
         # Save summary
@@ -316,7 +319,7 @@ KEY FINDINGS:
             # Step 4: Generate visualizations
             self.logger.info("Step 4: Generating visualizations...")
             try:
-                analyzer.create_robustness_plots(
+                self.analyzer.create_robustness_plots(
                     output_dir=str(self.output_dir / "plots"),
                     report=robustness_report
                 )

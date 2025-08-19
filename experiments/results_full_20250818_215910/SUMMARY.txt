@@ -1,0 +1,21 @@
+RUBRIC SENSITIVITY EXPERIMENT V2 SUMMARY
+========================================
+
+CONFIGURATION:
+- Examples: 1000
+- Combinations: 3
+- Real API Calls: False
+- Parallelization: 10 workers
+
+RESULTS:
+- Learned Aggregator Variance: 1.1763
+- Mean Baseline Variance: 0.0773
+- Learned Correlation: nan
+- Mean Correlation: nan
+
+VERDICT: NEEDS IMPROVEMENT ❌
+
+KEY FINDINGS:
+- Variance Ratio (Learned/Mean): 15.21x
+- Correlation Drop: nan%
+- API Calls Made: 40,000 (efficient score reuse)

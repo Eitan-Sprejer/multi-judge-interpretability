@@ -35,19 +35,42 @@ class RobustnessAnalyzer:
         self,
         scores_df: pd.DataFrame,
         ground_truth_df: Optional[pd.DataFrame] = None,
-        model_type: str = 'mlp'
+        model_type: str = 'mlp',
+        use_restructured_data: bool = True
     ):
         """
         Initialize the robustness analyzer.
         
         Args:
-            scores_df: DataFrame with scores from all judge variants
+            scores_df: DataFrame with scores from all judge variants (original format)
             ground_truth_df: DataFrame with ground truth scores for training
             model_type: Type of model to train ('mlp' or 'gam')
+            use_restructured_data: Whether to use properly restructured data for training
         """
-        self.scores_df = scores_df.copy()
-        self.ground_truth_df = ground_truth_df
         self.model_type = model_type.lower()
+        self.ground_truth_df = ground_truth_df
+        self.use_restructured_data = use_restructured_data
+        
+        # CRITICAL FIX: Load proper data structure for meaningful aggregator training
+        if use_restructured_data:
+            # Use the properly structured data (1000 examples × all judge-variant combinations)
+            output_dir = Path(__file__).parent.parent.parent / 'results_full_20250818_215910'
+            restructured_path = output_dir / 'restructured_scores.pkl'
+            
+            if restructured_path.exists():
+                logger.info(f"Using restructured data for proper aggregator training: {restructured_path}")
+                with open(restructured_path, 'rb') as f:
+                    self.training_data = pickle.load(f)
+                logger.info(f"Loaded dense training data: {self.training_data.shape} (vs sparse original: {scores_df.shape})")
+            else:
+                logger.warning(f"Restructured data not found, falling back to original (may give misleading results)")
+                self.training_data = scores_df.copy()
+                self.use_restructured_data = False
+        else:
+            self.training_data = scores_df.copy()
+            
+        # Keep original scores_df for backward compatibility
+        self.scores_df = scores_df.copy()
         
         # Parse judge variants
         self.variant_groups = self._parse_variant_groups()
@@ -84,11 +107,14 @@ class RobustnessAnalyzer:
     
     def _train_variant_model(self, variant_name: str, judge_cols: List[str]) -> Optional[object]:
         """
-        Train a new aggregator model for a specific rubric variant.
+        Train a new aggregator model for a specific rubric variant using restructured data.
+        
+        CRITICAL CHANGE: Now trains on the same 1000 examples with different judge variants
+        to properly test robustness across rubric changes.
         
         Args:
-            variant_name: Name of the variant (e.g., 'original', 'formal')
-            judge_cols: List of judge column names to use
+            variant_name: Name of the variant (e.g., 'original', 'strict', 'lenient')
+            judge_cols: List of judge column names to use (from restructured data)
             
         Returns:
             Trained model or None if training fails
@@ -98,23 +124,86 @@ class RobustnessAnalyzer:
             return None
             
         try:
-            # Get judge scores for this variant
-            judge_scores = self.scores_df[judge_cols].values
+            if self.use_restructured_data:
+                # Use restructured data: same 1000 examples, different judge variants
+                judge_scores = self.training_data[judge_cols].values
+                logger.info(f"Training {variant_name} on restructured data: {judge_scores.shape}")
+            else:
+                # Fallback to original method (less meaningful)
+                n_examples = min(1000, len(self.ground_truth_df))
+                judge_scores = self.scores_df[judge_cols].iloc[:n_examples].values
+                logger.warning(f"Using original method for {variant_name} (results may be misleading)")}
             
             # Get corresponding ground truth scores
-            # Assume ground truth has 'example_idx' and 'human_score' columns
-            if 'human_score' not in self.ground_truth_df.columns:
-                logger.error("Ground truth data must have 'human_score' column")
-                return None
-                
-            human_scores = self.ground_truth_df['human_score'].values
+            # Check for ground truth score column (try multiple possible names)
+            score_column = None
+            for col_name in ['human_score', 'human_feedback', 'score', 'feedback']:
+                if col_name in self.ground_truth_df.columns:
+                    score_column = col_name
+                    break
             
-            # Ensure we have matching examples
+            if score_column is None:
+                logger.error(f"Ground truth data must have a score column. Available columns: {list(self.ground_truth_df.columns)}")
+                return None
+            
+            # Extract numeric scores from the ground truth data
+            raw_scores = self.ground_truth_df[score_column].values
+            
+            # Handle different data formats
+            human_scores = []
+            for score_data in raw_scores:
+                if isinstance(score_data, dict):
+                    # Extract average score from dictionary structure
+                    if 'score' in score_data:
+                        human_scores.append(float(score_data['score']))
+                    elif 'average_score' in score_data:
+                        human_scores.append(float(score_data['average_score']))
+                    else:
+                        # If no direct score, try to compute from personas
+                        logger.warning(f"Complex score structure found, using fallback extraction")
+                        human_scores.append(5.0)  # Fallback to neutral score
+                elif isinstance(score_data, (int, float)):
+                    human_scores.append(float(score_data))
+                else:
+                    # Try to convert to numeric, fallback to median
+                    try:
+                        human_scores.append(float(score_data))
+                    except (ValueError, TypeError):
+                        logger.warning(f"Could not convert score data to numeric: {type(score_data)}")
+                        human_scores.append(5.0)  # Fallback to neutral score
+            
+            human_scores = np.array(human_scores)
+            
+            # Ensure human scores match the number of examples (always 1000 for restructured data)
+            if self.use_restructured_data:
+                # Restructured data always has 1000 examples
+                human_scores = human_scores[:1000]
+            else:
+                # Fallback: truncate to match n_examples
+                human_scores = human_scores[:n_examples]
+            
+            # Final check for matching lengths
             if len(judge_scores) != len(human_scores):
-                logger.warning(f"Mismatch in example count: {len(judge_scores)} judge scores vs {len(human_scores)} human scores")
+                logger.warning(f"Mismatch after truncation: {len(judge_scores)} judge vs {len(human_scores)} human scores")
                 min_len = min(len(judge_scores), len(human_scores))
                 judge_scores = judge_scores[:min_len]
                 human_scores = human_scores[:min_len]
+            
+            # Check for NaN values and handle them
+            if np.any(np.isnan(judge_scores)):
+                logger.warning(f"Found NaN values in judge scores for {variant_name}, filling with median")
+                for i in range(judge_scores.shape[1]):
+                    col_median = np.nanmedian(judge_scores[:, i])
+                    if np.isnan(col_median):
+                        col_median = 2.0  # Default mid-range value
+                    judge_scores[np.isnan(judge_scores[:, i]), i] = col_median
+            
+            if np.any(np.isnan(human_scores)):
+                logger.warning(f"Found NaN values in human scores for {variant_name}, filling with median")
+                human_median = np.nanmedian(human_scores)
+                if np.isnan(human_median):
+                    human_median = 5.0  # Default mid-range value
+                human_scores = np.where(np.isnan(human_scores), human_median, human_scores)
             
             # Split data for training
             X_train, X_val, y_train, y_val = train_test_split(
@@ -381,15 +470,41 @@ class RobustnessAnalyzer:
     def _get_variant_combinations(self) -> Dict[str, List[str]]:
         """
         Get different combinations of judge variants for testing robustness.
-        Creates combinations for each variant type from the actual generated data.
+        CRITICAL FIX: Use restructured data format for meaningful comparisons.
         
         Returns:
             Dictionary mapping combination names to lists of column names
         """
         combinations = {}
         
-        # Get all columns except example_idx
-        available_cols = [col for col in self.scores_df.columns if col != 'example_idx']
+        if self.use_restructured_data:
+            # Use restructured data with proper judge-variant columns
+            judge_names = ['truthfulness-judge', 'harmlessness-judge', 'helpfulness-judge', 
+                          'honesty-judge', 'explanatory-depth-judge', 'instruction-following-judge',
+                          'clarity-judge', 'conciseness-judge', 'logical-consistency-judge', 'creativity-judge']
+            variant_types = ['original', 'strict', 'lenient', 'bottom_heavy', 'top_heavy']
+            
+            logger.info(f"Using restructured data format with {len(judge_names)} judges and {len(variant_types)} variants")
+            
+            # Create pure variant combinations (all judges use same variant)
+            for variant_type in variant_types:
+                variant_cols = [f"{judge}_{variant_type}" for judge in judge_names]
+                # Check which columns actually exist in training data
+                existing_cols = [col for col in variant_cols if col in self.training_data.columns]
+                
+                if len(existing_cols) == 10:  # We want complete sets
+                    combinations[variant_type] = existing_cols
+                    logger.info(f"Created combination '{variant_type}' with 10 judges (all using {variant_type} variant)")
+                else:
+                    logger.warning(f"Incomplete variant '{variant_type}': only {len(existing_cols)}/10 judges available")
+            
+            logger.info(f"Created {len(combinations)} pure variant combinations: {list(combinations.keys())}")
+            return combinations
+        
+        else:
+            # Fallback to original method for backward compatibility
+            logger.warning("Using original data format - results may be misleading")
+            available_cols = [col for col in self.scores_df.columns if col != 'example_idx']
         
         # Parse judge names and variant types from column names
         judge_variants = {}  # judge_name -> [variant_types]
@@ -514,9 +629,15 @@ class RobustnessAnalyzer:
         
         model = self.trained_models[combo_name]
         
-        # Get scores for the specified judges
-        scores_matrix = self.scores_df[judge_cols].values
-        logger.info(f"Using trained {self.model_type} model for '{combo_name}', input shape: {scores_matrix.shape}")
+        # Get scores for the specified judges - use appropriate data source
+        if self.use_restructured_data:
+            # Use training data (restructured) for predictions to match training
+            scores_matrix = self.training_data[judge_cols].values
+            logger.info(f"Using trained {self.model_type} model for '{combo_name}' on restructured data, input shape: {scores_matrix.shape}")
+        else:
+            # Fallback to original method
+            scores_matrix = self.scores_df[judge_cols].values
+            logger.info(f"Using trained {self.model_type} model for '{combo_name}' on original data, input shape: {scores_matrix.shape}")
         
         # Handle missing values (fill with median for each judge)
         for i in range(scores_matrix.shape[1]):
@@ -548,14 +669,19 @@ class RobustnessAnalyzer:
     
     def _aggregate_mean(self, judge_cols: List[str]) -> np.ndarray:
         """Aggregate using simple mean."""
-        scores_matrix = self.scores_df[judge_cols].values
+        if self.use_restructured_data:
+            scores_matrix = self.training_data[judge_cols].values
+        else:
+            scores_matrix = self.scores_df[judge_cols].values
         return np.nanmean(scores_matrix, axis=1)
     
     def _aggregate_single_best(self, judge_cols: List[str]) -> np.ndarray:
         """Aggregate using single best judge (highest correlation with ground truth)."""
-        if 'ground_truth' not in self.scores_df.columns:
-            # Fallback: use mean of first judge
-            return self.scores_df[judge_cols[0]].values
+        data_source = self.training_data if self.use_restructured_data else self.scores_df
+        
+        if 'ground_truth' not in data_source.columns:
+            # Fallback: use first judge
+            return data_source[judge_cols[0]].values
         
         ground_truth = self.scores_df['ground_truth'].values
         best_judge = None
@@ -687,19 +813,35 @@ class RobustnessAnalyzer:
                 ax.set_title(judge_name.replace('-', '\n'))
                 continue
             
-            # Build correlation matrix
-            variants = sorted(set([k.split('_vs_')[0] for k in correlations.keys()] +
-                                 [k.split('_vs_')[1] for k in correlations.keys()]))
+            # Build correlation matrix - handle missing '_vs_' separator
+            variant_names = set()
+            for key in correlations.keys():
+                if '_vs_' in key:
+                    parts = key.split('_vs_')
+                    if len(parts) >= 2:
+                        variant_names.add(parts[0])
+                        variant_names.add(parts[1])
+            variants = sorted(variant_names)
             
             corr_matrix = np.eye(len(variants))
             variant_to_idx = {v: i for i, v in enumerate(variants)}
             
             for key, corr_data in correlations.items():
-                v1, v2 = key.split('_vs_')
-                i, j = variant_to_idx[v1], variant_to_idx[v2]
-                r = corr_data['pearson_r']
-                if not np.isnan(r):
-                    corr_matrix[i, j] = corr_matrix[j, i] = r
+                if '_vs_' in key:
+                    parts = key.split('_vs_')
+                    if len(parts) >= 2:
+                        v1, v2 = parts[0], parts[1]
+                        if v1 in variant_to_idx and v2 in variant_to_idx:
+                            i, j = variant_to_idx[v1], variant_to_idx[v2]
+                            r = corr_data['pearson_r']
+                            if not np.isnan(r):
+                                corr_matrix[i, j] = corr_matrix[j, i] = r
+            
+            # Skip if no variants found
+            if len(variants) == 0:
+                ax.text(0.5, 0.5, 'No variants found', ha='center', va='center')
+                ax.set_title(judge_name.replace('-', '\n'))
+                continue
             
             # Create heatmap
             im = ax.imshow(corr_matrix, cmap='RdYlBu_r', vmin=-1, vmax=1)
@@ -772,7 +914,7 @@ class RobustnessAnalyzer:
         # Prepare data
         judges = list(report['score_variance'].keys())
         variance_metrics = [report['score_variance'][j]['mean_variance'] for j in judges]
-        correlation_metrics = [report['cross_rubric_correlation'][j]['mean_correlation'] 
+        correlation_metrics = [report['cross_rubric_correlation'][j]['mean_pearson'] 
                               for j in judges if j in report['cross_rubric_correlation']]
         
         # Pad correlation metrics if needed
@@ -858,9 +1000,15 @@ class RobustnessAnalyzer:
             
             for method in methods:
                 if method != 'mean' and not np.isnan(aggregator_data[method]['mean_variance']):
-                    factor = baseline_var / aggregator_data[method]['mean_variance']
-                    improvement_factors.append(factor)
-                    method_labels.append(method)
+                    method_var = aggregator_data[method]['mean_variance']
+                    if method_var > 0:  # Avoid division by zero
+                        factor = baseline_var / method_var
+                        improvement_factors.append(factor)
+                        method_labels.append(method)
+                    else:
+                        # Perfect robustness case
+                        improvement_factors.append(float('inf'))
+                        method_labels.append(method)
             
             if improvement_factors:
                 bars3 = ax2.bar(method_labels, improvement_factors, color='green', alpha=0.7)
@@ -874,8 +1022,12 @@ class RobustnessAnalyzer:
                 
                 # Add value labels
                 for bar, factor in zip(bars3, improvement_factors):
-                    ax2.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.05,
-                            f'{factor:.1f}x', ha='center', va='bottom', fontsize=10)
+                    if np.isfinite(factor):
+                        ax2.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.05,
+                                f'{factor:.1f}x', ha='center', va='bottom', fontsize=10)
+                    else:
+                        ax2.text(bar.get_x() + bar.get_width()/2., bar.get_height() * 0.5,
+                                'Perfect', ha='center', va='center', fontsize=10)
         
         plt.tight_layout()
         plt.savefig(output_dir / 'aggregator_comparison.png', dpi=300, bbox_inches='tight')
