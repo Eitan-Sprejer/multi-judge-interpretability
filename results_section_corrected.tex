@@ -4,74 +4,105 @@
 
 This section presents the experimental validation of our multi-judge interpretability framework across three key dimensions: GAM model interpretability analysis, core performance comparison, and robustness evaluation under adversarial conditions.
 
-\subsection{GAM Analysis: Interpretability and Performance}
-
-Our Generalized Additive Model (GAM) provides highly interpretable judge aggregation with competitive performance. The GAM achieved an R² score of 0.575, demonstrating strong predictive accuracy while maintaining full transparency in how individual judge contributions combine to form final predictions.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\textwidth]{Result Figures/GAM Analysis/gam_hyperparameter_analysis.png}
-    \caption{GAM Hyperparameter Analysis: Performance surface showing R² scores across different regularization strengths (λ) and spline complexity (n\_splines). The optimal configuration achieves R² = 0.575 with λ = 20.0 and n\_splines = 5, balancing model complexity with interpretability. The analysis shows stable performance across a range of hyperparameters, indicating robust model behavior.}
-    \label{fig:gam_hyperparameter_analysis}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\textwidth]{Result Figures/GAM Analysis/gam_hyperparameter_heatmap.png}
-    \caption{GAM Hyperparameter Heatmap: Detailed performance matrix across hyperparameter space. Darker regions indicate higher R² scores. The optimal region shows λ values between 10-30 work well with moderate spline complexity (3-7 splines), providing a practical guide for hyperparameter selection in similar multi-judge aggregation tasks.}
-    \label{fig:gam_hyperparameter_heatmap}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\textwidth]{Result Figures/GAM Analysis/gam_partial_dependence_plots.png}
-    \caption{GAM Partial Dependence Plots: Individual judge contribution patterns showing how each specialized judge influences the final prediction. Key findings: (1) Instruction Following and Truthfulness show near-linear positive relationships, (2) Logical Consistency demonstrates the strongest monotonic contribution, (3) Harmlessness exhibits non-linear effects with threshold behavior, and (4) Some judges show interaction effects, particularly between Truthfulness and Helpfulness dimensions.}
-    \label{fig:gam_partial_dependence}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\textwidth]{Result Figures/GAM Analysis/gam_stability_analysis.png}
-    \caption{GAM Stability Analysis: Feature importance consistency across 20 independent model training runs. The analysis demonstrates that our GAM produces stable and reproducible feature importance rankings, with Truthfulness, Instruction Following, and Logical Consistency consistently ranking as top contributors. Low variance in importance scores (error bars) indicates reliable interpretability across different training initializations.}
-    \label{fig:gam_stability}
-\end{figure}
-
 \subsection{Main Results: Model Performance Comparison}
 
 We compare our learned aggregation approaches against multiple baselines across 2,000 UltraFeedback samples, demonstrating significant improvements over naive aggregation methods.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.8\textwidth]{Result Figures/Main Results/cross_correlation_heatmaps.png}
     \caption{Cross-Correlation Analysis: Judge agreement patterns revealing complementary evaluation dimensions. The analysis shows three correlation matrices: judge-judge correlations (top-left), persona-persona correlations (top-right), and judge-persona cross-correlations (bottom-left). Key findings from judge-judge correlations: (1) Truthfulness and Logical Consistency show strong correlation (0.73), (2) Helpfulness correlates well with Instruction Following (0.63) and Explanatory Depth (0.62), (3) Harmlessness operates relatively independently with lower correlations to other judges, and (4) Most correlations range from 0.2-0.7, indicating complementary but not redundant evaluation dimensions.}
     \label{fig:cross_correlation}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.8\textwidth]{Result Figures/Main Results/experiment_analysis.png}
-    \caption{Comprehensive Experiment Analysis: Performance metrics and training dynamics across all model variants. \textbf{Note to Naremeen: Focus on the top figures only, as the bottom plots are complementary but less relevant to the main findings.} The top panels show R² progression during training, demonstrating convergence properties, and final performance comparison: MLP (R² = 0.578) > GAM (R² = 0.575) > Learned Baselines (R² = 0.544) > Naive Methods (R² = 0.498). The learned aggregation approaches achieve 15-16\% improvement over naive averaging, while maintaining different interpretability trade-offs.}
+    \caption{Analysis on the data from the main experiment: Figures showing the correlation between personas and judges. Similar to \ref{fig:cross_correlation}.}
     \label{fig:experiment_analysis}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{Result Figures/Main Results/model_comparison.png}
+    \includegraphics[width=0.5\textwidth]{Result Figures/Main Results/model_comparison.png}
     \caption{Model Performance Comparison: Comprehensive evaluation across all aggregation methods. Our learned approaches (GAM and MLP) substantially outperform all baseline methods. Key results: (1) MLP achieves best overall performance (R² = 0.578), (2) GAM provides comparable performance (R² = 0.575) with full interpretability, (3) Learned linear baselines (R² = 0.544) outperform naive methods, and (4) Single best judge performs significantly worse (R² = 0.353), validating the multi-judge approach.}
     \label{fig:model_comparison}
 \end{figure}
 
-\subsection{Robustness Results: Adversarial Contamination Analysis}
+\subsection{GAM Analysis: Interpretability and Performance}
 
-We evaluate system robustness under three contamination strategies, each representing different real-world attack scenarios: (1) \textbf{Systematic bias} - judges consistently shift scores in one direction, simulating ideological bias or coordinated manipulation, (2) \textbf{Random noise} - judges provide completely random scores, representing either malicious random responses or severely broken evaluation criteria, and (3) \textbf{Scaled-down} contamination - judges systematically undervalue all responses, simulating overly harsh or demotivated evaluators. Our analysis reveals differential vulnerability patterns and provides guidance for deployment in adversarial environments.
+Our Generalized Additive Model (GAM) provides highly interpretable judge aggregation with competitive performance. The GAM achieved an R² score of 0.575, demonstrating strong predictive accuracy while maintaining full transparency in how individual judge contributions combine to form final predictions.
 
-\textbf{Additional robustness experiments pending:} We are currently finalizing results on judge contamination robustness (testing with deliberately compromised individual judges) and judge rubric robustness (evaluating sensitivity to variations in judge prompt formulations and evaluation criteria).
+THERE ARE SOME UGLY COMMENTED OUT RESULTS HERE. THEY ARE MORE FOR THE APPENDIX, BUT IF YOU'RE CURIOUS...
+
+% \begin{figure}[htbp]
+%     \centering
+%     \includegraphics[width=0.5\textwidth]{Result Figures/GAM Analysis/gam_hyperparameter_analysis.png}
+%     \caption{GAM Hyperparameter Analysis: Performance surface showing R² scores across different regularization strengths (λ) and spline complexity (n\_splines). The optimal configuration achieves R² = 0.575 with λ = 20.0 and n\_splines = 5, balancing model complexity with interpretability. The analysis shows stable performance across a range of hyperparameters, indicating robust model behavior.}
+%     \label{fig:gam_hyperparameter_analysis}
+% \end{figure}
+
+% \begin{figure}[htbp]
+%     \centering
+%     \includegraphics[width=0.5\textwidth]{Result Figures/GAM Analysis/gam_hyperparameter_heatmap.png}
+%     \caption{GAM Hyperparameter Heatmap: Detailed performance matrix across hyperparameter space. Darker regions indicate higher R² scores. The optimal region shows λ values between 10-30 work well with moderate spline complexity (3-7 splines), providing a practical guide for hyperparameter selection in similar multi-judge aggregation tasks.}
+%     \label{fig:gam_hyperparameter_heatmap}
+% \end{figure}
+
+% \begin{figure}[htbp]
+%     \centering
+%     \includegraphics[width=0.5\textwidth]{Result Figures/GAM Analysis/gam_partial_dependence_plots.png}
+%     \caption{GAM Partial Dependence Plots: Individual judge contribution patterns showing how each specialized judge influences the final prediction. Key findings: (1) Instruction Following and Truthfulness show near-linear positive relationships, (2) Logical Consistency demonstrates the strongest monotonic contribution, (3) Harmlessness exhibits non-linear effects with threshold behavior, and (4) Some judges show interaction effects, particularly between Truthfulness and Helpfulness dimensions.}
+%     \label{fig:gam_partial_dependence}
+% \end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\textwidth]{Result Figures/GAM Analysis/gam_stability_analysis.png}
+    \caption{GAM Stability Analysis: Feature importance consistency across 20 independent model training runs. The analysis demonstrates that our GAM produces stable and reproducible feature importance rankings, with Truthfulness, Instruction Following, and Logical Consistency consistently ranking as top contributors. Low variance in importance scores (error bars) indicates reliable interpretability across different training initializations.}
+    \label{fig:gam_stability}
+\end{figure}
+
+\subsection{Case Study: System Robustness}
+
+In the following section, we evaluate our aggregator's robustness to:
+\begin{itemize}
+    \item Biases in the human preference data.
+    \item Biases in the judges.
+\end{itemize}
+
+For the first case, we don't compare with any baselines, as the naive methods are not trained with human feedback data, so their bias wouldn't affect their scores on the \textbf{true preferences}. On the second case however, we compare with the \textit{Naive Mean} baseline, given that it uses the judges scores to predict the human preferences.
+
+
+\subsubsection{Persona Contamination Analysis: Robustness to Human Biases}
+
+We evaluate system robustness under three contamination strategies, each representing different real-world scenarios: (1) \textbf{Systematic bias} - humans consistently shift scores in one direction [Note: this is relevant, for example, as we see different cultures give consistently higher or lower scores in general], (2) \textbf{Random noise} - humans provide completely random preference scores, representing either random responses or severely broken preference criteria, and (3) \textbf{Scaled-down} contamination - some humans systematically undervalue all responses.
+
+\textbf{Additional robustness experiments pending:} We are currently finalizing results on judge contamination robustness (testing with deliberately compromised individual judges).
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\textwidth]{Result Figures/Robustness Results/persona_robustness/aggregator_robustness_analysis.png}
+    \caption{Aggregator Robustness Analysis: Performance degradation under different contamination strategies across contamination rates from 0\% to 50\%. Key findings: (1) \textbf{Systematic bias} shows gradual degradation with performance dropping from R² = 0.532 to R² = 0.480 at 50\% contamination, (2) \textbf{Random noise} maintains relatively stable performance until 15\% contamination, then shows moderate decline, and (3) \textbf{Scaled-down} contamination causes the most severe degradation, with R² dropping to 0.392 at 50\% contamination. The system demonstrates reasonable robustness up to 20\% contamination across all strategies, supporting deployment in environments with moderate human preference score contamination.}
+    \label{fig:robustness_analysis}
+\end{figure}
+
+\subsubsection{Rubric Sensitivity Analysis: Judge Robustness to Scoring Variations}
+
+We evaluate how sensitive our aggregation models are to variations in judge rubric formulations, testing whether learned models maintain their advantages when judge evaluation criteria are modified. This modifications are simulated by applying different bias transformations to the scores of the judges. The results show that the learned models are robust to these variations, while the naive mean method is not.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{Result Figures/Robustness Results/aggregator_robustness_analysis.png}
-    \caption{Aggregator Robustness Analysis: Performance degradation under different contamination strategies across contamination rates from 0\% to 50\%. Key findings: (1) \textbf{Systematic bias} shows gradual degradation with performance dropping from R² = 0.532 to R² = 0.480 at 50\% contamination, (2) \textbf{Random noise} maintains relatively stable performance until 15\% contamination, then shows moderate decline, and (3) \textbf{Scaled-down} contamination causes the most severe degradation, with R² dropping to 0.392 at 50\% contamination. The system demonstrates reasonable robustness up to 20\% contamination across all strategies, supporting deployment in environments with moderate adversarial presence.}
-    \label{fig:robustness_analysis}
+    \includegraphics[width=0.8\textwidth]{Result Figures/Rubric Sensitivity/bias_robustness_analysis.png}
+    \caption{Bias Robustness Analysis: Performance comparison across different bias transformation types and strengths. The analysis shows five bias scenarios: Bottom Heavy, Top Heavy, Middle Heavy, Systematic Shift Positive, and Systematic Shift Negative. \textbf{Simple Judge Mean} (orange) shows dramatic performance degradation under bias, dropping to negative R² values, while \textbf{Learned models} (GAM, MLP, Linear Regression) maintain stable performance across most bias types, with GAM and MLP showing superior robustness.}
+    \label{fig:bias_robustness}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Result Figures/Rubric Sensitivity/transformation_scatter_plots_appendix.png}
+    \caption{Transformation Scatter Plots: Score mapping relationships for the Truthfulness judge under different bias transformations. Each panel shows original scores (x-axis) vs. transformed scores (y-axis) with correlation coefficients. The transformation strength that was applied is reported in the title of each panel.}
+    \label{fig:transformation_scatter}
 \end{figure}
 
 \subsection{Summary of Key Results}
@@ -80,8 +111,8 @@ Our experimental validation demonstrates:
 
 \begin{enumerate}
     \item \textbf{Performance}: Learned aggregation achieves 15-16\% improvement over naive methods (MLP R² = 0.578, GAM R² = 0.575 vs. naive R² = 0.498)
-    \item \textbf{Interpretability}: GAM provides full transparency in judge contributions while maintaining competitive performance
-    \item \textbf{Robustness}: System remains functional under up to 20\% contamination across multiple persona contamination strategies
+    \item \textbf{Interpretability}: GAM provides transparency in judge contributions while maintaining competitive performance
+    \item \textbf{Robustness}: System remains functional under up to 20\% contamination across multiple persona contamination strategies. [Pending Judge Robustness experiment results]
 \end{enumerate}
 
 These results validate our multi-judge interpretability framework as a practical approach for robust, transparent AI evaluation systems that outperform existing methods while providing actionable insights into evaluation quality and potential failure modes.
