@@ -39,7 +39,7 @@ DEFAULT_INITIAL_DELAY = 1.0
 class JudgeEvaluator:
     """Handles evaluation of Q&A pairs using multiple judges."""
     
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: Optional[str] = None, judge_ids: Optional[List[str]] = None):
         """
         Initialize the evaluator with Martian API client.
         
@@ -58,9 +58,9 @@ class JudgeEvaluator:
             api_url=config.api_url,
             api_key=config.api_key,
         )
-        
-        # Load judges
-        self.judges = self._load_judges()
+
+        self.judge_ids = JUDGE_IDS if not judge_ids else judge_ids
+        self.judges = self._load_judges_from_ids(self.judge_ids)
         
     def _load_judges_from_ids(self, judge_ids: List[str]) -> Dict[str, Any]:
         """Load judges from a list of judge IDs."""
@@ -73,15 +73,11 @@ class JudgeEvaluator:
             except Exception as e:
                 logger.error(f"❌ Failed to load judge {judge_id}: {e}")
         
-        if len(judges) != len(JUDGE_IDS):
-            logger.warning(f"Only loaded {len(judges)}/{len(JUDGE_IDS)} judges")
+        if len(judges) != len(judge_ids):
+            logger.warning(f"Only loaded {len(judges)}/{len(judge_ids)} judges")
         
         return judges
     
-    def _load_judges(self) -> Dict[str, Any]:
-        """Load all judges from the Martian API."""
-        return self._load_judges_from_ids(JUDGE_IDS)
-        
     def evaluate_single(self, question: str, answer: str, judge_id: str) -> float:
         """
         Evaluate a single Q&A pair with a specific judge.

@@ -7,7 +7,7 @@ ROOT = os.path.join(os.getcwd(), '..', '..')
 sys.path.append(ROOT)
 
 from pipeline.core.judge_creation import create_or_update_judge
-from pipeline.core.judge_creation import JUDGE_IDS, JUDGE_MODEL, MIN_SCORE, MAX_SCORE
+from pipeline.core.judge_creation import JUDGE_MODEL, MIN_SCORE, MAX_SCORE
 from pipeline.utils.judge_rubrics import INVERTED_JUDGE_RUBRICS
 from pipeline.utils.create_martian_client import create_martian_client
 from martian_apart_hack_sdk import judge_specs
@@ -26,13 +26,15 @@ def create_inverted_rubric_judge(target_id: str, inverted_rubric: str):
 
     create_or_update_judge(
         client=client,
-        judge_id=f'{target_id}-inverted-rubric',
+        judge_id=f'{target_id}',
         judge_spec=judge_spec,
         description=f'Judge with inverted rubric for the {target_id} judge.',
     )
 
+INVERTED_JUDGE_IDS = list(INVERTED_JUDGE_RUBRICS.keys())
+
 #%%
-for target_id in INVERTED_JUDGE_RUBRICS.keys():
+for target_id in INVERTED_JUDGE_IDS:
     inverted_lr_rubric = INVERTED_JUDGE_RUBRICS[target_id]()
     create_inverted_rubric_judge(target_id=target_id, inverted_rubric=inverted_lr_rubric)
 
@@ -42,4 +44,19 @@ for target_id in INVERTED_JUDGE_RUBRICS.keys():
 from pipeline.core.judge_evaluation import JudgeEvaluator
 from pipeline.core.dataset_loader import DatasetLoader
 
-judges = JudgeEvaluator()._load_judges_from_ids(JUDGE_IDS)
+judge_evaluator = JudgeEvaluator(judge_ids=INVERTED_JUDGE_IDS)
+dataset_loader = DatasetLoader()
+
+data = dataset_loader.load_existing_personas('data/data_with_all_personas.pkl')
+
+scores = []
+
+for i in range(len(data)):
+    question = data['instruction'].iloc[i]
+    answer = data['answer'].iloc[i]
+    intermediate = judge_evaluator.evaluate_parallel(question=question, answer=answer)
+    scores.append(intermediate)
+
+scores_df = pd.DataFrame(scores, columns=INVERTED_JUDGE_IDS)
+
+# %%
