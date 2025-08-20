@@ -129,18 +129,6 @@ PERSONAS = {
         ]
     },
     
-    "Ethicist": {
-        "description": "A moral philosopher who values ethical reasoning, consideration of consequences, fairness, and philosophical grounding",
-        "evaluation_focus": "moral reasoning depth and multi-stakeholder consideration",
-        "evaluation_priorities": "ethical implications thoroughly explored, multiple stakeholder perspectives, principled reasoning, acknowledgment of moral complexity and trade-offs, philosophical frameworks applied, comfortable with ambiguity",
-        "correlated_judges": [
-            "logical-consistency-judge",  # Moral reasoning structure
-            "harmlessness-judge",         # Ethical implications
-            "honesty-judge",              # Acknowledging moral dilemmas
-            "explanatory-depth-judge",    # Exploring consequences
-            "truthfulness-judge"          # Accurate philosophical references
-        ]
-    },
     
     "Skeptic": {
         "description": "A critical thinker who demands evidence, identifies logical fallacies, maintains healthy doubt, and verifies claims",

@@ -142,14 +142,14 @@ class BaselineEvaluator:
                            X_test: np.ndarray, y_test: np.ndarray) -> Dict[str, Any]:
         """
         Naive Mean Baseline: Simple average of all judge scores.
-        No scaling or training involved.
+        No scaling or training involved. Judges are [0-4], personas are [0-10].
         """
-        # Simple mean of judges
+        # Simple mean of judges - NO SCALING (truly naive)
         y_pred = np.mean(X_test, axis=1)
         
         return {
-            'method': 'Simple average of all judge scores',
-            'approach': 'Direct averaging (no scaling)',
+            'method': 'Simple average of all judge scores (no scaling)',
+            'approach': 'Direct averaging, judges [0-4] vs personas [0-10]',
             'metrics': compute_metrics(y_test, y_pred),
             'predictions': y_pred
         }
@@ -157,26 +157,20 @@ class BaselineEvaluator:
     def linear_scaling_mean_baseline(self, X_train: np.ndarray, y_train: np.ndarray,
                                    X_test: np.ndarray, y_test: np.ndarray) -> Dict[str, Any]:
         """
-        Linear Scaling Mean Baseline: Scale judge mean to [0,10] range.
-        This is what the main experiment uses.
+        Linear Scaling Mean Baseline: Scale judge mean proportionally from [0-4] to [0-10].
+        This is a proper heuristic scaling (no training involved).
         """
         # Compute means
-        judge_mean_train = np.mean(X_train, axis=1)
         judge_mean_test = np.mean(X_test, axis=1)
         
-        # Scale to [0, 10] range using training data statistics
-        target_min, target_max = 0, 10
-        judge_min, judge_max = np.min(judge_mean_train), np.max(judge_mean_train)
-        
-        if judge_max > judge_min:
-            y_pred = ((judge_mean_test - judge_min) / (judge_max - judge_min)) * (target_max - target_min) + target_min
-        else:
-            y_pred = np.full_like(judge_mean_test, (target_min + target_max) / 2)
+        # Proportional scaling: judges [0-4] to personas [0-10]
+        # y = (x / 4) * 10 = x * 2.5
+        y_pred = judge_mean_test * 2.5
         
         return {
-            'method': 'Mean of judges scaled to [0,10] range',
-            'approach': 'Linear scaling (main experiment method)',
-            'scaling_params': {'judge_min': judge_min, 'judge_max': judge_max, 'target_range': [target_min, target_max]},
+            'method': 'Mean of judges scaled proportionally from [0-4] to [0-10]',
+            'approach': 'Proportional scaling (multiply by 2.5)',
+            'scaling_params': {'scaling_factor': 2.5, 'judge_range': [0, 4], 'target_range': [0, 10]},
             'metrics': compute_metrics(y_test, y_pred),
             'predictions': y_pred
         }
@@ -245,31 +239,22 @@ class BaselineEvaluator:
                                         X_test: np.ndarray, y_test: np.ndarray,
                                         judge_names: Optional[List[str]] = None) -> Dict[str, Any]:
         """
-        Best Single Judge with Linear Scaling: Scale best judge to [0,10] range.
-        This is what the main experiment uses.
+        Best Single Judge with Proportional Scaling: Scale best judge from [0-4] to [0-10].
+        This is a proper heuristic scaling (no training involved).
         """
         if judge_names is None:
             judge_names = [f'Judge_{i}' for i in range(X_train.shape[1])]
         
-        # Find best judge and scale
+        # Find best judge with proportional scaling
         best_r2 = -1
         best_judge_idx = 0
         best_pred = None
-        best_scaling_params = None
-        
-        target_min, target_max = 0, 10
         
         for judge_idx in range(X_train.shape[1]):
-            judge_scores_train = X_train[:, judge_idx]
             judge_scores_test = X_test[:, judge_idx]
             
-            # Scale to [0, 10] range
-            judge_min, judge_max = np.min(judge_scores_train), np.max(judge_scores_train)
-            
-            if judge_max > judge_min:
-                y_pred = ((judge_scores_test - judge_min) / (judge_max - judge_min)) * (target_max - target_min) + target_min
-            else:
-                y_pred = np.full_like(judge_scores_test, (target_min + target_max) / 2)
+            # Proportional scaling: judges [0-4] to personas [0-10]
+            y_pred = judge_scores_test * 2.5
             
             r2 = r2_score(y_test, y_pred)
             
@@ -277,14 +262,13 @@ class BaselineEvaluator:
                 best_r2 = r2
                 best_judge_idx = judge_idx
                 best_pred = y_pred
-                best_scaling_params = {'judge_min': judge_min, 'judge_max': judge_max}
         
         return {
-            'method': f'Best single judge with linear scaling: {judge_names[best_judge_idx]}',
-            'approach': 'Linear scaling to [0,10] (main experiment method)',
+            'method': f'Best single judge with proportional scaling: {judge_names[best_judge_idx]}',
+            'approach': 'Proportional scaling from [0-4] to [0-10] (multiply by 2.5)',
             'judge_index': best_judge_idx,
             'judge_name': judge_names[best_judge_idx],
-            'scaling_params': best_scaling_params,
+            'scaling_params': {'scaling_factor': 2.5, 'judge_range': [0, 4], 'target_range': [0, 10]},
             'metrics': compute_metrics(y_test, best_pred),
             'predictions': best_pred
         }
@@ -464,28 +448,52 @@ class BaselineEvaluator:
         # Select UltraFeedback judges: Truthfulness, Helpfulness, Honesty, Instruction Following
         ultrafeedback_indices = [0, 2, 3, 5]  
         
-        X_train_uf = X_train[:, ultrafeedback_indices]
         X_test_uf = X_test[:, ultrafeedback_indices]
         
-        # Compute scaled mean of 4 judges
-        judge_mean_train = np.mean(X_train_uf, axis=1)
+        # Compute mean of 4 judges and scale proportionally
         judge_mean_test = np.mean(X_test_uf, axis=1)
         
-        # Scale to [0, 10] range using training data statistics
-        target_min, target_max = 0, 10
-        judge_min, judge_max = np.min(judge_mean_train), np.max(judge_mean_train)
-        
-        if judge_max > judge_min:
-            y_pred = ((judge_mean_test - judge_min) / (judge_max - judge_min)) * (target_max - target_min) + target_min
-        else:
-            y_pred = np.full_like(judge_mean_test, (target_min + target_max) / 2)
+        # Proportional scaling: judges [0-4] to personas [0-10]
+        y_pred = judge_mean_test * 2.5
         
         return {
             'method': 'UltraFeedback 4-judge subset (Truthfulness, Helpfulness, Honesty, Instruction Following)',
-            'approach': 'Heuristic scaling of 4 UltraFeedback judges',
+            'approach': 'Proportional scaling of 4 UltraFeedback judges from [0-4] to [0-10]',
             'judge_indices': ultrafeedback_indices,
             'judge_names': ['Truthfulness', 'Helpfulness', 'Honesty', 'Instruction Following'],
-            'scaling_params': {'judge_min': judge_min, 'judge_max': judge_max, 'target_range': [target_min, target_max]},
+            'scaling_params': {'scaling_factor': 2.5, 'judge_range': [0, 4], 'target_range': [0, 10]},
+            'metrics': compute_metrics(y_test, y_pred),
+            'predictions': y_pred
+        }
+    
+    def ultrafeedback_overall_baseline(self, X_train: np.ndarray, y_train: np.ndarray,
+                                     X_test: np.ndarray, y_test: np.ndarray,
+                                     df_test: pd.DataFrame) -> Dict[str, Any]:
+        """
+        UltraFeedback Overall Score Baseline: Use the original overall scores from UltraFeedback.
+        This extracts the overall_score from the original UltraFeedback completions.
+        """
+        # Extract overall scores from the dataframe
+        y_pred = []
+        missing_count = 0
+        
+        for idx, row in df_test.iterrows():
+            if 'ultrafeedback_overall' in row and row['ultrafeedback_overall'] is not None:
+                # Scale from [1-5] to [0-10] (UltraFeedback overall scores are typically 1-5)
+                score = float(row['ultrafeedback_overall'])
+                scaled_score = (score - 1) / 4 * 10  # Map [1,5] to [0,10]
+                y_pred.append(scaled_score)
+            else:
+                # Fallback: use mean of available scores
+                y_pred.append(5.0)  # Middle value
+                missing_count += 1
+        
+        y_pred = np.array(y_pred)
+        
+        return {
+            'method': 'UltraFeedback original overall scores',
+            'approach': 'Original dataset overall scores scaled from [1-5] to [0-10]',
+            'scaling_params': {'source_range': [1, 5], 'target_range': [0, 10], 'missing_scores': missing_count},
             'metrics': compute_metrics(y_test, y_pred),
             'predictions': y_pred
         }
@@ -538,9 +546,16 @@ class BaselineEvaluator:
         baselines = {}
         
         # Heuristic baselines (no training, just scaling/selection heuristics)
+        baselines['naive_mean'] = self.naive_mean_baseline(X_train, y_train, X_test, y_test)
         baselines['linear_scaling_mean'] = self.linear_scaling_mean_baseline(X_train, y_train, X_test, y_test)
         baselines['best_judge_linear_scaling'] = self.best_single_judge_linear_scaling(X_train, y_train, X_test, y_test, judge_names)
         baselines['ultrafeedback_4judge'] = self.ultrafeedback_4judge_baseline(X_train, y_train, X_test, y_test)
+        
+        # UltraFeedback overall baseline (if available in the dataframe)
+        if 'ultrafeedback_overall' in df.columns:
+            # Split the dataframe to match the train/test split
+            df_test = df.iloc[len(X_train):].reset_index(drop=True)
+            baselines['ultrafeedback_overall'] = self.ultrafeedback_overall_baseline(X_train, y_train, X_test, y_test, df_test)
         
         # Learned baselines (train parameters on data)
         baselines['standardscaler_lr_mean'] = self.standardscaler_lr_mean_baseline(X_train, y_train, X_test, y_test)

@@ -95,6 +95,7 @@ class DatasetLoader:
                 # Select random completion to avoid bias
                 random_completion = self._select_random_completion(completions)
                 answer = random_completion.get('response', '') if random_completion else ''
+                overall_score = random_completion.get('overall_score', None) if random_completion else None
                 
                 if not instruction or not answer:
                     logger.warning(f"Sample {i} missing instruction or answer, skipping")
@@ -104,7 +105,8 @@ class DatasetLoader:
                     'instruction': instruction,
                     'answer': answer,
                     'source': 'ultrafeedback',
-                    'original_index': i
+                    'original_index': i,
+                    'ultrafeedback_overall': overall_score
                 })
                 
             except Exception as e:

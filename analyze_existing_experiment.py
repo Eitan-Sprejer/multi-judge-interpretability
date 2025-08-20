@@ -204,91 +204,55 @@ class ExistingExperimentAnalyzer:
         
         baselines = {}
         
-        # 1. Naive Mean: Simple average of all judge scores
+        # 1. Naive Mean: Simple average of all judge scores (NO SCALING - truly naive)
         print("📊 Computing Naive Mean baseline...")
-        naive_mean_train = np.mean(X_train, axis=1)
         naive_mean_test = np.mean(X_test, axis=1)
         
-        # Scale to match target range [0, 10] (same as human scores)
-        target_min, target_max = 0, 10
-        naive_min, naive_max = np.min(naive_mean_train), np.max(naive_mean_train)
-        
-        if naive_max > naive_min:
-            naive_mean_train_scaled = ((naive_mean_train - naive_min) / (naive_max - naive_min)) * (target_max - target_min) + target_min
-            naive_mean_test_scaled = ((naive_mean_test - naive_min) / (naive_max - naive_min)) * (target_max - target_min) + target_min
-        else:
-            naive_mean_train_scaled = np.full_like(naive_mean_train, (target_min + target_max) / 2)
-            naive_mean_test_scaled = np.full_like(naive_mean_test, (target_min + target_max) / 2)
-        
-        naive_metrics = compute_metrics(y_test, naive_mean_test_scaled)
+        # NO SCALING - this is the naive baseline (judges [0-4] vs personas [0-10])
+        naive_metrics = compute_metrics(y_test, naive_mean_test)
         baselines['naive_mean'] = {
-            'method': 'Simple average of all judge scores, scaled to [0,10]',
-            'train_metrics': compute_metrics(y_train, naive_mean_train_scaled),
+            'method': 'Simple average of all judge scores (no scaling)',
             'test_metrics': naive_metrics
         }
         
-        # 2. Best Single Judge: Find the judge with highest correlation to human feedback
+        # 2. Best Single Judge: Find the judge with best proportional scaling performance
         print("🏆 Finding best single judge...")
-        judge_correlations = []
         judge_metrics = []
         
         for j in range(10):
-            judge_scores_train = X_train[:, j]
             judge_scores_test = X_test[:, j]
             
-            # Scale judge scores to [0, 10] range
-            judge_min, judge_max = np.min(judge_scores_train), np.max(judge_scores_train)
-            if judge_max > judge_min:
-                judge_train_scaled = ((judge_scores_train - judge_min) / (judge_max - judge_min)) * (target_max - target_min) + target_min
-                judge_test_scaled = ((judge_scores_test - judge_min) / (judge_max - judge_min)) * (target_max - target_min) + target_min
-            else:
-                judge_train_scaled = np.full_like(judge_scores_train, (target_min + target_max) / 2)
-                judge_test_scaled = np.full_like(judge_scores_test, (target_min + target_max) / 2)
+            # Proportional scaling: judges [0-4] to personas [0-10]
+            judge_scaled = judge_scores_test * 2.5
             
-            correlation = np.corrcoef(y_test, judge_test_scaled)[0, 1] if len(np.unique(judge_test_scaled)) > 1 else 0
-            metrics = compute_metrics(y_test, judge_test_scaled)
-            
-            judge_correlations.append(correlation)
+            metrics = compute_metrics(y_test, judge_scaled)
             judge_metrics.append(metrics)
         
-        best_judge_idx = np.argmax(judge_correlations)
+        best_judge_idx = np.argmax([m['r2'] for m in judge_metrics])
         best_judge_name = FEATURE_LABELS[best_judge_idx]
         
         baselines['best_single_judge'] = {
-            'method': f'Best performing single judge: {best_judge_name}',
+            'method': f'Best single judge with proportional scaling: {best_judge_name}',
             'judge_index': int(best_judge_idx),
             'judge_name': best_judge_name,
-            'correlation': float(judge_correlations[best_judge_idx]),
+            'scaling_factor': 2.5,
             'test_metrics': judge_metrics[best_judge_idx],
-            'all_judge_correlations': {
-                FEATURE_LABELS[i]: float(corr) for i, corr in enumerate(judge_correlations)
+            'all_judge_r2': {
+                FEATURE_LABELS[i]: float(m['r2']) for i, m in enumerate(judge_metrics)
             }
         }
         
-        # 3. Scaled Mean: Weighted average using correlation-based weights
-        print("⚖️ Computing correlation-weighted baseline...")
-        weights = np.array([max(0, corr) for corr in judge_correlations])  # Only positive correlations
-        if np.sum(weights) > 0:
-            weights = weights / np.sum(weights)  # Normalize
-        else:
-            weights = np.ones(10) / 10  # Equal weights if all correlations are negative
+        # 3. Linear Scaling Mean: Proportional scaling from [0-4] to [0-10]
+        print("⚖️ Computing linear scaling baseline...")
+        judge_mean_test = np.mean(X_test, axis=1)
         
-        scaled_mean_train = np.average(X_train, axis=1, weights=weights)
-        scaled_mean_test = np.average(X_test, axis=1, weights=weights)
+        # Proportional scaling: judges [0-4] to personas [0-10]
+        scaled_mean_test = judge_mean_test * 2.5
         
-        # Scale to [0, 10] range
-        scaled_min, scaled_max = np.min(scaled_mean_train), np.max(scaled_mean_train)
-        if scaled_max > scaled_min:
-            scaled_mean_train_scaled = ((scaled_mean_train - scaled_min) / (scaled_max - scaled_min)) * (target_max - target_min) + target_min
-            scaled_mean_test_scaled = ((scaled_mean_test - scaled_min) / (scaled_max - scaled_min)) * (target_max - target_min) + target_min
-        else:
-            scaled_mean_train_scaled = np.full_like(scaled_mean_train, (target_min + target_max) / 2)
-            scaled_mean_test_scaled = np.full_like(scaled_mean_test, (target_min + target_max) / 2)
-        
-        scaled_metrics = compute_metrics(y_test, scaled_mean_test_scaled)
-        baselines['correlation_weighted_mean'] = {
-            'method': 'Correlation-weighted average of judge scores',
-            'weights': {FEATURE_LABELS[i]: float(w) for i, w in enumerate(weights)},
+        scaled_metrics = compute_metrics(y_test, scaled_mean_test)
+        baselines['linear_scaling_mean'] = {
+            'method': 'Mean of judges scaled proportionally from [0-4] to [0-10]',
+            'scaling_factor': 2.5,
             'test_metrics': scaled_metrics
         }
         
@@ -296,7 +260,7 @@ class ExistingExperimentAnalyzer:
         print("\n📊 Baseline Comparison Results:")
         print(f"   Naive Mean R²: {naive_metrics['r2']:.4f}")
         print(f"   Best Judge R² ({best_judge_name}): {judge_metrics[best_judge_idx]['r2']:.4f}")
-        print(f"   Weighted Mean R²: {scaled_metrics['r2']:.4f}")
+        print(f"   Linear Scaling Mean R²: {scaled_metrics['r2']:.4f}")
         
         return {
             'baselines': baselines,
