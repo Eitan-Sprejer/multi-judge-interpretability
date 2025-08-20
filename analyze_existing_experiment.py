@@ -134,10 +134,18 @@ class ExistingExperimentAnalyzer:
             print(f"   Best baseline: {summary['best_baseline']} (R² = {summary['best_r2']:.4f})")
             print(f"   Samples used: {summary['data_info']['total_samples']}")
             
+            # Debug: Print all R² scores
+            print(f"\n🔍 Debug: All baseline R² scores:")
+            for name, result in baselines.items():
+                r2 = result['metrics']['r2']
+                print(f"   {name}: {r2:.4f}")
+            
             return baseline_results
             
         except Exception as e:
             print(f"❌ Unified baseline system failed: {e}")
+            import traceback
+            traceback.print_exc()
             # Fallback to legacy method
             return self._legacy_baseline_comparison(data)
     
@@ -305,6 +313,7 @@ class ExistingExperimentAnalyzer:
         print("🧠 Running GAM hyperparameter analysis...")
         
         # Create GAM tuner with experiment data
+        # IMPORTANT: Use the same random seed as baseline evaluation to ensure consistency
         gam_tuner = GAMHyperparameterTuner(
             experiment_data_path=str(self.experiment_dir),
             output_dir=str(self.experiment_dir / "gam_analysis"),
@@ -312,10 +321,12 @@ class ExistingExperimentAnalyzer:
         )
         
         # Run GAM tuning with more trials for thorough analysis
+        # Use normalize=True to match the standards used in aggregator training
         gam_analysis = gam_tuner.run_tuning(n_trials=75, normalize=True)
         
         if gam_analysis:
             print(f"✅ GAM analysis complete - Best R²: {gam_analysis['best_r2']:.4f}")
+            print(f"   GAM used same random seed ({self.random_seed}) as baselines for consistency")
             return gam_analysis
         else:
             print("❌ GAM analysis failed")
@@ -330,6 +341,14 @@ class ExistingExperimentAnalyzer:
         """Update experiment_summary.json with new analysis results."""
         print("📝 Updating experiment summary with new results...")
         
+        # Extract R2 scores safely from either structure
+        def safe_extract_r2(model_dict):
+            if isinstance(model_dict, dict):
+                # Try 'metrics' first (unified system), then 'test_metrics' (legacy)
+                return (model_dict.get('metrics', {}).get('r2', 0) or 
+                       model_dict.get('test_metrics', {}).get('r2', 0))
+            return 0
+        
         # Add baseline analysis (handle unified baseline structure)
         baselines = baseline_results.get('baselines', baseline_results)
         
@@ -338,12 +357,11 @@ class ExistingExperimentAnalyzer:
             'baselines': baseline_results,
             'methodology': baseline_results.get('summary', {}).get('methodology', 'unknown'),
             'baseline_comparison': {
-                'naive_mean_r2': baselines.get('naive_mean', {}).get('test_metrics', {}).get('r2', 0) or baselines.get('naive_mean', {}).get('metrics', {}).get('r2', 0),
-                'best_judge_r2': (baselines.get('best_judge_linear_scaling', {}).get('test_metrics', {}).get('r2', 0) or 
-                                baselines.get('best_judge_linear_scaling', {}).get('metrics', {}).get('r2', 0) or
-                                baselines.get('best_single_judge', {}).get('test_metrics', {}).get('r2', 0)),
-                'linear_scaling_mean_r2': baselines.get('linear_scaling_mean', {}).get('metrics', {}).get('r2', 0),
-                'standardscaler_lr_mean_r2': baselines.get('standardscaler_lr_mean', {}).get('metrics', {}).get('r2', 0),
+                'naive_mean_r2': safe_extract_r2(baselines.get('naive_mean', {})),
+                'best_judge_r2': (safe_extract_r2(baselines.get('best_judge_linear_scaling', {})) or
+                                safe_extract_r2(baselines.get('best_single_judge', {}))),
+                'linear_scaling_mean_r2': safe_extract_r2(baselines.get('linear_scaling_mean', {})),
+                'standardscaler_lr_mean_r2': safe_extract_r2(baselines.get('standardscaler_lr_mean', {})),
                 'best_baseline_method': baseline_results.get('summary', {}).get('best_baseline', 'unknown')
             }
         }
@@ -366,15 +384,6 @@ class ExistingExperimentAnalyzer:
             }
         
         # Add overall comparison (handle both unified and legacy baseline structures)
-        all_r2_scores = {}
-        
-        # Extract R2 scores safely from either structure
-        def safe_extract_r2(model_dict):
-            if isinstance(model_dict, dict):
-                return (model_dict.get('test_metrics', {}).get('r2') or 
-                       model_dict.get('metrics', {}).get('r2', 0))
-            return 0
-        
         all_r2_scores = {}
         
         # Add heuristic baselines
@@ -462,11 +471,12 @@ class ExistingExperimentAnalyzer:
         fig, ax = plt.subplots(1, 1, figsize=(14, 8))
         
         # Extract models and organize by type
-        def safe_extract_metrics(model_dict, metrics_key='test_metrics'):
-            if metrics_key in model_dict:
-                return model_dict[metrics_key].get('r2', 0), model_dict[metrics_key].get('mae', 0)
-            elif 'metrics' in model_dict:
+        def safe_extract_metrics(model_dict, metrics_key='metrics'):
+            # Try 'metrics' first (unified system), then 'test_metrics' (legacy)
+            if 'metrics' in model_dict:
                 return model_dict['metrics'].get('r2', 0), model_dict['metrics'].get('mae', 0)
+            elif 'test_metrics' in model_dict:
+                return model_dict['test_metrics'].get('r2', 0), model_dict['test_metrics'].get('mae', 0)
             return 0, 0
         
         # Organize models by type
@@ -621,22 +631,27 @@ class ExistingExperimentAnalyzer:
     def run_analysis(self):
         """Run complete analysis of existing experiment."""
         print(f"🚀 Starting analysis of existing experiment...")
+        print(f"🎯 Using random seed {self.random_seed} for all components to ensure consistency")
         
         # Load experiment data
         data, existing_summary = self.load_experiment_data()
         
-        # Run baseline comparisons
+        # Run baseline comparisons with unified system
+        print(f"\n📊 Phase 1: Computing baselines with unified evaluation system...")
         baseline_results = self.compute_baseline_comparisons(data)
         
-        # Run GAM analysis
+        # Run GAM analysis (uses same sampling methodology)
+        print(f"\n🧠 Phase 2: Running GAM analysis with consistent sampling...")
         gam_results = self.run_gam_analysis()
         
         # Update experiment summary
+        print(f"\n📝 Phase 3: Updating experiment summary...")
         updated_summary = self.update_experiment_summary(
             existing_summary, baseline_results, gam_results
         )
         
         # Create comparison visualization
+        print(f"\n📊 Phase 4: Creating visualizations...")
         self.create_comparison_visualization(
             baseline_results, gam_results, updated_summary
         )
@@ -662,8 +677,8 @@ class ExistingExperimentAnalyzer:
         baselines = baseline_results.get('baselines', baseline_results)
         
         for name, result in baselines.items():
-            # Try to get metrics from either test_metrics or metrics
-            metrics = result.get('test_metrics', result.get('metrics', {}))
+            # Try to get metrics from either metrics (unified) or test_metrics (legacy)
+            metrics = result.get('metrics', result.get('test_metrics', {}))
             r2 = metrics.get('r2', 0)
             mae = metrics.get('mae', 0)
             print(f"   {name.replace('_', ' ').title()}: R²={r2:.4f}, MAE={mae:.3f}")

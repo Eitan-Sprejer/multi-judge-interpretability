@@ -16,6 +16,7 @@ martian-sdk-python
 results/full_experiments/*/
 !results/full_experiments/baseline_ultrafeedback_2000samples_20250816_213023/
 !results/full_experiments/baseline_ultrafeedback_2000samples_20250816_213023/**
+!results/full_experiments/full_experiment_10000_enhanced
 
 # Exclude large data files (pickle files) from version control
 *.pkl

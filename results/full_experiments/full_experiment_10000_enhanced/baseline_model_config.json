@@ -1,0 +1,12 @@
+{
+  "description": "For experiments with 1000-10k samples (OPTIMAL for 2k samples)",
+  "hidden_dim": 128,
+  "learning_rate": 0.001,
+  "batch_size": 32,
+  "n_epochs": 200,
+  "early_stopping_patience": 20,
+  "min_delta": 0.0001,
+  "normalization": false,
+  "scale": "large_scale",
+  "test_r2": 0.41699737310409546
+}

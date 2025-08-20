@@ -1,0 +1,16 @@
+{
+  "data_source": "ultrafeedback",
+  "data_size": 10000,
+  "test_size": 0.2,
+  "random_seed": 42,
+  "concurrency": 15,
+  "checkpoint_interval": 10,
+  "normalize_features": true,
+  "enable_hyperparameter_tuning": false,
+  "hyperparameter_trials": 30,
+  "enable_gam_tuning": false,
+  "gam_trials": 30,
+  "experiment_type": "JUDGES_VS_PERSONAS",
+  "run_name": "full_experiment_10000_enhanced",
+  "timestamp": "20250820_033634"
+}
