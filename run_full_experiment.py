@@ -70,7 +70,8 @@ class FullExperiment:
         enable_hyperparameter_tuning: bool = False,
         hyperparameter_trials: int = 30,
         enable_gam_tuning: bool = False,
-        gam_trials: int = 30
+        gam_trials: int = 30,
+        sampling_method: str = "uniform"  # Add sampling method parameter
     ):
         self.data_source = data_source
         self.data_size = data_size
@@ -83,6 +84,7 @@ class FullExperiment:
         self.hyperparameter_trials = hyperparameter_trials
         self.enable_gam_tuning = enable_gam_tuning
         self.gam_trials = gam_trials
+        self.sampling_method = sampling_method
         
         # Set random seeds
         random.seed(random_seed)
@@ -188,6 +190,59 @@ class FullExperiment:
         })
         
         return subset
+    
+    def sample_ground_truth_score(self, personas_feedback: Dict[str, Any], method: str = None) -> Tuple[str, float]:
+        """
+        Sample ground truth score from persona feedback using specified method.
+        
+        Args:
+            personas_feedback: Dict of persona -> {score, certainty, analysis}
+            method: 'uniform' or 'confidence_weighted'
+            
+        Returns:
+            Tuple of (selected_persona, selected_score)
+        """
+        if method is None:
+            method = self.sampling_method
+        
+        # Filter valid personas (those with scores and certainty)
+        valid_personas = {
+            persona: feedback for persona, feedback in personas_feedback.items()
+            if isinstance(feedback, dict) and 'score' in feedback and 'certainty' in feedback
+        }
+        
+        if not valid_personas:
+            raise ValueError("No valid personas with score and certainty found")
+        
+        if method == 'uniform':
+            # Existing: Random uniform sampling
+            selected_persona = random.choice(list(valid_personas.keys()))
+            
+        elif method == 'confidence_weighted':
+            # New: High confidence + diversity
+            # 1. Group by confidence tiers
+            high_conf = [(p, f) for p, f in valid_personas.items() if f['certainty'] >= 80]
+            med_conf = [(p, f) for p, f in valid_personas.items() if 50 <= f['certainty'] < 80]
+            low_conf = [(p, f) for p, f in valid_personas.items() if f['certainty'] < 50]
+            
+            # 2. Prefer high confidence but maintain diversity
+            rand_val = random.random()
+            if high_conf and rand_val < 0.7:  # 70% from high confidence
+                selected_persona = random.choice(high_conf)[0]
+            elif med_conf and rand_val < 0.9:  # 20% from medium confidence  
+                selected_persona = random.choice(med_conf)[0]
+            else:  # 10% from low confidence (or fallback if no high/med)
+                if low_conf:
+                    selected_persona = random.choice(low_conf)[0]
+                else:
+                    # Fallback to any available persona
+                    selected_persona = random.choice(list(valid_personas.keys()))
+        
+        else:
+            raise ValueError(f"Unknown sampling method: {method}")
+        
+        selected_score = valid_personas[selected_persona]['score']
+        return selected_persona, selected_score
     
     async def simulate_personas_if_needed(self, data: pd.DataFrame) -> pd.DataFrame:
         """Simulate persona responses if not already present."""
@@ -335,16 +390,24 @@ class FullExperiment:
         # Individual judge correlations
         judge_correlations = {}
         for judge_id in JUDGE_IDS:
-            if len(individual_judge_scores[judge_id]) >= 2:
-                corr = np.corrcoef(individual_judge_scores[judge_id], persona_averages)[0, 1]
-                judge_correlations[judge_id] = corr
+            if len(individual_judge_scores[judge_id]) >= 2 and len(individual_judge_scores[judge_id]) == len(persona_averages):
+                try:
+                    corr = np.corrcoef(individual_judge_scores[judge_id], persona_averages)[0, 1]
+                    judge_correlations[judge_id] = corr
+                except (ValueError, np.linalg.LinAlgError) as e:
+                    logger.warning(f"Could not compute correlation for {judge_id}: {e}")
+                    continue
         
         # Individual persona correlations  
         persona_correlations = {}
         for persona_name in PERSONAS.keys():
-            if len(individual_persona_scores[persona_name]) >= 2:
-                corr = np.corrcoef(individual_persona_scores[persona_name], judge_averages)[0, 1]
-                persona_correlations[persona_name] = corr
+            if len(individual_persona_scores[persona_name]) >= 2 and len(individual_persona_scores[persona_name]) == len(judge_averages):
+                try:
+                    corr = np.corrcoef(individual_persona_scores[persona_name], judge_averages)[0, 1]
+                    persona_correlations[persona_name] = corr
+                except (ValueError, np.linalg.LinAlgError) as e:
+                    logger.warning(f"Could not compute correlation for {persona_name}: {e}")
+                    continue
         
         correlation_analysis = {
             'overall_correlation': overall_correlation,
@@ -1049,32 +1112,21 @@ class FullExperiment:
         X_list = []
         y_list = []
         
-        # Uniform persona sampling
-        available_personas = list(PERSONAS.keys())
-        samples_per_persona = len(data) // len(available_personas)
-        remaining_samples = len(data) % len(available_personas)
-        
-        persona_assignment = []
-        for persona in available_personas:
-            persona_assignment.extend([persona] * samples_per_persona)
-        for _ in range(remaining_samples):
-            persona_assignment.append(random.choice(available_personas))
-        random.shuffle(persona_assignment)
-        
-        # Extract features and targets
-        for idx, (row, assigned_persona) in enumerate(zip(data.iterrows(), persona_assignment)):
-            row = row[1]
-            
+        # Extract features and targets using new sampling method
+        for idx, row in data.iterrows():
             if ('human_feedback' not in row or 'personas' not in row['human_feedback'] or
                 'judge_scores' not in row or not isinstance(row['judge_scores'], list)):
                 continue
             
             personas_feedback = row['human_feedback']['personas']
-            if assigned_persona not in personas_feedback or 'score' not in personas_feedback[assigned_persona]:
-                continue
-            
-            selected_score = personas_feedback[assigned_persona]['score']
             judge_scores = row['judge_scores']
+            
+            try:
+                # Use the new sampling method
+                assigned_persona, selected_score = self.sample_ground_truth_score(personas_feedback)
+            except (ValueError, KeyError) as e:
+                # Skip this sample if no valid personas available
+                continue
             
             if selected_score is None or len(judge_scores) != len(JUDGE_IDS):
                 continue
@@ -1154,10 +1206,251 @@ class FullExperiment:
         return baselines
     
     def _legacy_baseline_comparison(self, data: pd.DataFrame) -> Dict[str, Any]:
-        \"\"\"Legacy baseline comparison method as fallback.\"\"\"\n        # Prepare data similar to test_aggregation_models\n        X_list = []\n        y_list = []\n        \n        # Uniform persona sampling\n        available_personas = list(PERSONAS.keys())\n        samples_per_persona = len(data) // len(available_personas)\n        remaining_samples = len(data) % len(available_personas)\n        \n        persona_assignment = []\n        for persona in available_personas:\n            persona_assignment.extend([persona] * samples_per_persona)\n        for _ in range(remaining_samples):\n            persona_assignment.append(random.choice(available_personas))\n        random.shuffle(persona_assignment)\n        \n        # Extract features and targets\n        for idx, (row, assigned_persona) in enumerate(zip(data.iterrows(), persona_assignment)):\n            row = row[1]\n            \n            if ('human_feedback' not in row or 'personas' not in row['human_feedback'] or\n                'judge_scores' not in row or not isinstance(row['judge_scores'], list)):\n                continue\n            \n            personas_feedback = row['human_feedback']['personas']\n            if assigned_persona not in personas_feedback or 'score' not in personas_feedback[assigned_persona]:\n                continue\n            \n            selected_score = personas_feedback[assigned_persona]['score']\n            judge_scores = row['judge_scores']\n            \n            if selected_score is None or len(judge_scores) != len(JUDGE_IDS):\n                continue\n            \n            X_list.append(judge_scores)\n            y_list.append(selected_score)\n        \n        if len(X_list) < 10:\n            return {'baselines': {}, 'summary': {'error': 'insufficient_data'}}\n        \n        X = np.array(X_list)\n        y = np.array(y_list)\n        \n        # Split data\n        X_train, X_test, y_train, y_test = train_test_split(\n            X, y, test_size=self.test_size, random_state=self.random_seed\n        )\n        \n        legacy_baselines = {}\n        \n        # 1. Naive Mean Baseline\n        naive_mean_pred = np.mean(X_test, axis=1)\n        legacy_baselines['naive_mean'] = {\n            'metrics': compute_metrics(y_test, naive_mean_pred)\n        }\n        \n        # 2. Best Single Judge\n        best_judge_r2 = -1\n        best_judge_idx = 0\n        for judge_idx in range(len(JUDGE_IDS)):\n            judge_pred = X_test[:, judge_idx]\n            judge_metrics = compute_metrics(y_test, judge_pred)\n            if judge_metrics['r2'] > best_judge_r2:\n                best_judge_r2 = judge_metrics['r2']\n                best_judge_idx = judge_idx\n        \n        best_judge_name = JUDGE_IDS[best_judge_idx] if best_judge_idx < len(JUDGE_IDS) else f\"Judge_{best_judge_idx}\"\n        legacy_baselines['best_judge_linear_scaling'] = {\n            'metrics': compute_metrics(y_test, X_test[:, best_judge_idx]),\n            'judge_name': best_judge_name\n        }\n        \n        # 3. Scaled Mean\n        y_min, y_max = np.min(y_test), np.max(y_test)\n        judges_mean = np.mean(X_test, axis=1)\n        judges_min, judges_max = np.min(judges_mean), np.max(judges_mean)\n        scaled_mean_pred = (judges_mean - judges_min) / (judges_max - judges_min) * (y_max - y_min) + y_min\n        legacy_baselines['linear_scaling_mean'] = {\n            'metrics': compute_metrics(y_test, scaled_mean_pred)\n        }\n        \n        return {\n            'baselines': legacy_baselines,\n            'summary': {\n                'best_baseline': 'legacy_fallback',\n                'methodology': 'legacy_fallback'\n            }\n        }
+        """Legacy baseline comparison method as fallback."""
+        # Prepare data similar to test_aggregation_models
+        X_list = []
+        y_list = []
+        
+        # Uniform persona sampling
+        available_personas = list(PERSONAS.keys())
+        samples_per_persona = len(data) // len(available_personas)
+        remaining_samples = len(data) % len(available_personas)
+        
+        persona_assignment = []
+        for persona in available_personas:
+            persona_assignment.extend([persona] * samples_per_persona)
+        for _ in range(remaining_samples):
+            persona_assignment.append(random.choice(available_personas))
+        random.shuffle(persona_assignment)
+        
+        # Extract features and targets
+        for idx, (row, assigned_persona) in enumerate(zip(data.iterrows(), persona_assignment)):
+            row = row[1]
+            
+            if ('human_feedback' not in row or 'personas' not in row['human_feedback'] or
+                'judge_scores' not in row or not isinstance(row['judge_scores'], list)):
+                continue
+            
+            personas_feedback = row['human_feedback']['personas']
+            if assigned_persona not in personas_feedback or 'score' not in personas_feedback[assigned_persona]:
+                continue
+            
+            selected_score = personas_feedback[assigned_persona]['score']
+            judge_scores = row['judge_scores']
+            
+            if selected_score is None or len(judge_scores) != len(JUDGE_IDS):
+                continue
+            
+            X_list.append(judge_scores)
+            y_list.append(selected_score)
+        
+        if len(X_list) < 10:
+            return {'baselines': {}, 'summary': {'error': 'insufficient_data'}}
+        
+        X = np.array(X_list)
+        y = np.array(y_list)
+        
+        # Split data
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=self.test_size, random_state=self.random_seed
+        )
+        
+        legacy_baselines = {}
+        
+        # 1. Naive Mean Baseline
+        naive_mean_pred = np.mean(X_test, axis=1)
+        legacy_baselines['naive_mean'] = {
+            'metrics': compute_metrics(y_test, naive_mean_pred)
+        }
+        
+        # 2. Best Single Judge
+        best_judge_r2 = -1
+        best_judge_idx = 0
+        for judge_idx in range(len(JUDGE_IDS)):
+            judge_pred = X_test[:, judge_idx]
+            judge_metrics = compute_metrics(y_test, judge_pred)
+            if judge_metrics['r2'] > best_judge_r2:
+                best_judge_r2 = judge_metrics['r2']
+                best_judge_idx = judge_idx
+        
+        best_judge_name = JUDGE_IDS[best_judge_idx] if best_judge_idx < len(JUDGE_IDS) else f"Judge_{best_judge_idx}"
+        legacy_baselines['best_judge_linear_scaling'] = {
+            'metrics': compute_metrics(y_test, X_test[:, best_judge_idx]),
+            'judge_name': best_judge_name
+        }
+        
+        # 3. Scaled Mean
+        y_min, y_max = np.min(y_test), np.max(y_test)
+        judges_mean = np.mean(X_test, axis=1)
+        judges_min, judges_max = np.min(judges_mean), np.max(judges_mean)
+        scaled_mean_pred = (judges_mean - judges_min) / (judges_max - judges_min) * (y_max - y_min) + y_min
+        legacy_baselines['linear_scaling_mean'] = {
+            'metrics': compute_metrics(y_test, scaled_mean_pred)
+        }
+        
+        return {
+            'baselines': legacy_baselines,
+            'summary': {
+                'best_baseline': 'legacy_fallback',
+                'methodology': 'legacy_fallback'
+            }
+        }
     
     def create_baseline_comparison_plots(self, baseline_results: Dict[str, Any], model_results: Dict[str, Any], 
-                                       hyperparameter_results: Dict[str, Any], gam_results: Dict[str, Any]):\n        \"\"\"Create focused baseline comparison plots distinguishing learned vs non-learned approaches.\"\"\"\n        log_experiment_milestone(\"Creating Baseline Comparison Visualizations\")\n        \n        baselines = baseline_results.get('baselines', {})\n        \n        # Define model categories\n        non_learned_models = {\n            'Naive Mean': baselines.get('naive_mean', {}),\n            'Best Judge': baselines.get('best_judge_linear_scaling', {}),\n            'Scaled Mean': baselines.get('linear_scaling_mean', {})\n        }\n        \n        learned_models = {}\n        \n        # Add learned aggregators\n        if model_results:\n            best_mlp = max([(k, v) for k, v in model_results.items() if 'test_metrics' in v], \n                          key=lambda x: x[1]['test_metrics']['r2'], default=None)\n            if best_mlp:\n                learned_models['MLP'] = best_mlp[1]\n        \n        if gam_results and gam_results.get('best_r2', -1) > 0:\n            learned_models['GAM'] = {\n                'test_metrics': {\n                    'r2': gam_results['best_r2'],\n                    'mae': gam_results['best_mae']\n                }\n            }\n        \n        if hyperparameter_results and hyperparameter_results.get('best_r2', -1) > 0:\n            learned_models['MLP (Tuned)'] = {\n                'test_metrics': {\n                    'r2': hyperparameter_results['best_r2'],\n                    'mae': hyperparameter_results.get('best_mae', 0)\n                }\n            }\n        \n        # Add learned baselines\n        learned_baselines = {\n            'LR (Normalized)': baselines.get('linear_regression_norm', {}),\n            'LR (Raw)': baselines.get('linear_regression_raw', {}),\n            'Ridge (Normalized)': baselines.get('ridge_regression_norm', {})\n        }\n        \n        # Remove empty entries\n        learned_baselines = {k: v for k, v in learned_baselines.items() if v}\n        \n        # Create two comparison plots\n        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))\n        \n        # Plot 1: Main Comparison (Non-learned + Best Learned)\n        main_models = list(non_learned_models.keys())\n        main_r2s = [model.get('metrics', {}).get('r2', 0) for model in non_learned_models.values()]\n        main_maes = [model.get('metrics', {}).get('mae', 0) for model in non_learned_models.values()]\n        \n        # Add best learned model\n        if learned_models:\n            best_learned = max(learned_models.items(), key=lambda x: x[1]['test_metrics']['r2'])\n            main_models.append(best_learned[0])\n            main_r2s.append(best_learned[1]['test_metrics']['r2'])\n            main_maes.append(best_learned[1]['test_metrics']['mae'])\n        \n        colors = ['lightcoral', 'orange', 'gold', 'lightgreen'][:len(main_models)]\n        bars1 = ax1.bar(main_models, main_r2s, color=colors)\n        ax1.set_title('Main Model Comparison - R² Score', fontsize=14, fontweight='bold')\n        ax1.set_ylabel('R² Score')\n        ax1.grid(True, alpha=0.3)\n        ax1.set_ylim(0, max(main_r2s) * 1.15)\n        \n        # Add value labels\n        for bar, score in zip(bars1, main_r2s):\n            ax1.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.01,\n                    f'{score:.3f}', ha='center', va='bottom', fontweight='bold')\n        \n        # Highlight best model\n        best_idx = np.argmax(main_r2s)\n        bars1[best_idx].set_color('gold')\n        bars1[best_idx].set_edgecolor('darkgoldenrod')\n        bars1[best_idx].set_linewidth(2)\n        \n        # Plot 2: MAE Comparison\n        bars2 = ax2.bar(main_models, main_maes, color=colors)\n        ax2.set_title('Main Model Comparison - MAE', fontsize=14, fontweight='bold')\n        ax2.set_ylabel('Mean Absolute Error (Lower is Better)')\n        ax2.grid(True, alpha=0.3)\n        ax2.set_ylim(0, max(main_maes) * 1.15)\n        \n        for bar, score in zip(bars2, main_maes):\n            ax2.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.01,\n                    f'{score:.3f}', ha='center', va='bottom', fontweight='bold')\n        \n        # Plot 3: Comprehensive Learned Models\n        all_learned = {**learned_models, **learned_baselines}\n        if all_learned:\n            learned_names = list(all_learned.keys())\n            learned_r2s = [model['test_metrics']['r2'] for model in all_learned.values()]\n            \n            # Color by type\n            learned_colors = []\n            for name in learned_names:\n                if name in learned_models:\n                    learned_colors.append('lightblue')  # Aggregators\n                else:\n                    learned_colors.append('lightsteelblue')  # Learned baselines\n            \n            bars3 = ax3.bar(learned_names, learned_r2s, color=learned_colors)\n            ax3.set_title('Learned Models Comparison - R² Score', fontsize=14, fontweight='bold')\n            ax3.set_ylabel('R² Score')\n            ax3.grid(True, alpha=0.3)\n            ax3.set_xticklabels(learned_names, rotation=45, ha='right')\n            ax3.set_ylim(0, max(learned_r2s) * 1.15)\n            \n            for bar, score in zip(bars3, learned_r2s):\n                ax3.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.01,\n                        f'{score:.3f}', ha='center', va='bottom', fontweight='bold')\n        \n        # Plot 4: All Baselines (Non-learned)\n        all_non_learned = {**non_learned_models}\n        \n        # Add more baselines if available\n        additional_baselines = {\n            'Best Judge (Naive)': baselines.get('best_judge_naive', {}),\n            'StandardScaler+LR Mean': baselines.get('standardscaler_lr_mean', {}),\n            'Best Judge (StandardScaler+LR)': baselines.get('best_judge_standardscaler_lr', {})\n        }\n        \n        for name, baseline in additional_baselines.items():\n            if baseline:\n                all_non_learned[name] = baseline\n        \n        if all_non_learned:\n            baseline_names = list(all_non_learned.keys())\n            baseline_r2s = [model.get('metrics', {}).get('r2', 0) for model in all_non_learned.values()]\n            \n            bars4 = ax4.bar(baseline_names, baseline_r2s, color='lightcoral', alpha=0.7)\n            ax4.set_title('Non-Learned Baselines - R² Score', fontsize=14, fontweight='bold')\n            ax4.set_ylabel('R² Score')\n            ax4.grid(True, alpha=0.3)\n            ax4.set_xticklabels(baseline_names, rotation=45, ha='right')\n            ax4.set_ylim(0, max(baseline_r2s) * 1.15 if baseline_r2s else 1)\n            \n            for bar, score in zip(bars4, baseline_r2s):\n                ax4.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.01,\n                        f'{score:.3f}', ha='center', va='bottom', fontweight='bold')\n        \n        plt.tight_layout()\n        \n        # Save plots\n        comparison_path = self.run_dir / \"plots\" / \"baseline_comparison_comprehensive.png\"\n        plt.savefig(comparison_path, dpi=300, bbox_inches='tight')\n        plt.close()\n        \n        log_experiment_milestone(\"Baseline comparison plots saved\", {'saved_to': str(comparison_path)})
+                                       hyperparameter_results: Dict[str, Any], gam_results: Dict[str, Any]):
+        """Create focused baseline comparison plots distinguishing learned vs non-learned approaches."""
+        log_experiment_milestone("Creating Baseline Comparison Visualizations")
+        
+        baselines = baseline_results.get('baselines', {})
+        
+        # Define model categories
+        non_learned_models = {
+            'Naive Mean': baselines.get('naive_mean', {}),
+            'Best Judge': baselines.get('best_judge_linear_scaling', {}),
+            'Scaled Mean': baselines.get('linear_scaling_mean', {})
+        }
+        
+        learned_models = {}
+        
+        # Add learned aggregators
+        if model_results:
+            best_mlp = max([(k, v) for k, v in model_results.items() if 'test_metrics' in v], 
+                          key=lambda x: x[1]['test_metrics']['r2'], default=None)
+            if best_mlp:
+                learned_models['MLP'] = best_mlp[1]
+        
+        if gam_results and gam_results.get('best_r2', -1) > 0:
+            learned_models['GAM'] = {
+                'test_metrics': {
+                    'r2': gam_results['best_r2'],
+                    'mae': gam_results['best_mae']
+                }
+            }
+        
+        if hyperparameter_results and hyperparameter_results.get('best_r2', -1) > 0:
+            learned_models['MLP (Tuned)'] = {
+                'test_metrics': {
+                    'r2': hyperparameter_results['best_r2'],
+                    'mae': hyperparameter_results.get('best_mae', 0)
+                }
+            }
+        
+        # Add learned baselines
+        learned_baselines = {
+            'LR (Normalized)': baselines.get('linear_regression_norm', {}),
+            'LR (Raw)': baselines.get('linear_regression_raw', {}),
+            'Ridge (Normalized)': baselines.get('ridge_regression_norm', {})
+        }
+        
+        # Remove empty entries
+        learned_baselines = {k: v for k, v in learned_baselines.items() if v}
+        
+        # Create two comparison plots
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
+        
+        # Plot 1: Main Comparison (Non-learned + Best Learned)
+        main_models = list(non_learned_models.keys())
+        main_r2s = [model.get('metrics', {}).get('r2', 0) for model in non_learned_models.values()]
+        main_maes = [model.get('metrics', {}).get('mae', 0) for model in non_learned_models.values()]
+        
+        # Add best learned model
+        if learned_models:
+            best_learned = max(learned_models.items(), key=lambda x: x[1]['test_metrics']['r2'])
+            main_models.append(best_learned[0])
+            main_r2s.append(best_learned[1]['test_metrics']['r2'])
+            main_maes.append(best_learned[1]['test_metrics']['mae'])
+        
+        colors = ['lightcoral', 'orange', 'gold', 'lightgreen'][:len(main_models)]
+        bars1 = ax1.bar(main_models, main_r2s, color=colors)
+        ax1.set_title('Main Model Comparison - R² Score', fontsize=14, fontweight='bold')
+        ax1.set_ylabel('R² Score')
+        ax1.grid(True, alpha=0.3)
+        ax1.set_ylim(0, max(main_r2s) * 1.15)
+        
+        # Add value labels
+        for bar, score in zip(bars1, main_r2s):
+            ax1.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.01,
+                    f'{score:.3f}', ha='center', va='bottom', fontweight='bold')
+        
+        # Highlight best model
+        best_idx = np.argmax(main_r2s)
+        bars1[best_idx].set_color('gold')
+        bars1[best_idx].set_edgecolor('darkgoldenrod')
+        bars1[best_idx].set_linewidth(2)
+        
+        # Plot 2: MAE Comparison
+        bars2 = ax2.bar(main_models, main_maes, color=colors)
+        ax2.set_title('Main Model Comparison - MAE', fontsize=14, fontweight='bold')
+        ax2.set_ylabel('Mean Absolute Error (Lower is Better)')
+        ax2.grid(True, alpha=0.3)
+        ax2.set_ylim(0, max(main_maes) * 1.15)
+        
+        for bar, score in zip(bars2, main_maes):
+            ax2.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.01,
+                    f'{score:.3f}', ha='center', va='bottom', fontweight='bold')
+        
+        # Plot 3: Comprehensive Learned Models
+        all_learned = {**learned_models, **learned_baselines}
+        if all_learned:
+            learned_names = list(all_learned.keys())
+            learned_r2s = [model['test_metrics']['r2'] for model in all_learned.values()]
+            
+            # Color by type
+            learned_colors = []
+            for name in learned_names:
+                if name in learned_models:
+                    learned_colors.append('lightblue')  # Aggregators
+                else:
+                    learned_colors.append('lightsteelblue')  # Learned baselines
+            
+            bars3 = ax3.bar(learned_names, learned_r2s, color=learned_colors)
+            ax3.set_title('Learned Models Comparison - R² Score', fontsize=14, fontweight='bold')
+            ax3.set_ylabel('R² Score')
+            ax3.grid(True, alpha=0.3)
+            ax3.set_xticklabels(learned_names, rotation=45, ha='right')
+            ax3.set_ylim(0, max(learned_r2s) * 1.15)
+            
+            for bar, score in zip(bars3, learned_r2s):
+                ax3.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.01,
+                        f'{score:.3f}', ha='center', va='bottom', fontweight='bold')
+        
+        # Plot 4: All Baselines (Non-learned)
+        all_non_learned = {**non_learned_models}
+        
+        # Add more baselines if available
+        additional_baselines = {
+            'Best Judge (Naive)': baselines.get('best_judge_naive', {}),
+            'StandardScaler+LR Mean': baselines.get('standardscaler_lr_mean', {}),
+            'Best Judge (StandardScaler+LR)': baselines.get('best_judge_standardscaler_lr', {})
+        }
+        
+        for name, baseline in additional_baselines.items():
+            if baseline:
+                all_non_learned[name] = baseline
+        
+        if all_non_learned:
+            baseline_names = list(all_non_learned.keys())
+            baseline_r2s = [model.get('metrics', {}).get('r2', 0) for model in all_non_learned.values()]
+            
+            bars4 = ax4.bar(baseline_names, baseline_r2s, color='lightcoral', alpha=0.7)
+            ax4.set_title('Non-Learned Baselines - R² Score', fontsize=14, fontweight='bold')
+            ax4.set_ylabel('R² Score')
+            ax4.grid(True, alpha=0.3)
+            ax4.set_xticklabels(baseline_names, rotation=45, ha='right')
+            ax4.set_ylim(0, max(baseline_r2s) * 1.15 if baseline_r2s else 1)
+            
+            for bar, score in zip(bars4, baseline_r2s):
+                ax4.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.01,
+                        f'{score:.3f}', ha='center', va='bottom', fontweight='bold')
+        
+        plt.tight_layout()
+        
+        # Save plots
+        comparison_path = self.run_dir / "plots" / "baseline_comparison_comprehensive.png"
+        plt.savefig(comparison_path, dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        log_experiment_milestone("Baseline comparison plots saved", {'saved_to': str(comparison_path)})
     
     def run_cross_correlation_analysis(self, data_with_judges: pd.DataFrame) -> Dict[str, Any]:
         """Run detailed cross-correlation analysis between judges and personas."""
@@ -1230,6 +1523,8 @@ async def main():
                         help='Number of GAM trials (default: 30)')
     parser.add_argument('--dry-run', action='store_true',
                         help='Run with small dataset for testing')
+    parser.add_argument('--sampling-method', choices=['uniform', 'confidence_weighted'], default='uniform',
+                        help='Ground truth sampling method (default: uniform)')
     
     args = parser.parse_args()
     
@@ -1250,7 +1545,8 @@ async def main():
         enable_hyperparameter_tuning=args.hyperparameter_tuning,
         hyperparameter_trials=args.hyperparameter_trials,
         enable_gam_tuning=args.gam_tuning,
-        gam_trials=args.gam_trials
+        gam_trials=args.gam_trials,
+        sampling_method=args.sampling_method
     )
     
     try:

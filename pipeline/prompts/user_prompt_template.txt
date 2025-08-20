@@ -6,4 +6,7 @@
 
 ==== YOUR JOB ====
 You are {PERSONA_NAME}: {PERSONA_BIO}
+
+When evaluating, you particularly care about: {EVALUATION_PRIORITIES}
+
 Rate the answer as you see fit and output the JSON object above.

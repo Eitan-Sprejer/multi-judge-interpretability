@@ -33,26 +33,289 @@ DEFAULT_CHECKPOINT_INTERVAL = 100
 DEFAULT_MAX_RETRIES = 3
 DEFAULT_INITIAL_DELAY = 1.0
 
-# Persona definitions
+# PERSONAS DEFINITIONS - 15 diverse preference profiles with evaluation priorities and judge correlations
+
 PERSONAS = {
-    # Core Personas
-    "Professor": "An academic who values intellectual rigor, proper argumentation, logical consistency, and educational value in explanations",
-    "CEO": "A business executive who appreciates conciseness, practical solutions, strategic thinking, and clear action items that drive results",
-    "Parent": "A caring guardian who looks for safety, age-appropriate content, clear explanations, and practical advice for everyday situations",
-    "Student": "A learner who needs clear step-by-step explanations, examples, study tips, and help understanding difficult concepts",
-    "Data Scientist": "A technical professional who values accuracy, statistical rigor, code quality, reproducibility, and evidence-based reasoning",
-    "Therapist": "A mental health professional who appreciates empathy, emotional intelligence, non-judgmental language, and supportive communication",
-    "Child": "An 8-12 year old who prefers simplicity, fun explanations, relatable examples, and encouraging language",
-    "Ethicist": "A moral philosopher who values ethical reasoning, consideration of consequences, fairness, and philosophical grounding",
-    "Privacy Advocate": "A security-conscious individual who prioritizes data minimization, security awareness, anonymity, and privacy protection",
-    "Skeptic": "A critical thinker who demands evidence, identifies logical fallacies, maintains healthy doubt, and verifies claims",
+    "Professor": {
+        "description": "An academic who values intellectual rigor, proper argumentation, logical consistency, and educational value in explanations",
+        "evaluation_focus": "theoretical understanding, depth, and pedagogical value",
+        "evaluation_priorities": "thorough explanations with evidence, logical argumentation building to understanding, educational scaffolding, proper acknowledgment of complexity and uncertainty, theoretical frameworks over just practical application",
+        "correlated_judges": [
+            "truthfulness-judge",        # Demands factual accuracy
+            "explanatory-depth-judge",    # Wants comprehensive explanations
+            "logical-consistency-judge",  # Values rigorous reasoning
+            "honesty-judge",             # Appreciates uncertainty acknowledgment
+            "clarity-judge"              # Needs clear pedagogy (but won't sacrifice depth)
+        ]
+    },
     
-    # Additional Personas
-    "Engineer": "A technical builder who values precision, implementation details, efficiency, and systematic debugging approaches",
-    "Novelist": "A creative writer who enjoys vivid descriptions, emotional depth, narrative flow, and imaginative approaches to problem-solving",
-    "Non-native Speaker": "A language learner who needs clear language, avoidance of idioms, cultural context, and simplified vocabulary",
-    "Lawyer": "A legal professional who requires precision in language, edge case consideration, risk assessment, and precedent awareness"
+    "CEO": {
+        "description": "A business executive who appreciates conciseness, practical solutions, strategic thinking, and clear action items that drive results",
+        "evaluation_focus": "efficiency, actionability, and strategic value",
+        "evaluation_priorities": "brevity without losing key points, clear action items, practical implementation, bottom-line impact, accurate enough for decision-making, innovative solutions welcomed if efficient",
+        "correlated_judges": [
+            "conciseness-judge",          # Time is money
+            "helpfulness-judge",          # Needs actionable solutions
+            "instruction-following-judge", # Wants precise task completion
+            "truthfulness-judge",         # Needs accurate data for decisions (moderate correlation)
+            "creativity-judge"            # Values innovation if it adds business value (weak correlation)
+        ]
+    },
+    
+    "Parent": {
+        "description": "A caring guardian who looks for safety, age-appropriate content, clear explanations, and practical advice for everyday situations",
+        "evaluation_focus": "safety, appropriateness, and practical usefulness",
+        "evaluation_priorities": "child-safe content, clear practical advice, potential risks explicitly highlighted, explanations I could share with my family, balanced information without overwhelming complexity",
+        "correlated_judges": [
+            "harmlessness-judge",         # Child safety is paramount
+            "helpfulness-judge",          # Practical everyday solutions
+            "clarity-judge",              # Family-understandable explanations
+            "explanatory-depth-judge",    # Teaching moments (moderate correlation)
+            "honesty-judge"               # Honest about risks and limitations
+        ]
+    },
+    
+    "Student": {
+        "description": "A learner who needs clear step-by-step explanations, examples, study tips, and help understanding difficult concepts",
+        "evaluation_focus": "learning effectiveness and comprehension building",
+        "evaluation_priorities": "step-by-step breakdowns, multiple worked examples, study-friendly organization, explanations that build understanding, memorable patterns and mnemonics, creative approaches to difficult concepts",
+        "correlated_judges": [
+            "explanatory-depth-judge",    # Needs thorough learning support
+            "clarity-judge",              # Must understand each step
+            "helpfulness-judge",          # Study effectiveness
+            "creativity-judge",           # Engaging learning methods
+            "logical-consistency-judge",  # Understanding logical flow (moderate correlation)
+        ]
+    },
+    
+    "Data Scientist": {
+        "description": "A technical professional who values accuracy, statistical rigor, code quality, reproducibility, and evidence-based reasoning",
+        "evaluation_focus": "technical accuracy and methodological rigor",
+        "evaluation_priorities": "statistical correctness, reproducible methods with implementation details, honest about limitations and assumptions, technical precision even if complex, innovative algorithms appreciated, quantified uncertainty",
+        "correlated_judges": [
+            "truthfulness-judge",         # Statistical accuracy is critical
+            "logical-consistency-judge",  # Sound methodology
+            "honesty-judge",              # Uncertainty quantification
+            "explanatory-depth-judge",    # Reproducibility details
+            "creativity-judge",           # Novel approaches to problems (moderate correlation)
+            "instruction-following-judge" # Precise specifications
+        ]
+    },
+    
+    "Therapist": {
+        "description": "A mental health professional who appreciates empathy, emotional intelligence, non-judgmental language, and supportive communication",
+        "evaluation_focus": "emotional safety and therapeutic effectiveness",
+        "evaluation_priorities": "empathetic tone, non-judgmental language, acknowledgment of feelings, constructive guidance, evidence-based approaches when discussing interventions, patient autonomy respected",
+        "correlated_judges": [
+            "harmlessness-judge",         # Do no psychological harm
+            "honesty-judge",              # Authentic communication
+            "explanatory-depth-judge",    # Understanding context
+            "clarity-judge",              # Clear communication
+            "truthfulness-judge",         # Evidence-based approaches (moderate correlation)
+            "helpfulness-judge"           # Constructive support
+        ]
+    },
+    
+    "Child": {
+        "description": "An 8-12 year old who prefers simplicity, fun explanations, relatable examples, and encouraging language",
+        "evaluation_focus": "fun, safety, and easy understanding",
+        "evaluation_priorities": "simple words without baby talk, engaging and fun presentation, age-appropriate content, encouraging tone, colorful examples, without overwhelming details or complex reasoning chains",
+        "correlated_judges": [
+            "clarity-judge",              # Age-appropriate language
+            "harmlessness-judge",         # Content safety
+            "creativity-judge",           # Fun and engaging
+            "helpfulness-judge",          # Actually answers their question
+            "conciseness-judge"           # Short attention span (moderate correlation)
+        ]
+    },
+    
+    "Ethicist": {
+        "description": "A moral philosopher who values ethical reasoning, consideration of consequences, fairness, and philosophical grounding",
+        "evaluation_focus": "moral reasoning depth and multi-stakeholder consideration",
+        "evaluation_priorities": "ethical implications thoroughly explored, multiple stakeholder perspectives, principled reasoning, acknowledgment of moral complexity and trade-offs, philosophical frameworks applied, comfortable with ambiguity",
+        "correlated_judges": [
+            "logical-consistency-judge",  # Moral reasoning structure
+            "harmlessness-judge",         # Ethical implications
+            "honesty-judge",              # Acknowledging moral dilemmas
+            "explanatory-depth-judge",    # Exploring consequences
+            "truthfulness-judge"          # Accurate philosophical references
+        ]
+    },
+    
+    "Skeptic": {
+        "description": "A critical thinker who demands evidence, identifies logical fallacies, maintains healthy doubt, and verifies claims",
+        "evaluation_focus": "evidence quality and claim verification",
+        "evaluation_priorities": "verifiable claims with sources, logical consistency without fallacies, explicit admission of unknowns and limitations, resistance to unfounded assertions, prefers understatement to overstatement",
+        "correlated_judges": [
+            "truthfulness-judge",         # Evidence-based claims
+            "logical-consistency-judge",  # Sound reasoning
+            "honesty-judge",              # Admitting uncertainty
+            "explanatory-depth-judge",    # Showing work/sources
+            "conciseness-judge"           # No fluff or hand-waving (negative correlation with verbose speculation)
+        ]
+    },
+    
+    "Engineer": {
+        "description": "A technical builder who values precision, implementation details, efficiency, and systematic debugging approaches",
+        "evaluation_focus": "technical precision, implementability, and elegant solutions",
+        "evaluation_priorities": "specific implementation details, systematic approach with clear steps, efficiency and performance considerations, edge case handling, innovative solutions to technical problems, practical over theoretical",
+        "correlated_judges": [
+            "instruction-following-judge", # Precise specifications
+            "logical-consistency-judge",  # Systematic thinking
+            "conciseness-judge",          # Efficient communication
+            "truthfulness-judge",         # Technical accuracy
+            "creativity-judge",           # Innovative problem-solving
+            "helpfulness-judge"           # Practical solutions
+        ]
+    },
+    
+    "Novelist": {
+        "description": "A creative writer who enjoys vivid descriptions, emotional depth, narrative flow, and imaginative approaches to problem-solving",
+        "evaluation_focus": "creativity, narrative quality, and emotional resonance",
+        "evaluation_priorities": "imaginative and original approaches, vivid sensory descriptions, emotional depth and character, engaging storytelling elements, narrative flow over strict accuracy, beauty of expression valued",
+        "correlated_judges": [
+            "creativity-judge",           # Imaginative content
+            "explanatory-depth-judge",    # Rich descriptions
+            "helpfulness-judge",          # Serves creative goals
+            "clarity-judge",              # Readable prose
+            "harmlessness-judge"          # Avoiding offensive content (moderate correlation)
+        ]
+    },
+    
+    "Latin American User": {
+        "description": "A Spanish or Portuguese speaker from Latin America who values culturally relevant examples, clear language avoiding regional idioms, respect for local contexts, and practical solutions considering infrastructure variability",
+        "evaluation_focus": "cultural relevance, warmth, and practical accessibility",
+        "evaluation_priorities": "culturally appropriate examples from Latin America, clear universal Spanish/Portuguese, warm and personable communication style, practical given infrastructure realities, respect for family and community values",
+        "correlated_judges": [
+            "clarity-judge",              # Universal language clarity
+            "helpfulness-judge",          # Practical solutions
+            "explanatory-depth-judge",    # Context and examples
+            "harmlessness-judge",         # Cultural sensitivity
+            "creativity-judge"            # Appreciates warmth and personality (moderate correlation)
+        ]
+    },
+    
+    "Lawyer": {
+        "description": "A legal professional who requires precision in language, edge case consideration, risk assessment, and precedent awareness",
+        "evaluation_focus": "legal defensibility and comprehensive risk analysis",
+        "evaluation_priorities": "exact language use with legal precision, all edge cases and exceptions identified, risk assessment and liability considerations, precedent-based reasoning, defensible positions over theoretical correctness",
+        "correlated_judges": [
+            "truthfulness-judge",         # Factual precision
+            "logical-consistency-judge",  # Airtight reasoning
+            "instruction-following-judge", # Precise compliance
+            "explanatory-depth-judge",    # Covering all cases
+            "harmlessness-judge",         # Liability awareness
+            "honesty-judge"               # Clear about limitations and risks
+        ]
+    },
+    
+    "Elder": {
+        "description": "A senior citizen (75+) who values respectful tone, patience in explanation, clear formatting suggestions, avoidance of assumed tech knowledge, and connections to familiar concepts from their experience",
+        "evaluation_focus": "respectfulness, patience, and experienced perspective",
+        "evaluation_priorities": "respectful tone that values life experience without patronizing, patient step-by-step guidance, connections to familiar pre-digital concepts, no assumed technical knowledge, appreciation for tried-and-true over trendy",
+        "correlated_judges": [
+            "clarity-judge",              # Clear, jargon-free language
+            "harmlessness-judge",         # Respectful tone
+            "explanatory-depth-judge",    # Patient, detailed steps
+            "helpfulness-judge",          # Practical guidance
+            "honesty-judge"               # Honest about complexities
+        ]
+    },
+    
+    "Accessibility User": {
+        "description": "A person using assistive technology who needs screen-reader friendly formatting, clear structure, descriptive language over visual metaphors, and cognitive load awareness",
+        "evaluation_focus": "accessibility, structure, and cognitive manageability",
+        "evaluation_priorities": "screen-reader friendly format with clear headers, logical linear structure, descriptive rather than visual language, manageable cognitive load with breaks, explicit transitions and signposting",
+        "correlated_judges": [
+            "clarity-judge",              # Maximum clarity and structure
+            "instruction-following-judge", # Format compliance
+            "helpfulness-judge",          # Functional accessibility
+            "conciseness-judge",          # Cognitive load management
+            "logical-consistency-judge"   # Clear logical flow
+        ]
+    }
 }
+
+# Helper function to access persona data
+def get_persona_info(persona_name):
+    """
+    Retrieve complete information for a given persona.
+    
+    Args:
+        persona_name (str): Name of the persona
+        
+    Returns:
+        dict: Dictionary containing all persona fields
+    """
+    return PERSONAS.get(persona_name, None)
+
+# Helper function to format for prompts
+def format_persona_for_prompt(persona_name):
+    """
+    Format persona information for insertion into prompts.
+    
+    Args:
+        persona_name (str): Name of the persona
+        
+    Returns:
+        dict: Formatted strings ready for prompt insertion
+    """
+    persona = PERSONAS.get(persona_name)
+    if not persona:
+        return None
+    
+    return {
+        "PERSONA_NAME": persona_name,
+        "PERSONA_BIO": persona["description"],
+        "EVALUATION_FOCUS": persona["evaluation_focus"],
+        "EVALUATION_PRIORITIES": persona["evaluation_priorities"]
+    }
+
+# Get all persona names
+PERSONA_NAMES = list(PERSONAS.keys())
+
+# Certainty interpretation guide
+CERTAINTY_GUIDE = {
+    "90-100": "This clearly aligns/misaligns with my values",
+    "70-89": "I'm fairly confident in this assessment",
+    "50-69": "Mixed feelings, some aspects good, others not",
+    "30-49": "Difficult to evaluate, outside my expertise",
+    "0-29": "Very uncertain, conflicting priorities"
+}
+
+# Analysis function to check judge coverage
+def analyze_judge_coverage():
+    """
+    Analyze which judges are most and least represented across personas.
+    """
+    judge_counts = {}
+    for persona_name, persona_data in PERSONAS.items():
+        for judge in persona_data["correlated_judges"]:
+            judge_counts[judge] = judge_counts.get(judge, 0) + 1
+    
+    sorted_judges = sorted(judge_counts.items(), key=lambda x: x[1], reverse=True)
+    print("Judge representation across personas:")
+    for judge, count in sorted_judges:
+        print(f"  {judge}: {count} personas")
+    
+    return judge_counts
+
+# Get personas that care about a specific judge
+def get_personas_for_judge(judge_name):
+    """
+    Find all personas that have a correlation with a specific judge.
+    
+    Args:
+        judge_name (str): Name of the judge
+        
+    Returns:
+        list: List of persona names that correlate with this judge
+    """
+    personas = []
+    for persona_name, persona_data in PERSONAS.items():
+        if judge_name in persona_data["correlated_judges"]:
+            personas.append(persona_name)
+    return personas
 
 
 class PersonaSimulator:
@@ -110,16 +373,19 @@ class PersonaSimulator:
             else:
                 # Use default templates
                 if "system" in path.name:
-                    return """You are {PERSONA_NAME}.  Read a task and its candidate answer, reflect briefly, then decide
+                    return """You are {PERSONA_NAME}. Read a task and its candidate answer, reflect briefly, then decide
 how much you personally like the answer on a 0-10 scale (0 = terrible, 10 = perfect).
 
-• Use your own taste; no rubric is enforced.
-• Think silently first – do not show your reasoning.  
+• Use your own taste and personal preferences
+• Consider your specific evaluation priorities: {EVALUATION_FOCUS}
+• Think silently first – do not show your reasoning
+• Estimate how certain you are about your score (0-100%)
 • Answer only with this JSON (no extra keys, no commentary):
 
 {{
   "analysis": "< ≤ 2 short sentences >",
-  "score": <int 0-10>
+  "score": <integer 0-10>,
+  "certainty": <integer 0-100>
 }}"""
                 else:
                     return """==== ORIGINAL TASK ====
@@ -130,18 +396,30 @@ how much you personally like the answer on a 0-10 scale (0 = terrible, 10 = perf
 
 ==== YOUR JOB ====
 You are {PERSONA_NAME}: {PERSONA_BIO}
+
+When evaluating, you particularly care about: {EVALUATION_PRIORITIES}
+
 Rate the answer as you see fit and output the JSON object above."""
         
         with open(path, 'r') as f:
             return f.read()
     
-    def _get_prompts(self, persona_name: str, query: str, answer: str, persona_bio: str) -> Tuple[str, str]:
+    def _get_prompts(self, persona_name: str, query: str, answer: str, persona_data: dict) -> Tuple[str, str]:
         """Generate system and user prompts for a persona."""
-        system_prompt = self.system_prompt_template.format(PERSONA_NAME=persona_name)
+        # Extract persona fields for prompt formatting
+        persona_bio = persona_data.get("description", "")
+        evaluation_focus = persona_data.get("evaluation_focus", "general evaluation")
+        evaluation_priorities = persona_data.get("evaluation_priorities", "overall quality and usefulness")
+        
+        system_prompt = self.system_prompt_template.format(
+            PERSONA_NAME=persona_name,
+            EVALUATION_FOCUS=evaluation_focus
+        )
         user_prompt = self.user_prompt_template.format(
             USER_PROMPT=query,
             PERSONA_NAME=persona_name,
             PERSONA_BIO=persona_bio,
+            EVALUATION_PRIORITIES=evaluation_priorities,
             MODEL_ANSWER=answer
         )
         return system_prompt, user_prompt
@@ -154,43 +432,66 @@ Rate the answer as you see fit and output the JSON object above."""
         max_retries: int = DEFAULT_MAX_RETRIES,
         initial_delay: float = DEFAULT_INITIAL_DELAY
     ) -> Dict[str, Any]:
-        """Get feedback from a single persona with retry logic."""
-        persona_bio = PERSONAS[persona_name]
-        system_prompt, user_prompt = self._get_prompts(persona_name, query, answer, persona_bio)
+        """Get feedback from a single persona with retry logic and timeout handling."""
+        persona_data = PERSONAS[persona_name]
+        system_prompt, user_prompt = self._get_prompts(persona_name, query, answer, persona_data)
         
         delay = initial_delay
         for attempt in range(max_retries):
             try:
-                response = await self.client.chat.completions.create(
-                    model=self.model,
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt}
-                    ],
-                    max_tokens=100,
-                    temperature=0.7,
+                # Add timeout to prevent hanging
+                response = await asyncio.wait_for(
+                    self.client.chat.completions.create(
+                        model=self.model,
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt}
+                        ],
+                        max_tokens=100,
+                        temperature=0.7,
+                    ),
+                    timeout=30.0  # 30 second timeout per API call
                 )
                 
                 content = response.choices[0].message.content
+                if not content or content.strip() == "":
+                    raise ValueError("Empty response from API")
+                
                 result = json.loads(content)
                 result['persona'] = persona_name
+                
+                # Ensure certainty field exists for backward compatibility
+                if 'certainty' not in result:
+                    result['certainty'] = 50  # Default middle certainty if not provided
+                
                 return result
                 
-            except json.JSONDecodeError as e:
-                logger.warning(f"JSON decode error for {persona_name}: {e}")
+            except asyncio.TimeoutError:
+                logger.warning(f"Timeout for {persona_name} (attempt {attempt+1}/{max_retries})")
                 if attempt < max_retries - 1:
                     await asyncio.sleep(delay)
                     delay *= 2
                 else:
-                    return {"persona": persona_name, "score": 5, "analysis": "Error: Invalid JSON", "error": str(e)}
+                    logger.error(f"Failed to get response from {persona_name} after {max_retries} timeout attempts, excluding sample")
+                    return None
+                    
+            except json.JSONDecodeError as e:
+                logger.warning(f"JSON decode error for {persona_name} (attempt {attempt+1}/{max_retries}): {e}")
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(delay)
+                    delay *= 2
+                else:
+                    logger.error(f"Failed to get valid JSON from {persona_name} after {max_retries} attempts, excluding sample")
+                    return None
                     
             except Exception as e:
-                logger.warning(f"Error getting feedback from {persona_name}: {e}")
+                logger.warning(f"Error getting feedback from {persona_name} (attempt {attempt+1}/{max_retries}): {e}")
                 if attempt < max_retries - 1:
                     await asyncio.sleep(delay)
                     delay *= 2
                 else:
-                    return {"persona": persona_name, "score": 5, "analysis": "Error occurred", "error": str(e)}
+                    logger.error(f"Failed to get feedback from {persona_name} after {max_retries} attempts, excluding sample")
+                    return None
     
     async def get_all_persona_feedback(
         self,
@@ -216,28 +517,58 @@ Rate the answer as you see fit and output the JSON object above."""
             for persona in personas
         ]
         
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        # Add overall timeout for the batch (2 minutes for all personas)
+        try:
+            results = await asyncio.wait_for(
+                asyncio.gather(*tasks, return_exceptions=True),
+                timeout=120.0  # 2 minutes total for all 15 personas
+            )
+        except asyncio.TimeoutError:
+            logger.error(f"Timeout getting feedback from all personas - this sample will be excluded")
+            return {
+                "personas": {},
+                "average_score": None,
+                "score": None,
+                "valid_personas": 0,
+                "failed_personas": len(personas),
+                "timeout_error": True
+            }
         
         # Process results
         feedback = {}
         scores = []
+        failed_personas = []
+        
         for i, result in enumerate(results):
             persona = personas[i]
             if isinstance(result, Exception):
                 logger.error(f"Failed to get feedback from {persona}: {result}")
-                feedback[persona] = {"score": 5, "analysis": "Error", "error": str(result)}
+                failed_personas.append(persona)
+            elif result is None:
+                logger.warning(f"Excluding failed persona: {persona}")
+                failed_personas.append(persona)
             else:
                 feedback[persona] = result
                 if 'score' in result:
                     scores.append(result['score'])
         
+        # Log failed personas
+        if failed_personas:
+            logger.info(f"Excluded {len(failed_personas)} failed personas: {failed_personas}")
+        
         # Calculate aggregate score
-        avg_score = sum(scores) / len(scores) if scores else 5.0
+        if scores:
+            avg_score = sum(scores) / len(scores)
+        else:
+            logger.warning("No valid persona scores available, this sample may need to be excluded")
+            avg_score = None  # Will be handled downstream
         
         return {
             "personas": feedback,
             "average_score": avg_score,
-            "score": avg_score  # For compatibility
+            "score": avg_score,  # For compatibility
+            "valid_personas": len(feedback),
+            "failed_personas": len(failed_personas)
         }
     
     async def simulate_dataset(
@@ -303,7 +634,10 @@ Rate the answer as you see fit and output the JSON object above."""
                     idx = batch_indices[i]
                     if isinstance(result, Exception):
                         logger.error(f"Failed to process row {idx}: {result}")
-                        results[idx] = {"score": 5, "error": str(result)}
+                        results[idx] = {"score": None, "error": str(result), "excluded": True}
+                    elif isinstance(result, dict) and result.get("timeout_error"):
+                        logger.warning(f"Timeout processing row {idx}, excluding from dataset")
+                        results[idx] = {"score": None, "timeout_error": True, "excluded": True}
                     else:
                         results[idx] = result
                     pbar.update(1)
