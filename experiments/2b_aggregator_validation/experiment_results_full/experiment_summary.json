@@ -1,0 +1,154 @@
+{
+  "experiment_info": {
+    "data_path": "/Users/eitu/Documents/Eitu/AI Safety/AIS_hackathons/model_routing/multi-judge-interpretability/results/full_experiments/baseline_ultrafeedback_2000samples_20250816_213023/data/data_with_judge_scores_and_ultrafeedback.pkl",
+    "test_size": 0.2,
+    "random_seed": 42,
+    "normalize": true,
+    "timestamp": "2025-08-21T07:55:31.110443",
+    "experiment_type": "aggregator_validation_varied_data"
+  },
+  "main_comparison": {
+    "mixed_personas": {
+      "gam_r2": 0.5532169432380618,
+      "mlp_r2": 0.5431188344955444,
+      "variance": 8.401839749999999
+    },
+    "ultrafeedback": {
+      "gam_r2": 0.6310116102543704,
+      "mlp_r2": 0.598322289998362,
+      "variance": 4.095205999999999
+    },
+    "individual_personas_mean": {
+      "gam_r2": 0.5949488161210901,
+      "mlp_r2": 0.5846471360751561,
+      "variance": 8.279951589285712
+    },
+    "persona_mean": {
+      "gam_r2": 0.6949496411879914,
+      "mlp_r2": 0.6683110681720399,
+      "variance": 6.958737396683673
+    }
+  },
+  "individual_persona_analysis": {
+    "Professor": {
+      "gam_r2": 0.6670649991700166,
+      "mlp_r2": 0.6619954109191895,
+      "variance": 9.249036,
+      "best_model": "gam"
+    },
+    "CEO": {
+      "gam_r2": 0.6533946407217106,
+      "mlp_r2": 0.6411235928535461,
+      "variance": 8.474193749999998,
+      "best_model": "gam"
+    },
+    "Parent": {
+      "gam_r2": 0.6432770561367195,
+      "mlp_r2": 0.6312749981880188,
+      "variance": 8.39699775,
+      "best_model": "gam"
+    },
+    "Student": {
+      "gam_r2": 0.6929817258218098,
+      "mlp_r2": 0.6678436994552612,
+      "variance": 9.8669,
+      "best_model": "gam"
+    },
+    "Data Scientist": {
+      "gam_r2": 0.588451831227499,
+      "mlp_r2": 0.5886845588684082,
+      "variance": 9.562937750000001,
+      "best_model": "mlp"
+    },
+    "Therapist": {
+      "gam_r2": 0.5901793247457319,
+      "mlp_r2": 0.5840168595314026,
+      "variance": 7.06951775,
+      "best_model": "gam"
+    },
+    "Child": {
+      "gam_r2": 0.4397739247119058,
+      "mlp_r2": 0.4418242573738098,
+      "variance": 7.8732560000000005,
+      "best_model": "mlp"
+    },
+    "Ethicist": {
+      "gam_r2": 0.5273380604990253,
+      "mlp_r2": 0.5070548057556152,
+      "variance": 7.7132477500000025,
+      "best_model": "gam"
+    },
+    "Privacy Advocate": {
+      "gam_r2": 0.44718159560410975,
+      "mlp_r2": 0.4518936276435852,
+      "variance": 8.0106,
+      "best_model": "mlp"
+    },
+    "Skeptic": {
+      "gam_r2": 0.6269748517972746,
+      "mlp_r2": 0.6169316172599792,
+      "variance": 9.129871,
+      "best_model": "gam"
+    },
+    "Engineer": {
+      "gam_r2": 0.6093578365096683,
+      "mlp_r2": 0.6077255010604858,
+      "variance": 8.470244,
+      "best_model": "gam"
+    },
+    "Novelist": {
+      "gam_r2": 0.5726845252119698,
+      "mlp_r2": 0.5585504770278931,
+      "variance": 5.580911,
+      "best_model": "gam"
+    },
+    "Non-native Speaker": {
+      "gam_r2": 0.6445525100986816,
+      "mlp_r2": 0.6236786842346191,
+      "variance": 8.566599750000002,
+      "best_model": "gam"
+    },
+    "Lawyer": {
+      "gam_r2": 0.6260705434391396,
+      "mlp_r2": 0.6024618148803711,
+      "variance": 7.95500975,
+      "best_model": "gam"
+    }
+  },
+  "variance_analysis": {
+    "variance_vs_r2_correlation": -0.4468011320467925,
+    "variance_range": [
+      4.095205999999999,
+      8.401839749999999
+    ],
+    "r2_range": [
+      0.5532169432380618,
+      0.6949496411879914
+    ],
+    "experiments": [
+      "mixed_personas",
+      "ultrafeedback",
+      "individual_personas_mean",
+      "persona_mean"
+    ]
+  },
+  "hypothesis_validation": {
+    "h1_ultrafeedback_high_r2": {
+      "hypothesis": "UltraFeedback R\u00b2 > 0.70",
+      "result": 0.6310116102543704,
+      "passed": false
+    },
+    "h2_individual_personas_high_r2": {
+      "hypothesis": "Individual personas mean R\u00b2 > 0.65",
+      "result": 0.5949488161210901,
+      "passed": false
+    },
+    "h3_variance_ordering": {
+      "hypothesis": "Variance order: Individual < UltraFeedback < Mixed",
+      "individual_variance": 8.279951589285712,
+      "ultrafeedback_variance": 4.095205999999999,
+      "mixed_variance": 8.401839749999999,
+      "passed": false
+    }
+  }
+}
