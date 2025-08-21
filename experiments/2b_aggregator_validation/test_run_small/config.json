@@ -1,0 +1,8 @@
+{
+  "data_path": "/Users/eitu/Documents/Eitu/AI Safety/AIS_hackathons/model_routing/multi-judge-interpretability/results/full_experiments/baseline_ultrafeedback_2000samples_20250816_213023/data/data_with_judge_scores_and_ultrafeedback.pkl",
+  "test_size": 0.2,
+  "random_seed": 42,
+  "normalize": true,
+  "timestamp": "2025-08-21T07:51:40.005303",
+  "experiment_type": "aggregator_validation_varied_data"
+}
