@@ -1,27 +1,284 @@
-# Judge Contamination Experiment Configuration
-experiment:
-  name: "judge_contamination"
-  version: "1.0.0"
+# Enhanced Judge Contamination Experiment Configuration
+# Comprehensive parameter control for research-grade experimentation
 
+experiment:
+  name: "enhanced_judge_contamination"
+  version: "2.0.0"
+  description: "Comprehensive judge contamination analysis with advanced statistical testing"
+  author: "Multi-Judge Interpretability Framework"
+  
+# Contamination Strategy Configuration
 contamination:
+  # Available contamination types
   types:
     - inverted
     - noise
     - bias
+    - drift
+    - adversarial
 
+  # Inverted rubric contamination
   inverted:
     enabled: true
     description: "Rubrics that score opposite to intended criteria"
-
+    strength: "complete"  # complete, partial, random
+    target_correlation: -0.8  # Target correlation for inversion
+    judge_selection: "all"  # all, random, specific
+    
+  # Noise-based contamination  
   noise:
     enabled: false
+    description: "Random noise injection into judge scoring"
+    noise_type: "gaussian"  # gaussian, uniform, laplace
     std_dev: 0.5
-
+    mean: 0.0
+    clip_range: [0.0, 4.0]
+    
+  # Systematic bias contamination
   bias:
     enabled: false
+    description: "Systematic scoring bias in one direction"
+    bias_type: "additive"  # additive, multiplicative, scale_shift
     bias_amount: 0.3
-
+    direction: "positive"  # positive, negative, alternating
+    
+  # Rubric drift contamination
+  drift:
+    enabled: false
+    description: "Gradual evolution of rubric interpretation"
+    drift_rate: 0.01
+    drift_type: "linear"  # linear, exponential, sinusoidal
+    max_drift: 1.0
+    
+  # Adversarial contamination
+  adversarial:
+    enabled: false
+    description: "Targeted adversarial scoring to fool aggregators"
+    strategy: "gradient_based"  # gradient_based, pattern_based, random
+    target_model: "naive_average"
+    
+# Experiment Execution Parameters
 execution:
+  # Sample size configuration
   quick_mode_samples: 50
   full_mode_samples: 1000
+  max_samples: 5000
+  
+  # Processing configuration
+  batch_size: 10
   max_retries: 3
+  timeout_seconds: 300
+  parallel_workers: 4
+  
+  # Randomization
+  random_seed: 42
+  stratified_sampling: true
+  
+# Data Configuration
+data:
+  # Data source preferences (in order of preference)
+  sources:
+    - "data/data_with_all_personas.pkl"
+    - "data/data_with_judge_scores.pkl"
+    - "../data/data_with_all_personas.pkl"
+    - "../../data/data_with_all_personas.pkl"
+    
+  # Required columns
+  required_columns:
+    - "instruction"
+    - "answer"
+    
+  # Optional columns (enhance analysis if available)
+  optional_columns:
+    - "human_feedback"
+    - "judge_scores"
+    - "baseline_scores"
+    
+  # Data quality checks
+  quality_checks:
+    min_instruction_length: 10
+    min_answer_length: 20
+    max_missing_rate: 0.1
+    
+# Statistical Analysis Configuration
+analysis:
+  # Significance testing
+  statistical_tests:
+    significance_level: 0.05
+    multiple_comparison_correction: "bonferroni"  # bonferroni, fdr, none
+    min_sample_size: 30
+    
+  # Correlation analysis
+  correlation:
+    methods: ["pearson", "spearman", "kendall"]
+    confidence_interval: 0.95
+    
+  # Distribution analysis
+  distribution:
+    normality_tests: ["shapiro", "kolmogorov_smirnov"]
+    homogeneity_tests: ["levene", "bartlett"]
+    
+  # Robustness analysis
+  robustness:
+    contamination_rates: [0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5]
+    aggregation_methods: ["naive_average", "weighted_average", "median"]
+    cross_validation_folds: 5
+    bootstrap_iterations: 1000
+    
+# Visualization Configuration
+visualization:
+  # General settings
+  enabled: true
+  dpi: 300
+  style: "publication"  # publication, presentation, web
+  color_palette: "husl"
+  
+  # Figure types to generate
+  figure_types:
+    score_distributions: true
+    correlation_heatmap: true
+    robustness_curves: true
+    individual_analysis: true
+    summary_dashboard: true
+    publication_figure: true
+    
+  # Publication-specific settings
+  publication:
+    figure_size: [12, 10]
+    font_size: 12
+    line_width: 2
+    marker_size: 8
+    
+  # Interactive plots
+  interactive:
+    enabled: false
+    backend: "plotly"  # plotly, bokeh
+    
+# Output Configuration
+output:
+  # Results organization
+  structure:
+    data_subdir: "data"
+    analysis_subdir: "analysis"
+    plots_subdir: "plots"
+    reports_subdir: "reports"
+    
+  # File formats
+  formats:
+    data: ["csv", "json", "pkl"]
+    analysis: ["json", "yaml"]
+    plots: ["png", "pdf", "svg"]
+    
+  # Compression
+  compression:
+    enabled: true
+    algorithm: "gzip"  # gzip, bz2, xz
+    
+  # Metadata
+  metadata:
+    include_git_info: true
+    include_system_info: true
+    include_package_versions: true
+    
+# Quality Assurance
+quality:
+  # Validation checks
+  validation:
+    check_data_consistency: true
+    validate_judge_responses: true
+    verify_statistical_assumptions: true
+    
+  # Reproducibility
+  reproducibility:
+    record_environment: true
+    save_random_states: true
+    log_all_parameters: true
+    
+  # Performance monitoring
+  monitoring:
+    track_memory_usage: true
+    track_execution_time: true
+    profile_bottlenecks: false
+    
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # File logging
+  file_logging:
+    enabled: true
+    filename: "experiment.log"
+    max_size_mb: 10
+    backup_count: 5
+    
+  # Console logging
+  console_logging:
+    enabled: true
+    color: true
+    
+# Integration Settings
+integration:
+  # External tools
+  external_tools:
+    enable_mlflow: false
+    enable_wandb: false
+    enable_tensorboard: false
+    
+  # API settings
+  api:
+    timeout: 30
+    retry_attempts: 3
+    rate_limit: 10  # requests per second
+    
+  # Notification settings
+  notifications:
+    email_on_completion: false
+    slack_webhook: null
+    
+# Advanced Features
+advanced:
+  # Experimental features
+  experimental:
+    enable_gpu_acceleration: false
+    use_distributed_computing: false
+    
+  # Model comparison
+  model_comparison:
+    baseline_models: ["naive_average", "best_single_judge"]
+    ml_models: ["gam", "mlp", "random_forest"]
+    
+  # Contamination detection
+  contamination_detection:
+    enable_automatic_detection: true
+    detection_threshold: 0.3
+    alert_on_detection: true
+
+# Environment-specific overrides
+profiles:
+  development:
+    execution:
+      quick_mode_samples: 20
+      full_mode_samples: 100
+    logging:
+      level: "DEBUG"
+    visualization:
+      dpi: 150
+      
+  testing:
+    execution:
+      quick_mode_samples: 10
+      full_mode_samples: 50
+    quality:
+      validation:
+        check_data_consistency: false
+        
+  production:
+    execution:
+      max_retries: 5
+      timeout_seconds: 600
+    output:
+      compression:
+        enabled: true
+    logging:
+      level: "WARNING"
