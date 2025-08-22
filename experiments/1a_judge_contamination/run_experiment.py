@@ -37,13 +37,13 @@ import sys
 warnings.filterwarnings('ignore')
 
 # Add project root to path, for importing pipeline utils and such
-project_root = os.path.join(os.getcwd(), '..', '..')
-sys.path.append(str(project_root))
+PROJECT_ROOT = os.path.join(os.getcwd(), '..', '..')
+sys.path.append(str(PROJECT_ROOT))
 
 # Pipeline imports
 from pipeline.core.judge_creation import create_or_update_judge, JUDGE_MODEL, MIN_SCORE, MAX_SCORE
 from pipeline.utils.judge_rubrics import INVERTED_JUDGE_RUBRICS
-from pipeline.utils.create_martian_client import create_mservedartian_client
+from pipeline.utils.create_martian_client import create_martian_client
 from pipeline.core.judge_evaluation import JudgeEvaluator
 from pipeline.core.dataset_loader import DatasetLoader
 from martian_apart_hack_sdk import judge_specs
@@ -81,7 +81,7 @@ class EnhancedContaminationExperimentRunner:
         self.inverted_judge_ids = list(INVERTED_JUDGE_RUBRICS.keys())
         self.analyzer = ContaminationAnalyzer(significance_level=args.significance_level)
         self.visualizer = ContaminationVisualizer(self.experiment_dir / "plots")
-        self.results_processor = AdvancedResultsProcessor(self.experiment_dir, self.config)
+        self.results_processor = ResultsProcessor(self.experiment_dir)
         
         # Results storage
         self.results = {
@@ -223,17 +223,17 @@ class EnhancedContaminationExperimentRunner:
         data_sources = [
             'data/data_with_all_personas.pkl',
             'data/data_with_judge_scores.pkl', 
-            '../data/data_with_all_personas.pkl'
         ]
         
         data = None
         for source in data_sources:
+            full_source = os.path.join(PROJECT_ROOT, source)
             try:
-                data = dataset_loader.load_existing_personas(source)
-                logger.info(f"Successfully loaded data from: {source}")
+                data = dataset_loader.load_existing_personas(full_source)
+                logger.info(f"Successfully loaded data from: {full_source}")
                 break
             except Exception as e:
-                logger.debug(f"Failed to load from {source}: {e}")
+                logger.debug(f"Failed to load from {full_source}: {e}")
         
         if data is None:
             raise FileNotFoundError("Could not load dataset from any source")
