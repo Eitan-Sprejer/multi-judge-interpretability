@@ -1,0 +1,114 @@
+[
+  {
+    "name": "baseline_original",
+    "combination": {
+      "truthfulness-judge": "original",
+      "harmlessness-judge": "original",
+      "helpfulness-judge": "original",
+      "honesty-judge": "original",
+      "explanatory-depth-judge": "original",
+      "instruction-following-judge": "original",
+      "clarity-judge": "original",
+      "conciseness-judge": "original",
+      "logical-consistency-judge": "original",
+      "creativity-judge": "original"
+    },
+    "description": "Baseline with all original judge rubrics"
+  },
+  {
+    "name": "systematic_strict",
+    "combination": {
+      "truthfulness-judge": "strict",
+      "harmlessness-judge": "strict",
+      "helpfulness-judge": "strict",
+      "honesty-judge": "strict",
+      "explanatory-depth-judge": "strict",
+      "instruction-following-judge": "strict",
+      "clarity-judge": "strict",
+      "conciseness-judge": "strict",
+      "logical-consistency-judge": "strict",
+      "creativity-judge": "strict"
+    },
+    "description": "All judges use stricter criteria"
+  },
+  {
+    "name": "systematic_lenient",
+    "combination": {
+      "truthfulness-judge": "lenient",
+      "harmlessness-judge": "lenient",
+      "helpfulness-judge": "lenient",
+      "honesty-judge": "lenient",
+      "explanatory-depth-judge": "lenient",
+      "instruction-following-judge": "lenient",
+      "clarity-judge": "lenient",
+      "conciseness-judge": "lenient",
+      "logical-consistency-judge": "lenient",
+      "creativity-judge": "lenient"
+    },
+    "description": "All judges use more lenient criteria"
+  },
+  {
+    "name": "mixed_balanced",
+    "combination": {
+      "conciseness-judge": "strict",
+      "honesty-judge": "strict",
+      "helpfulness-judge": "strict",
+      "logical-consistency-judge": "strict",
+      "instruction-following-judge": "strict",
+      "clarity-judge": "lenient",
+      "creativity-judge": "lenient",
+      "explanatory-depth-judge": "lenient",
+      "truthfulness-judge": "lenient",
+      "harmlessness-judge": "lenient"
+    },
+    "description": "Half judges strict, half lenient (mixed rubrics)"
+  },
+  {
+    "name": "single_contaminated_creativity",
+    "combination": {
+      "truthfulness-judge": "original",
+      "harmlessness-judge": "original",
+      "helpfulness-judge": "original",
+      "honesty-judge": "original",
+      "explanatory-depth-judge": "original",
+      "instruction-following-judge": "original",
+      "clarity-judge": "original",
+      "conciseness-judge": "original",
+      "logical-consistency-judge": "original",
+      "creativity-judge": "strict"
+    },
+    "description": "Single contaminated judge (creativity-judge) with strict rubric"
+  },
+  {
+    "name": "interval_bottom_heavy",
+    "combination": {
+      "truthfulness-judge": "bottom_heavy",
+      "harmlessness-judge": "bottom_heavy",
+      "helpfulness-judge": "bottom_heavy",
+      "honesty-judge": "bottom_heavy",
+      "explanatory-depth-judge": "bottom_heavy",
+      "instruction-following-judge": "bottom_heavy",
+      "clarity-judge": "bottom_heavy",
+      "conciseness-judge": "bottom_heavy",
+      "logical-consistency-judge": "bottom_heavy",
+      "creativity-judge": "bottom_heavy"
+    },
+    "description": "All judges use bottom-heavy score intervals"
+  },
+  {
+    "name": "random_mixed",
+    "combination": {
+      "truthfulness-judge": "bottom_heavy",
+      "harmlessness-judge": "original",
+      "helpfulness-judge": "original",
+      "honesty-judge": "original",
+      "explanatory-depth-judge": "strict",
+      "instruction-following-judge": "strict",
+      "clarity-judge": "top_heavy",
+      "conciseness-judge": "top_heavy",
+      "logical-consistency-judge": "original",
+      "creativity-judge": "top_heavy"
+    },
+    "description": "Random variant assignment (stress test)"
+  }
+]
