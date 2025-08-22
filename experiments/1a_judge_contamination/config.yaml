@@ -1,0 +1,27 @@
+# Judge Contamination Experiment Configuration
+experiment:
+  name: "judge_contamination"
+  version: "1.0.0"
+
+contamination:
+  types:
+    - inverted
+    - noise
+    - bias
+
+  inverted:
+    enabled: true
+    description: "Rubrics that score opposite to intended criteria"
+
+  noise:
+    enabled: false
+    std_dev: 0.5
+
+  bias:
+    enabled: false
+    bias_amount: 0.3
+
+execution:
+  quick_mode_samples: 50
+  full_mode_samples: 1000
+  max_retries: 3
